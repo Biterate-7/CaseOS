@@ -20,7 +20,7 @@ Every AI interaction in CaseOS is:
 | Database | PostgreSQL + Prisma 7 (pgvector for embeddings) |
 | Auth | Clerk |
 | Storage | Supabase Storage |
-| AI | OpenAI API — RAG over per-matter document embeddings |
+| AI | xAI Grok (generation) + local bge-small embeddings — RAG over per-matter document chunks |
 
 ## Getting started
 

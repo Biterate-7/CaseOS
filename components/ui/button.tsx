@@ -49,6 +49,9 @@ function Button({
   return (
     <ButtonPrimitive
       data-slot="button"
+      // When `render` swaps in a non-button element (e.g. a Link), Base UI
+      // must not assume native <button> semantics.
+      nativeButton={props.render == null}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

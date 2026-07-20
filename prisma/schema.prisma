@@ -114,7 +114,9 @@ model DocumentChunk {
   chunkIndex Int
   content    String
   pageNumber Int?
-  embedding  Unsupported("vector(1536)")?
+  // Dimension left unspecified so the embedding provider can change without a
+  // migration; all chunks must still use one provider at a time for retrieval.
+  embedding  Unsupported("vector")?
   createdAt  DateTime                    @default(now())
 
   document  Document   @relation(fields: [documentId], references: [id])

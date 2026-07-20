@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { UploadForm } from "@/components/upload-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,14 +13,16 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { mockAuditTrail, mockDocuments, mockMatters } from "@/lib/mock-data";
+import { db } from "@/lib/db";
 
 export const metadata = { title: "Matter workspace" };
+export const dynamic = "force-dynamic";
 
 const docStatusVariant = {
   READY: "default",
   PROCESSING: "secondary",
   UPLOADED: "outline",
+  FAILED: "destructive",
 } as const;
 
 export default async function MatterWorkspacePage({
@@ -27,7 +31,18 @@ export default async function MatterWorkspacePage({
   params: Promise<{ matterId: string }>;
 }) {
   const { matterId } = await params;
-  const matter = mockMatters.find((m) => m.id === matterId);
+  const matter = await db.matter.findUnique({
+    where: { id: matterId },
+    include: {
+      documents: { orderBy: { createdAt: "desc" } },
+      auditLogs: {
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        include: { user: { select: { name: true } } },
+      },
+      _count: { select: { documents: true } },
+    },
+  });
   if (!matter) notFound();
 
   return (
@@ -53,35 +68,45 @@ export default async function MatterWorkspacePage({
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="flex min-w-0 flex-col gap-6">
           <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Documents</CardTitle>
-                <CardDescription>
-                  Sources ground every AI answer in this matter.
-                </CardDescription>
-              </div>
-              <Button size="sm" disabled title="Upload lands in Phase 2">
-                Upload
-              </Button>
+            <CardHeader>
+              <CardTitle className="text-base">Documents</CardTitle>
+              <CardDescription>
+                Sources ground every AI answer in this matter. PDF and
+                plain-text files up to 20 MB.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col">
-              {mockDocuments.map((doc, i) => (
-                <div key={doc.id}>
-                  {i > 0 && <Separator />}
-                  <div className="flex items-center justify-between gap-4 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{doc.title}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {doc.fileName} · {doc.pages} pages · uploaded{" "}
-                        {doc.uploadedAt}
-                      </p>
+            <CardContent className="flex flex-col gap-4">
+              <UploadForm matterId={matter.id} />
+              <Separator />
+              {matter.documents.length === 0 ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  No documents yet. Upload the first one to start grounding AI
+                  answers.
+                </p>
+              ) : (
+                <div className="flex flex-col">
+                  {matter.documents.map((doc, i) => (
+                    <div key={doc.id}>
+                      {i > 0 && <Separator />}
+                      <div className="flex items-center justify-between gap-4 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {doc.title}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {doc.fileName} ·{" "}
+                            {(doc.sizeBytes / 1024).toFixed(0)} KB · uploaded{" "}
+                            {doc.createdAt.toISOString().slice(0, 10)}
+                          </p>
+                        </div>
+                        <Badge variant={docStatusVariant[doc.status]}>
+                          {doc.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <Badge variant={docStatusVariant[doc.status]}>
-                      {doc.status}
-                    </Badge>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </CardContent>
           </Card>
 
@@ -89,22 +114,34 @@ export default async function MatterWorkspacePage({
             <CardHeader>
               <CardTitle className="text-base">Audit trail</CardTitle>
               <CardDescription>
-                Every AI interaction on this matter, permanently recorded.
+                Every action on this matter, permanently recorded.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              {mockAuditTrail.map((entry) => (
-                <div key={entry.id} className="text-sm">
-                  <p className="font-medium">
-                    {entry.actor}{" "}
-                    <span className="font-normal text-muted-foreground">
-                      · {entry.action}
-                    </span>
-                  </p>
-                  <p className="text-muted-foreground">{entry.detail}</p>
-                  <p className="text-xs text-muted-foreground/70">{entry.at}</p>
-                </div>
-              ))}
+              {matter.auditLogs.length === 0 ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  No activity yet.
+                </p>
+              ) : (
+                matter.auditLogs.map((entry) => (
+                  <div key={entry.id} className="text-sm">
+                    <p className="font-medium">
+                      {entry.user?.name ?? "System"}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        · {entry.action}
+                      </span>
+                    </p>
+                    {entry.detail != null && (
+                      <p className="break-all text-muted-foreground">
+                        {JSON.stringify(entry.detail)}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground/70">
+                      {entry.createdAt.toISOString().replace("T", " ").slice(0, 16)}
+                    </p>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -113,33 +150,12 @@ export default async function MatterWorkspacePage({
           <CardHeader>
             <CardTitle className="text-base">AI assistant</CardTitle>
             <CardDescription>
-              Answers only from this matter&apos;s {matter.documentCount}{" "}
-              documents, with citations. Live in Phase 3.
+              Answers only from this matter&apos;s {matter._count.documents}{" "}
+              document{matter._count.documents === 1 ? "" : "s"}, with
+              citations. Live in Phase 3.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="rounded-md border bg-muted/40 p-3 text-sm">
-              <p className="mb-2 font-medium">
-                Is the non-compete in the 2022 employment agreement enforceable?
-              </p>
-              <p className="text-muted-foreground">
-                The agreement restricts competition for 24 months within 100
-                miles{" "}
-                <span className="rounded bg-primary/10 px-1 font-mono text-xs text-primary">
-                  [Employment Agreement (2022), p. 11 §8.2]
-                </span>
-                . The termination letter states the termination was without
-                cause{" "}
-                <span className="rounded bg-primary/10 px-1 font-mono text-xs text-primary">
-                  [Termination Letter, p. 1]
-                </span>
-                …
-              </p>
-              <div className="mt-3 flex gap-2">
-                <Badge variant="secondary">Pending review</Badge>
-                <Badge variant="outline">2 citations verified</Badge>
-              </div>
-            </div>
             <Textarea
               placeholder="Ask about this matter's documents…"
               disabled
