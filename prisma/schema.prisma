@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  ATTORNEY
+  PARALEGAL
+  STAFF
+}
+
+enum MatterStatus {
+  OPEN
+  PENDING
+  CLOSED
+  ARCHIVED
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum InteractionType {
+  RESEARCH
+  SUMMARIZE
+  DRAFT
+  EXTRACT
+}
+
+enum ReviewStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+model Firm {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  matters   Matter[]
+  auditLogs AuditLog[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String
+  role      Role     @default(ATTORNEY)
+  firmId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  firm           Firm            @relation(fields: [firmId], references: [id])
+  matters        Matter[]        @relation("MatterMembers")
+  aiInteractions AIInteraction[]
+  auditLogs      AuditLog[]
+
+  @@index([firmId])
+}
+
+model Matter {
+  id           String       @id @default(cuid())
+  firmId       String
+  title        String
+  clientName   String
+  practiceArea String
+  status       MatterStatus @default(OPEN)
+  description  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  firm           Firm            @relation(fields: [firmId], references: [id])
+  members        User[]          @relation("MatterMembers")
+  documents      Document[]
+  aiInteractions AIInteraction[]
+  auditLogs      AuditLog[]
+
+  @@index([firmId])
+}
+
+model Document {
+  id          String         @id @default(cuid())
+  matterId    String
+  title       String
+  fileName    String
+  storagePath String
+  mimeType    String
+  sizeBytes   Int
+  status      DocumentStatus @default(UPLOADED)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  matter Matter          @relation(fields: [matterId], references: [id])
+  chunks DocumentChunk[]
+
+  @@index([matterId])
+}
+
+model DocumentChunk {
+  id         String                      @id @default(cuid())
+  documentId String
+  chunkIndex Int
+  content    String
+  pageNumber Int?
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime                    @default(now())
+
+  document  Document   @relation(fields: [documentId], references: [id])
+  citations Citation[]
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+}
+
+model AIInteraction {
+  id           String          @id @default(cuid())
+  matterId     String
+  userId       String
+  type         InteractionType
+  prompt       String
+  response     String
+  model        String
+  reviewStatus ReviewStatus    @default(PENDING_REVIEW)
+  reviewedAt   DateTime?
+  createdAt    DateTime        @default(now())
+
+  matter    Matter     @relation(fields: [matterId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+  citations Citation[]
+
+  @@index([matterId])
+  @@index([userId])
+}
+
+model Citation {
+  id              String  @id @default(cuid())
+  aiInteractionId String
+  chunkId         String
+  quotedText      String
+  claimText       String
+  verified        Boolean @default(false)
+
+  aiInteraction AIInteraction @relation(fields: [aiInteractionId], references: [id])
+  chunk         DocumentChunk @relation(fields: [chunkId], references: [id])
+
+  @@index([aiInteractionId])
+  @@index([chunkId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  firmId     String
+  userId     String?
+  matterId   String?
+  action     String
+  entityType String
+  entityId   String?
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  firm   Firm    @relation(fields: [firmId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
+  matter Matter? @relation(fields: [matterId], references: [id])
+
+  @@index([firmId, createdAt])
+  @@index([matterId])
+}
