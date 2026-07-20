@@ -21,6 +21,7 @@ npm run db:seed      # seed demo firm/user/matters (idempotent)
 npm run doctor       # verify env vars, DB connections, pgvector, storage bucket
 npm run warm:embedder  # pre-download the local embedding model (~34 MB, cached)
 npm run test:ingest  # end-to-end ingestion test against the real DB/storage
+npm run test:ai      # end-to-end AI test: retrieval, isolation, generation, persistence
 ```
 
 Note: on this machine Node lives at `C:\Program Files\nodejs` and may not be on PATH — prefix commands with `$env:Path = "C:\Program Files\nodejs;$env:Path"` in PowerShell if `node` is not found.
@@ -35,7 +36,7 @@ Note: on this machine Node lives at `C:\Program Files\nodejs` and may not be on 
 - **Data model core**: `Firm` → `User`/`Matter`; `Matter` → `Document` → `DocumentChunk` (holds pgvector embedding); `AIInteraction` (one row per AI action, with review status) → `Citation` (typed join from an output claim to the exact `DocumentChunk` that grounds it); `AuditLog` scoped by firm. `DocumentChunk.embedding` is `Unsupported("vector")` (dimension deliberately unspecified) — raw SQL is required for vector queries (`embedding <=> $1::vector`).
 - **Auth**: Clerk. `middleware.ts` protects `/dashboard`, `/matters`, `/onboarding`, `/api`; sign-in/sign-up are Clerk catch-all routes. First login goes through `/onboarding`, which creates the `Firm` + `User` (role ADMIN) linked by `User.clerkId`. **Every page/server action touching firm data must call `requireUser()` from `lib/auth.ts` and scope queries by `user.firmId`** — use `findFirst({ where: { id, firmId } })`, never `findUnique` by id alone, so cross-firm ids 404 instead of leaking. The seed's demo user (`demo_user_placeholder`) is unreachable through normal auth and exists only for pipeline tests.
 - **Storage**: Supabase Storage for source documents (private `documents` bucket, path `firmId/matterId/documentId/fileName`); only chunk text + embeddings go in Postgres.
-- **AI pipeline** (in `lib/ai/` as it gets built): retrieve (matter-scoped only) → generate (grounded, no unsourced knowledge) → verify citations → human review gate. Generation uses xAI Grok via the OpenAI SDK (`baseURL: https://api.x.ai/v1`, `XAI_API_KEY` / `XAI_CHAT_MODEL` env vars).
+- **AI pipeline** — `lib/ai/`: `retrieve.ts` (matter boundary enforced inside the SQL join, top-8 cosine via `<=>`), `generate.ts` (Grok chat with sources-only system prompt; `parseCitations` maps `[Sn]` markers to sentences), `client.ts` (OpenAI SDK, `baseURL: https://api.x.ai/v1`, `XAI_API_KEY` / `XAI_CHAT_MODEL`). The `askQuestion` action in `lib/actions/ai.ts` persists `AIInteraction` + `Citation` rows + audit entry in one transaction; `reviewInteraction` is the attorney approve/reject gate. Test with `npm run test:ai` (skips generation with exit 2 if the xAI team has no credits).
 - **Standalone scripts** that import `lib/` server modules need the `react-server` condition to satisfy `server-only` imports: `node --conditions=react-server --import tsx <script>` (see `test:ingest`).
 
 ## Conventions

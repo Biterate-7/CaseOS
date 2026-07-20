@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AiAnswer } from "@/components/ai-answer";
+import { AskForm } from "@/components/ask-form";
+import { ReviewButtons } from "@/components/review-buttons";
 import { UploadForm } from "@/components/upload-form";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,7 +14,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -24,6 +25,18 @@ const docStatusVariant = {
   PROCESSING: "secondary",
   UPLOADED: "outline",
   FAILED: "destructive",
+} as const;
+
+const reviewStatusVariant = {
+  PENDING_REVIEW: "secondary",
+  APPROVED: "default",
+  REJECTED: "destructive",
+} as const;
+
+const reviewStatusLabel = {
+  PENDING_REVIEW: "Pending review",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
 } as const;
 
 export default async function MatterWorkspacePage({
@@ -44,10 +57,30 @@ export default async function MatterWorkspacePage({
         take: 10,
         include: { user: { select: { name: true } } },
       },
-      _count: { select: { documents: true } },
+      aiInteractions: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        include: {
+          user: { select: { name: true } },
+          citations: {
+            include: {
+              chunk: {
+                select: {
+                  pageNumber: true,
+                  document: { select: { title: true, fileName: true } },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
   if (!matter) notFound();
+
+  const readyDocumentCount = matter.documents.filter(
+    (d) => d.status === "READY"
+  ).length;
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-8">
@@ -150,26 +183,75 @@ export default async function MatterWorkspacePage({
           </Card>
         </div>
 
-        <Card className="h-fit lg:sticky lg:top-8">
-          <CardHeader>
-            <CardTitle className="text-base">AI assistant</CardTitle>
-            <CardDescription>
-              Answers only from this matter&apos;s {matter._count.documents}{" "}
-              document{matter._count.documents === 1 ? "" : "s"}, with
-              citations. Live in Phase 3.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <Textarea
-              placeholder="Ask about this matter's documents…"
-              disabled
-              rows={3}
-            />
-            <Button disabled title="AI pipeline lands in Phase 3">
-              Ask (Phase 3)
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">AI assistant</CardTitle>
+              <CardDescription>
+                Answers come only from this matter&apos;s {readyDocumentCount}{" "}
+                ingested document{readyDocumentCount === 1 ? "" : "s"}. Every
+                claim carries a citation, and every answer awaits attorney
+                review.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AskForm
+                matterId={matter.id}
+                readyDocumentCount={readyDocumentCount}
+              />
+            </CardContent>
+          </Card>
+
+          {matter.aiInteractions.map((interaction) => (
+            <Card key={interaction.id}>
+              <CardHeader>
+                <div className="flex items-start justify-between gap-3">
+                  <CardTitle className="text-sm leading-snug">
+                    {interaction.prompt}
+                  </CardTitle>
+                  <Badge variant={reviewStatusVariant[interaction.reviewStatus]}>
+                    {reviewStatusLabel[interaction.reviewStatus]}
+                  </Badge>
+                </div>
+                <CardDescription>
+                  {interaction.user.name} ·{" "}
+                  {interaction.createdAt.toISOString().replace("T", " ").slice(0, 16)}{" "}
+                  · {interaction.model}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <AiAnswer answer={interaction.response} />
+                {interaction.citations.length > 0 && (
+                  <div className="flex flex-col gap-2 rounded-md border bg-muted/30 p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      Citations ({interaction.citations.length})
+                    </p>
+                    {interaction.citations.map((citation) => (
+                      <div key={citation.id} className="text-xs">
+                        <p className="font-medium">
+                          {citation.chunk.document.title}
+                          {citation.chunk.pageNumber != null &&
+                            ` · page ${citation.chunk.pageNumber}`}
+                          {!citation.verified && (
+                            <span className="ml-2 text-destructive">
+                              unverified
+                            </span>
+                          )}
+                        </p>
+                        <p className="mt-0.5 border-l-2 pl-2 text-muted-foreground">
+                          “{citation.quotedText}…”
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {interaction.reviewStatus === "PENDING_REVIEW" && (
+                  <ReviewButtons interactionId={interaction.id} />
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );

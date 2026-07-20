@@ -15,7 +15,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "doctor": "tsx scripts/doctor.ts",
     "warm:embedder": "tsx scripts/warm-embedder.ts",
-    "test:ingest": "node --conditions=react-server --import tsx scripts/test-ingest.ts"
+    "test:ingest": "node --conditions=react-server --import tsx scripts/test-ingest.ts",
+    "test:ai": "node --conditions=react-server --import tsx scripts/test-ai.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
