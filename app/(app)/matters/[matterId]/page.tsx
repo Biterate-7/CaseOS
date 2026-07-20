@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export const metadata = { title: "Matter workspace" };
@@ -30,9 +31,12 @@ export default async function MatterWorkspacePage({
 }: {
   params: Promise<{ matterId: string }>;
 }) {
+  const user = await requireUser();
   const { matterId } = await params;
-  const matter = await db.matter.findUnique({
-    where: { id: matterId },
+  // findFirst with firmId (not findUnique by id alone) so another firm's
+  // matter id 404s instead of leaking data across the privilege boundary.
+  const matter = await db.matter.findFirst({
+    where: { id: matterId, firmId: user.firmId },
     include: {
       documents: { orderBy: { createdAt: "desc" } },
       auditLogs: {

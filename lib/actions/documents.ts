@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ingestDocument } from "@/lib/ingest/pipeline";
 import { uploadDocumentFile } from "@/lib/storage";
@@ -17,6 +18,8 @@ export async function uploadDocument(
   matterId: string,
   formData: FormData
 ): Promise<UploadResult> {
+  const user = await requireUser();
+
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Choose a file to upload." };
@@ -29,8 +32,9 @@ export async function uploadDocument(
     return { ok: false, error: "Only PDF and plain-text files are supported right now." };
   }
 
-  const matter = await db.matter.findUnique({
-    where: { id: matterId },
+  // Scoped to the caller's firm: a matter id from another firm is invisible.
+  const matter = await db.matter.findFirst({
+    where: { id: matterId, firmId: user.firmId },
     select: { id: true, firmId: true },
   });
   if (!matter) {
@@ -62,6 +66,7 @@ export async function uploadDocument(
     await db.auditLog.create({
       data: {
         firmId: matter.firmId,
+        userId: user.id,
         matterId: matter.id,
         action: "DOCUMENT_UPLOADED",
         entityType: "Document",

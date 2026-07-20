@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export const metadata = { title: "Matters" };
@@ -16,7 +17,9 @@ const statusVariant = {
 } as const;
 
 export default async function MattersPage() {
+  const user = await requireUser();
   const matters = await db.matter.findMany({
+    where: { firmId: user.firmId },
     orderBy: { updatedAt: "desc" },
     include: { _count: { select: { documents: true } } },
   });
@@ -30,7 +33,7 @@ export default async function MattersPage() {
             All matters at your firm.
           </p>
         </div>
-        <Button disabled title="Matter creation arrives with Clerk auth">
+        <Button nativeButton={false} render={<Link href="/matters/new" />}>
           New matter
         </Button>
       </div>
@@ -39,8 +42,7 @@ export default async function MattersPage() {
         <CardContent className="p-0">
           {matters.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
-              No matters yet. Run <code>npm run db:seed</code> to create demo
-              data, or wait for matter creation in the auth milestone.
+              No matters yet. Create your first matter to get started.
             </p>
           ) : (
             <div className="overflow-x-auto">

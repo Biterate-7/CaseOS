@@ -1,15 +1,19 @@
+import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 import { Separator } from "@/components/ui/separator";
+import { requireUser } from "@/lib/auth";
 
 const nav = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/matters", label: "Matters" },
 ];
 
-export default function AppLayout({
+export default async function AppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const user = await requireUser();
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="flex w-56 shrink-0 flex-col border-r bg-muted/30">
@@ -32,13 +36,11 @@ export default function AppLayout({
         </nav>
         <Separator />
         <div className="flex items-center gap-3 p-4">
-          <Avatar className="size-8">
-            <AvatarFallback>JA</AvatarFallback>
-          </Avatar>
+          <UserButton />
           <div className="min-w-0 text-sm">
-            <p className="truncate font-medium">J. Alvarez</p>
+            <p className="truncate font-medium">{user.name}</p>
             <p className="truncate text-xs text-muted-foreground">
-              Alvarez &amp; Chen LLP
+              {user.firmName}
             </p>
           </div>
         </div>

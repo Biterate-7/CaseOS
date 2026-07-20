@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
 export const metadata = { title: "Dashboard" };
@@ -21,13 +22,23 @@ const statusVariant = {
 } as const;
 
 export default async function DashboardPage() {
+  const user = await requireUser();
+  const firmId = user.firmId;
+
   const [openMatters, documentCount, pendingReviewCount, recentMatters, auditEntries] =
     await Promise.all([
-      db.matter.count({ where: { status: "OPEN" } }),
-      db.document.count(),
-      db.aIInteraction.count({ where: { reviewStatus: "PENDING_REVIEW" } }),
-      db.matter.findMany({ orderBy: { updatedAt: "desc" }, take: 4 }),
+      db.matter.count({ where: { firmId, status: "OPEN" } }),
+      db.document.count({ where: { matter: { firmId } } }),
+      db.aIInteraction.count({
+        where: { matter: { firmId }, reviewStatus: "PENDING_REVIEW" },
+      }),
+      db.matter.findMany({
+        where: { firmId },
+        orderBy: { updatedAt: "desc" },
+        take: 4,
+      }),
       db.auditLog.findMany({
+        where: { firmId },
         orderBy: { createdAt: "desc" },
         take: 5,
         include: { user: { select: { name: true } } },
