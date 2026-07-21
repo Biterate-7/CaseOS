@@ -4,12 +4,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------------------
+   CaseOS design system
+   ---------------------------------------------------------------------------
+   Identity: "Trustworthy intelligence for serious legal work."
+
+   Colour is deliberately rationed. Authority navy carries the brand; a strict
+   three-state semantic set (grounded / pending / rejected) is reserved
+   EXCLUSIVELY for review and ingestion state, so status colour never has to
+   compete with brand colour for a lawyer's attention. Bronze is reserved
+   exclusively for citations — the one thing that makes this product not a
+   chatbot. Nothing else in the UI is allowed to use it.
+--------------------------------------------------------------------------- */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+
+  /* Sans for UI, serif for deliberate display moments, mono for citation
+     markers / record ids. --font-heading stays sans on purpose: serif is
+     opt-in via `font-serif`, never leaked into every component title. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -18,11 +37,13 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -39,6 +60,23 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  /* Semantic state — review gate + ingestion pipeline only. */
+  --color-grounded: var(--grounded);
+  --color-grounded-surface: var(--grounded-surface);
+  --color-grounded-border: var(--grounded-border);
+  --color-pending: var(--pending);
+  --color-pending-surface: var(--pending-surface);
+  --color-pending-border: var(--pending-border);
+  --color-rejected: var(--rejected);
+  --color-rejected-surface: var(--rejected-surface);
+  --color-rejected-border: var(--rejected-border);
+
+  /* Citations only. */
+  --color-citation: var(--citation);
+  --color-citation-surface: var(--citation-surface);
+  --color-citation-border: var(--citation-border);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -46,85 +84,188 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Elevation. Shadows are navy-tinted rather than neutral black — the detail
+     that reads as "material" instead of "drop shadow". Two layers each: a
+     tight contact shadow plus a wider ambient one. */
+  --shadow-2xs: 0 1px 2px -1px var(--shadow-tint-weak);
+  --shadow-xs: 0 1px 2px 0 var(--shadow-tint-weak),
+    0 1px 3px -1px var(--shadow-tint-weak);
+  --shadow-sm: 0 1px 2px 0 var(--shadow-tint-weak),
+    0 2px 6px -1px var(--shadow-tint);
+  --shadow-md: 0 2px 4px -1px var(--shadow-tint-weak),
+    0 6px 14px -3px var(--shadow-tint);
+  --shadow-lg: 0 4px 8px -2px var(--shadow-tint-weak),
+    0 14px 28px -6px var(--shadow-tint);
+  --shadow-xl: 0 8px 16px -4px var(--shadow-tint),
+    0 28px 56px -12px var(--shadow-tint-strong);
+
+  /* Motion. ease-out entering, ease-in exiting (skill rule: linear feels
+     robotic). Durations sit in the 150–300ms band. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-in-quart: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Formal near-white ground with a trace of cool. Cards are pure white so
+     they lift off the page rather than blending into it. */
+  --background: oklch(0.9847 0.0025 248);
+  --foreground: oklch(0.2077 0.0293 264);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2077 0.0293 264);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2077 0.0293 264);
+
+  /* Authority navy #1E3A5F */
+  --primary: oklch(0.3351 0.0624 253);
+  --primary-foreground: oklch(0.9847 0.0025 248);
+  --secondary: oklch(0.9683 0.0043 248);
+  --secondary-foreground: oklch(0.3009 0.045 253);
+  --muted: oklch(0.9683 0.0043 248);
+  --muted-foreground: oklch(0.5217 0.0245 264);
+  --accent: oklch(0.9453 0.0121 248);
+  --accent-foreground: oklch(0.3009 0.045 253);
+  --destructive: oklch(0.5484 0.2093 27);
+
+  --border: oklch(0.9276 0.0058 265);
+  --input: oklch(0.9276 0.0058 265);
+  --ring: oklch(0.4815 0.0855 252);
+
+  --grounded: oklch(0.5234 0.1287 153);
+  --grounded-surface: oklch(0.9698 0.0287 153);
+  --grounded-border: oklch(0.8756 0.0611 153);
+  /* Darkened from L 0.5623: the original measured 4.37:1 on its own surface,
+     under AA for the small text these badges use. */
+  --pending: oklch(0.5387 0.1176 62);
+  --pending-surface: oklch(0.9723 0.0331 78);
+  --pending-border: oklch(0.8912 0.0722 72);
+  --rejected: oklch(0.5484 0.2093 27);
+  --rejected-surface: oklch(0.9701 0.0208 17);
+  --rejected-border: oklch(0.8853 0.0559 18);
+
+  --citation: oklch(0.5512 0.1043 78);
+  --citation-surface: oklch(0.9742 0.0234 85);
+  --citation-border: oklch(0.8823 0.0523 82);
+
+  --shadow-tint-weak: oklch(0.2077 0.0293 264 / 0.04);
+  --shadow-tint: oklch(0.2077 0.0293 264 / 0.07);
+  --shadow-tint-strong: oklch(0.2077 0.0293 264 / 0.1);
+
+  --chart-1: oklch(0.3351 0.0624 253);
+  --chart-2: oklch(0.4815 0.0855 252);
+  --chart-3: oklch(0.6012 0.0812 250);
+  --chart-4: oklch(0.5512 0.1043 78);
+  --chart-5: oklch(0.5234 0.1287 153);
+
+  --sidebar: oklch(0.9683 0.0043 248);
+  --sidebar-foreground: oklch(0.2077 0.0293 264);
+  --sidebar-primary: oklch(0.3351 0.0624 253);
+  --sidebar-primary-foreground: oklch(0.9847 0.0025 248);
+  --sidebar-accent: oklch(1 0 0);
+  --sidebar-accent-foreground: oklch(0.3009 0.045 253);
+  --sidebar-border: oklch(0.9276 0.0058 265);
+  --sidebar-ring: oklch(0.4815 0.0855 252);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Deep navy-black rather than neutral black — the brand hue survives into
+     dark mode instead of washing out to grey. */
+  --background: oklch(0.1822 0.0204 258);
+  --foreground: oklch(0.9683 0.0043 248);
+  --card: oklch(0.2246 0.0234 257);
+  --card-foreground: oklch(0.9683 0.0043 248);
+  --popover: oklch(0.2246 0.0234 257);
+  --popover-foreground: oklch(0.9683 0.0043 248);
+
+  /* Navy inverts to a light steel of the same hue so the brand reads. */
+  --primary: oklch(0.7118 0.0879 250);
+  --primary-foreground: oklch(0.1822 0.0204 258);
+  --secondary: oklch(0.2712 0.0256 257);
+  --secondary-foreground: oklch(0.9683 0.0043 248);
+  --muted: oklch(0.2712 0.0256 257);
+  --muted-foreground: oklch(0.7118 0.0208 258);
+  --accent: oklch(0.3012 0.0289 257);
+  --accent-foreground: oklch(0.9683 0.0043 248);
+  --destructive: oklch(0.7045 0.1912 22);
+
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.5834 0.0912 251);
+
+  --grounded: oklch(0.7623 0.1456 155);
+  --grounded-surface: oklch(0.2812 0.0456 155);
+  --grounded-border: oklch(0.3912 0.0656 155);
+  --pending: oklch(0.8012 0.1312 78);
+  --pending-surface: oklch(0.2912 0.0412 70);
+  --pending-border: oklch(0.4012 0.0623 72);
+  --rejected: oklch(0.7045 0.1912 22);
+  --rejected-surface: oklch(0.2823 0.0534 20);
+  --rejected-border: oklch(0.3912 0.0812 20);
+
+  --citation: oklch(0.7912 0.1123 82);
+  --citation-surface: oklch(0.2834 0.0389 80);
+  --citation-border: oklch(0.3934 0.0578 80);
+
+  --shadow-tint-weak: oklch(0 0 0 / 0.2);
+  --shadow-tint: oklch(0 0 0 / 0.32);
+  --shadow-tint-strong: oklch(0 0 0 / 0.45);
+
+  --chart-1: oklch(0.7118 0.0879 250);
+  --chart-2: oklch(0.6012 0.0812 250);
+  --chart-3: oklch(0.5012 0.0712 252);
+  --chart-4: oklch(0.7912 0.1123 82);
+  --chart-5: oklch(0.7623 0.1456 155);
+
+  --sidebar: oklch(0.2046 0.0219 258);
+  --sidebar-foreground: oklch(0.9683 0.0043 248);
+  --sidebar-primary: oklch(0.7118 0.0879 250);
+  --sidebar-primary-foreground: oklch(0.1822 0.0204 258);
+  --sidebar-accent: oklch(0.2712 0.0256 257);
+  --sidebar-accent-foreground: oklch(0.9683 0.0043 248);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.5834 0.0912 251);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
   html {
-    @apply font-sans;
+    @apply font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tabular figures everywhere numbers are compared: counts, dates, sizes,
+     page references. Lawyers scan columns of these. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  /* Accessibility: honour the OS motion preference globally rather than
+     per-component, so no future animation can opt out by omission. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

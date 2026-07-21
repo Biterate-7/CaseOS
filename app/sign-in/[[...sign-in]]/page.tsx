@@ -1,11 +1,20 @@
 import { SignIn } from "@clerk/nextjs";
 
+import { AuthShell } from "@/components/auth-shell";
+
 export const metadata = { title: "Sign in" };
 
 export default function SignInPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-6 py-10">
+    <AuthShell
+      className="flex w-auto max-w-none justify-center"
+      footer={
+        <>
+          Matter-scoped, citation-backed, audit-logged.
+        </>
+      }
+    >
       <SignIn />
-    </div>
+    </AuthShell>
   );
 }

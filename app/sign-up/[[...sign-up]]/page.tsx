@@ -1,11 +1,16 @@
 import { SignUp } from "@clerk/nextjs";
 
+import { AuthShell } from "@/components/auth-shell";
+
 export const metadata = { title: "Create account" };
 
 export default function SignUpPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-6 py-10">
+    <AuthShell
+      className="flex w-auto max-w-none justify-center"
+      footer={<>You&apos;ll set up your firm workspace next.</>}
+    >
       <SignUp />
-    </div>
+    </AuthShell>
   );
 }

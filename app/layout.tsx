@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,6 +11,15 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Display face only — page titles, matter names, hero. Signals the profession
+// without turning the product into a law-firm brochure. Applied deliberately
+// via `font-serif`, never as a component default.
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
+  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,12 +43,15 @@ export default function RootLayout({
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/onboarding"
     >
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          {children}
-        </body>
+      {/* Font variables belong on <html>, not <body>: globals.css resolves
+          `font-sans` at the html level, so declaring them lower means the
+          family resolves to nothing and the browser falls back to a serif
+          default. */}
+      <html
+        lang="en"
+        className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable}`}
+      >
+        <body className="antialiased">{children}</body>
       </html>
     </ClerkProvider>
   );
