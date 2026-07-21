@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import type { StatusTone } from "@/lib/format"
 
 /**
- * The single place raw enum state becomes something a lawyer reads.
+ * The single place raw enum state becomes something an analyst reads.
  *
  * Never pass a database constant to this component — pass a label from
  * lib/format.ts and its matching tone. Colour alone never conveys the state

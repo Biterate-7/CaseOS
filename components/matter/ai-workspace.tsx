@@ -144,7 +144,7 @@ function AiWorkspace({
       <div>
         <h2 className="text-sm font-semibold">Research</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Answers are drawn only from this matter&apos;s documents, and every
+          Answers are drawn only from this project&apos;s documents, and every
           claim carries the passage it came from.
         </p>
       </div>
@@ -160,7 +160,7 @@ function AiWorkspace({
           title="No research yet"
           description={
             readyDocumentCount > 0
-              ? "Ask a question above. The assistant will search this matter's passages and return an answer with its sources attached."
+              ? "Ask a question above. The assistant will search this project's passages and return an answer with its sources attached."
               : "Upload a document first. Without indexed sources there is nothing for the assistant to ground an answer in."
           }
         />

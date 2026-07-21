@@ -14,7 +14,7 @@ import type { WorkspaceInteraction } from "@/lib/matter-data";
  * Evidence for the answer currently in focus.
  *
  * Persistent rather than inline-under-each-answer: keeping the sources in a
- * fixed column means a lawyer reads the answer and its proof side by side,
+ * fixed column means an analyst reads the answer and its proof side by side,
  * which is the entire argument for this product over a chatbot.
  */
 function EvidencePanel({
@@ -41,12 +41,12 @@ function EvidencePanel({
 
   if (!interaction || !aligned) {
     return (
-      <section aria-label="Evidence" className="p-4 lg:p-5">
-        <h2 className="mb-3 text-sm font-semibold">Evidence</h2>
+      <section aria-label="Sources" className="p-4 lg:p-5">
+        <h2 className="mb-3 text-sm font-semibold">Sources</h2>
         <EmptyState
           icon={Sparkles}
           size="sm"
-          title="No answer selected"
+          title="No analysis selected"
           description="Ask a question, then every claim in the answer will appear here with the document and page it came from."
         />
       </section>
@@ -56,9 +56,9 @@ function EvidencePanel({
   const { citations } = interaction;
 
   return (
-    <section aria-label="Evidence" className="flex flex-col gap-3 p-4 lg:p-5">
+    <section aria-label="Sources" className="flex flex-col gap-3 p-4 lg:p-5">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Evidence</h2>
+        <h2 className="text-sm font-semibold">Sources</h2>
         <span className="text-xs text-muted-foreground tabular-nums">
           {countLabel(citations.length, "source")}
         </span>
@@ -68,7 +68,7 @@ function EvidencePanel({
         <p className="inline-flex items-start gap-1.5 rounded-md border border-grounded-border bg-grounded-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-grounded">
           <ShieldCheck className="mt-px size-3.5 shrink-0" />
           <span>
-            Every source below was retrieved from this matter. Nothing outside
+            Every source below was retrieved from this project. Nothing outside
             it was searched.
           </span>
         </p>

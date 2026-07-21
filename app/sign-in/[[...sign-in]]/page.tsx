@@ -10,7 +10,7 @@ export default function SignInPage() {
       className="flex w-auto max-w-none justify-center"
       footer={
         <>
-          Matter-scoped, citation-backed, audit-logged.
+          Grounded in your documents. Every answer cited.
         </>
       }
     >

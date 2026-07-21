@@ -1,7 +1,7 @@
 "use client"
 
 import { UserButton } from "@clerk/nextjs"
-import { FolderOpen, LayoutDashboard, Scale } from "lucide-react"
+import { FolderOpen, LayoutDashboard, Network } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/matters", label: "Matters", icon: FolderOpen },
+  { href: "/matters", label: "Projects", icon: FolderOpen },
 ]
 
 function BrandMark() {
@@ -21,7 +21,7 @@ function BrandMark() {
       className="flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
       <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
-        <Scale className="size-4" />
+        <Network className="size-4" />
       </span>
       <span className="font-serif text-[0.9375rem] font-semibold tracking-tight">
         CaseOS

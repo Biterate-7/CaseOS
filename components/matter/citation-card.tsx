@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
  *
  * On "grounded" vs "verified": the label states only what the system
  * guarantees — this marker resolved to a passage that was actually retrieved
- * from this matter. It is NOT a claim that the sentence faithfully represents
+ * from this project. It is NOT a claim that the sentence faithfully represents
  * the passage; no span-check pass exists yet (see docs/architecture.md).
  * Overstating that in a product sold on citation integrity would be the one
  * unforgivable lie.
@@ -73,7 +73,7 @@ function CitationCard({
 
           {/* Provenance line. Document is the primary fact and gets weight;
               the page is a discrete locator chip, because "which page" is the
-              thing a lawyer actually goes and checks. */}
+              thing an analyst actually goes and checks. */}
           <span className="mt-2 flex items-center gap-1.5 text-[0.6875rem]">
             <FileText className="size-3 shrink-0 text-muted-foreground" />
             <span className="min-w-0 flex-1 truncate font-medium text-foreground">
@@ -119,7 +119,7 @@ function CitationCard({
 
               <p className="mt-2 inline-flex items-center gap-1 text-[0.625rem] text-muted-foreground/80">
                 <Link2 className="size-2.5 shrink-0" />
-                Retrieved from this matter&apos;s indexed passages
+                Retrieved from this project&apos;s indexed passages
               </p>
             </div>
           </motion.div>

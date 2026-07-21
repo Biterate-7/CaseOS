@@ -1,6 +1,6 @@
 "use client";
 
-import { FileStack, PanelLeftClose, PanelRightClose, Scale } from "lucide-react";
+import { FileStack, PanelLeftClose, PanelRightClose, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import { AiWorkspace } from "@/components/matter/ai-workspace";
@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
  * place that behaviour lives.
  *
  * Layout is three columns on wide screens, and a tabbed single column below
- * that — a lawyer on a phone gets the same five layers without a horizontal
+ * that — an analyst on a phone gets the same five layers without a horizontal
  * scroll or a squeezed evidence rail.
  */
 function MatterWorkspace({ data }: { data: WorkspaceData }) {
@@ -128,7 +128,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    aria-label={showEvidence ? "Hide evidence" : "Show evidence"}
+                    aria-label={showEvidence ? "Hide sources" : "Show sources"}
                     aria-pressed={showEvidence}
                     onClick={() => setShowEvidence((v) => !v)}
                   >
@@ -142,7 +142,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
                 }
               />
               <TooltipContent>
-                {showEvidence ? "Hide evidence" : "Show evidence"}
+                {showEvidence ? "Hide sources" : "Show sources"}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -168,7 +168,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
           <div className="border-b px-4 py-2 lg:px-5">
             <TabsList>
               <TabsTab value="research">
-                <Scale />
+                <Sparkles />
                 Research
               </TabsTab>
               <TabsTab value="documents">
@@ -178,7 +178,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
                   {stats.documentCount}
                 </span>
               </TabsTab>
-              <TabsTab value="evidence">Evidence</TabsTab>
+              <TabsTab value="evidence">Sources</TabsTab>
               <TabsTab value="activity">Activity</TabsTab>
             </TabsList>
           </div>

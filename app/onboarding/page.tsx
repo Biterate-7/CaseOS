@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { db } from "@/lib/db";
 
-export const metadata = { title: "Set up your firm" };
+export const metadata = { title: "Set up your workspace" };
 export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
@@ -29,7 +29,7 @@ export default async function OnboardingPage() {
   return (
     <AuthShell
       footer={
-        <>Your firm is the outer boundary. Nothing crosses it — ever.</>
+        <>Your workspace is the outer boundary. Nothing crosses it — ever.</>
       }
     >
       <Card className="w-full shadow-sm">
@@ -38,8 +38,8 @@ export default async function OnboardingPage() {
             Set up your firm
           </CardTitle>
           <CardDescription className="leading-relaxed">
-            CaseOS scopes every matter, document, and AI interaction to your
-            firm. Create your firm workspace to get started.
+            CaseOS scopes every project, document, and AI interaction to your
+            workspace. Create yours to get started.
           </CardDescription>
         </CardHeader>
         <CardContent>

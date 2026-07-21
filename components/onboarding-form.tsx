@@ -34,18 +34,18 @@ export function OnboardingForm({ defaultName }: { defaultName: string }) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="firmName">Firm name</Label>
+        <Label htmlFor="firmName">Workspace name</Label>
         <Input
           id="firmName"
           name="firmName"
-          placeholder="Alvarez & Chen LLP"
+          placeholder="Research Group"
           required
           disabled={isPending}
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Setting up your workspace…" : "Create firm workspace"}
+        {isPending ? "Setting up your workspace…" : "Create workspace"}
       </Button>
     </form>
   );

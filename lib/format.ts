@@ -2,7 +2,7 @@
  * Presentation formatters.
  *
  * Database enums and ISO timestamps must never reach a user's screen raw.
- * Every label a lawyer reads goes through this module, so wording stays
+ * Every label a user reads goes through this module, so wording stays
  * consistent across the dashboard, matter workspace, and audit trail.
  *
  * No `server-only` import: these are pure functions used by both server and
@@ -48,7 +48,7 @@ export const documentStatusTone: Record<DocumentStatus, StatusTone> = {
 
 /**
  * Plain-language explanation of what each ingestion state means for the
- * lawyer — specifically, whether the document can ground an answer yet.
+ * user — specifically, whether the document can ground an answer yet.
  */
 export const documentStatusHint: Record<DocumentStatus, string> = {
   UPLOADED: "Waiting to be processed. Not yet searchable.",
@@ -76,11 +76,17 @@ export const interactionTypeLabel: Record<InteractionType, string> = {
   EXTRACT: "Extraction",
 };
 
+/**
+ * The Role enum values are database identifiers and stay as-is; these are the
+ * domain-neutral labels users actually see. CaseOS analyses any document
+ * collection, so roles are described by what someone does in a workspace
+ * rather than by profession.
+ */
 export const roleLabel: Record<Role, string> = {
   ADMIN: "Administrator",
-  ATTORNEY: "Attorney",
-  PARALEGAL: "Paralegal",
-  STAFF: "Staff",
+  ATTORNEY: "Lead analyst",
+  PARALEGAL: "Analyst",
+  STAFF: "Contributor",
 };
 
 /** Audit actions rendered as past-tense sentences rather than constants. */
@@ -91,8 +97,8 @@ const auditActionLabel: Record<string, string> = {
   DOCUMENT_UPLOADED: "uploaded a document",
   DOCUMENT_INGESTED: "finished ingesting a document",
   DOCUMENT_INGEST_FAILED: "hit an ingestion failure",
-  MATTER_CREATED: "created the matter",
-  FIRM_CREATED: "created the firm workspace",
+  MATTER_CREATED: "created the project",
+  FIRM_CREATED: "created the workspace",
   FIRM_SEEDED: "seeded demo data",
 };
 
@@ -151,7 +157,7 @@ const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 
 /**
  * "3 hours ago". Anything older than ~30 days falls back to an absolute date —
- * "11 months ago" is useless on a legal record where the actual date matters.
+ * "11 months ago" is useless on a record where the exact date matters.
  */
 export function formatRelativeTime(date: Date, now: Date = new Date()): string {
   const diff = date.getTime() - now.getTime();

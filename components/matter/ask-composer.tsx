@@ -12,7 +12,7 @@ import { countLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
- * Query input. Not a chat box: the affordance is "ask this matter a
+ * Query input. Not a chat box: the affordance is "ask this project a
  * question", and the scope of what can be answered is stated on the control
  * itself rather than discovered by getting a refusal.
  */
@@ -57,8 +57,8 @@ function AskComposer({
             disabled={disabled}
             placeholder={
               grounded
-                ? "Ask what the documents in this matter say…"
-                : "Upload a document first — answers are grounded only in this matter's sources."
+                ? "Ask what the documents in this project say…"
+                : "Upload a document first — answers are grounded only in this project's sources."
             }
             className="resize-none border-0 bg-transparent p-3 text-sm shadow-none focus-visible:ring-0"
             onKeyDown={(e) => {
@@ -76,11 +76,11 @@ function AskComposer({
               <Lock className="size-3 shrink-0" />
               {grounded ? (
                 <>
-                  Answers use only this matter&apos;s{" "}
+                  Answers use only this project&apos;s{" "}
                   {countLabel(readyDocumentCount, "indexed document")}
                 </>
               ) : (
-                <>No indexed documents in this matter yet</>
+                <>No indexed documents in this project yet</>
               )}
             </p>
 

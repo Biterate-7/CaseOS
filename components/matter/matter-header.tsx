@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2, Scale } from "lucide-react";
+import { ArrowLeft, Building2, Tag } from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -20,8 +20,8 @@ import type { WorkspaceData } from "@/lib/matter-data";
 import { cn } from "@/lib/utils";
 
 /**
- * Matter identity. Deliberately not a Card — this is a layered surface that
- * spans the workspace, so the panels below read as contents *of* the matter
+ * Project identity. Deliberately not a Card — this is a layered surface that
+ * spans the workspace, so the panels below read as contents *of* the project
  * rather than siblings of it.
  */
 function MatterHeader({
@@ -61,7 +61,7 @@ function MatterHeader({
           className="inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <ArrowLeft className="size-3.5" />
-          All matters
+          All projects
         </Link>
 
         <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
@@ -83,7 +83,7 @@ function MatterHeader({
                 </span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Scale className="size-3.5 shrink-0" />
+                <Tag className="size-3.5 shrink-0" />
                 {matter.practiceArea}
               </span>
               <span className="text-muted-foreground/80">

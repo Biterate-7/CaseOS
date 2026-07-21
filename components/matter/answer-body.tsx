@@ -13,7 +13,7 @@ import type { AlignedAnswer } from "@/lib/citations";
  *
  * Markers the model invented (no citation row) render in a muted, inert style
  * with a title explaining why — they are never silently hidden, because a
- * lawyer needs to see that the model over-cited.
+ * analyst needs to see that the model over-cited.
  */
 function AnswerBody({
   aligned,

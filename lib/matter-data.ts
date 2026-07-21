@@ -89,7 +89,7 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
   const user = await requireUser();
 
   // findFirst scoped by firmId (never findUnique by id alone) so a matter id
-  // belonging to another firm 404s instead of leaking across the privilege
+  // belonging to another workspace 404s instead of leaking across the tenant
   // boundary.
   const matter = await db.matter.findFirst({
     where: { id: matterId, firmId: user.firmId },

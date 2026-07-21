@@ -64,7 +64,7 @@ function AuditTimeline({ entries }: { entries: WorkspaceAuditEntry[] }) {
           icon={ScrollText}
           size="sm"
           title="No activity yet"
-          description="Every upload, question, and review decision on this matter will be recorded here permanently."
+          description="Every upload, question, and review decision on this project will be recorded here permanently."
         />
       </section>
     );

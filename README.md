@@ -1,13 +1,13 @@
 # CaseOS
 
-An AI-native legal workspace for small-to-mid sized law firms (2–50 attorneys).
+An AI workspace that helps you understand, organise, analyse, and extract insights from complex document collections.
 
 ## Core principle
 
 Every AI interaction in CaseOS is:
 
-- **Matter-specific** — scoped to a single legal matter, never crossing privilege boundaries
-- **Grounded** — answers come from uploaded legal documents, not unsourced model knowledge
+- **Project-scoped** — scoped to a single project, never crossing collection boundaries
+- **Grounded** — answers come from your uploaded documents, not unsourced model knowledge
 - **Citation-backed** — every claim links to the exact document passage it came from
 - **Audited** — every AI action is a permanent, reviewable record
 
@@ -20,7 +20,7 @@ Every AI interaction in CaseOS is:
 | Database | PostgreSQL + Prisma 7 (pgvector for embeddings) |
 | Auth | Clerk |
 | Storage | Supabase Storage |
-| AI | Pluggable generation provider (Gemini default, Grok/OpenAI switchable via `AI_PROVIDER`) + local bge-small embeddings — RAG over per-matter document chunks |
+| AI | Pluggable generation provider (Gemini default, Grok/OpenAI switchable via `AI_PROVIDER`) + Gemini embeddings — RAG over per-project document chunks |
 
 ## Getting started
 
@@ -56,6 +56,6 @@ docs/        Product and architecture documentation
 
 ## AI provider
 
-Answer generation runs through a provider abstraction (`lib/ai/provider.ts`). Set `AI_PROVIDER` in `.env` to `gemini` (default), `grok`, or `openai`, and supply the matching key (`GEMINI_API_KEY`, `XAI_API_KEY`, or `OPENAI_API_KEY`). Retrieval, prompting, citation extraction, and persistence are provider-independent — only the model call changes. Embeddings always run locally (bge-small) regardless of provider.
+Answer generation runs through a provider abstraction (`lib/ai/provider.ts`). Set `AI_PROVIDER` in `.env` to `gemini` (default), `grok`, or `openai`, and supply the matching key (`GEMINI_API_KEY`, `XAI_API_KEY`, or `OPENAI_API_KEY`). Retrieval, prompting, citation extraction, and persistence are provider-independent — only the model call changes. Embeddings always run through the Gemini API regardless of the chat provider.
 
 See [docs/product-spec.md](docs/product-spec.md) and [docs/architecture.md](docs/architecture.md) for the full product and technical foundation.

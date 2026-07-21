@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 /**
  * A document as an intelligence unit rather than a filename: how many pages it
  * holds, how many retrievable passages it contributes, and whether it can
- * ground an answer yet. The excerpt expands in place so a lawyer can confirm
+ * ground an answer yet. The excerpt expands in place so an analyst can confirm
  * the right file was ingested without leaving the workspace.
  */
 function DocumentCard({ document }: { document: WorkspaceDocument }) {

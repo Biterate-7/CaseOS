@@ -26,12 +26,12 @@ import { cn } from "@/lib/utils";
 
 const STAGES = [
   {
-    label: "Searching matter documents",
-    detail: "Embedding the question and scanning this matter's passages",
+    label: "Searching project documents",
+    detail: "Embedding the question and scanning this project's passages",
     ms: 1600,
   },
   {
-    label: "Finding relevant clauses",
+    label: "Finding relevant passages",
     detail: "Ranking passages by similarity, top matches only",
     ms: 2200,
   },

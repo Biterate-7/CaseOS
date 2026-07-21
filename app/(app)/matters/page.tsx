@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export const metadata = { title: "Matters" };
+export const metadata = { title: "Projects" };
 export const dynamic = "force-dynamic";
 
 const statusVariant = {
@@ -28,9 +28,9 @@ export default async function MattersPage() {
     <div className="mx-auto max-w-5xl px-8 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Matters</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
           <p className="text-sm text-muted-foreground">
-            All matters at your firm.
+            All projects at your firm.
           </p>
         </div>
         <Button nativeButton={false} render={<Link href="/matters/new" />}>
@@ -42,16 +42,16 @@ export default async function MattersPage() {
         <CardContent className="p-0">
           {matters.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
-              No matters yet. Create your first matter to get started.
+              No projects yet. Create your first project to start analysing documents.
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-                    <th className="px-4 py-3 font-medium">Matter</th>
-                    <th className="px-4 py-3 font-medium">Client</th>
-                    <th className="px-4 py-3 font-medium">Practice area</th>
+                    <th className="px-4 py-3 font-medium">Project</th>
+                    <th className="px-4 py-3 font-medium">Subject</th>
+                    <th className="px-4 py-3 font-medium">Category</th>
                     <th className="px-4 py-3 font-medium">Docs</th>
                     <th className="px-4 py-3 font-medium">Status</th>
                     <th className="px-4 py-3 font-medium">Updated</th>

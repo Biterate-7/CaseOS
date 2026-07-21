@@ -64,14 +64,14 @@ function DocumentPanel({
             icon={FileStack}
             size="sm"
             title="No sources yet"
-            description="CaseOS only answers from documents in this matter. Upload the first one to give the assistant something to ground on."
+            description="CaseOS only answers from documents in this project. Upload the first one to give the assistant something to ground on."
           />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={Search}
             size="sm"
             title="No matching documents"
-            description={`Nothing in this matter matches “${query}”.`}
+            description={`Nothing in this project matches “${query}”.`}
           />
         ) : (
           filtered.map((document) => (

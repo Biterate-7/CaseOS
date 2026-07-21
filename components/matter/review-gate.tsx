@@ -10,10 +10,10 @@ import type { WorkspaceInteraction } from "@/lib/matter-data";
 import { cn } from "@/lib/utils";
 
 /**
- * The attorney review gate.
+ * The human review gate.
  *
  * Weighted deliberately heavier than the old pair of extra-small buttons:
- * this is the legally consequential act in the product — the moment a human
+ * this is the consequential act in the product — the moment a person
  * takes responsibility for AI output. It gets its own bordered surface and a
  * sentence naming what approval means.
  */
@@ -70,8 +70,8 @@ function ReviewGate({ interaction }: { interaction: WorkspaceInteraction }) {
         <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-pending">
           <ShieldQuestion className="mt-px size-3.5 shrink-0" />
           <span>
-            Awaiting attorney review. Nothing here should reach a client or a
-            court until someone signs off on it.
+            Awaiting review. Nothing here should be relied on or shared
+            onward until someone signs off on it.
           </span>
         </p>
 

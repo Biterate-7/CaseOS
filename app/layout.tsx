@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Display face only — page titles, matter names, hero. Signals the profession
-// without turning the product into a law-firm brochure. Applied deliberately
+// Display face only — page titles, project names, hero. Adds editorial weight
+// without turning the product into a brochure. Applied deliberately
 // via `font-serif`, never as a component default.
 const sourceSerif = Source_Serif_4({
   variable: "--font-source-serif",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     template: "%s · CaseOS",
   },
   description:
-    "The AI-native legal workspace. Matter-scoped, citation-backed, audit-logged.",
+    "An AI workspace for understanding, organising, and extracting insights from complex document collections.",
 };
 
 export default function RootLayout({

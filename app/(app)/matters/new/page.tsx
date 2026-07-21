@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export const metadata = { title: "New matter" };
+export const metadata = { title: "New project" };
 export const dynamic = "force-dynamic";
 
 export default function NewMatterPage() {
@@ -19,13 +19,13 @@ export default function NewMatterPage() {
         href="/matters"
         className="text-xs text-muted-foreground hover:underline"
       >
-        ← All matters
+        ← All projects
       </Link>
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle className="text-xl">New matter</CardTitle>
+          <CardTitle className="text-xl">New project</CardTitle>
           <CardDescription>
-            A matter is the boundary for documents, AI answers, and audit
+            A project is the boundary for documents, AI answers, and activity
             history. Nothing crosses it.
           </CardDescription>
         </CardHeader>

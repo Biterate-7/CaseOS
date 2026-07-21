@@ -24,31 +24,31 @@ export function MatterForm() {
   return (
     <form action={handleSubmit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="title">Matter title</Label>
+        <Label htmlFor="title">Project name</Label>
         <Input
           id="title"
           name="title"
-          placeholder="Hendricks v. Meridian Logistics"
+          placeholder="Q3 Vendor Compliance Review"
           required
           disabled={isPending}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="clientName">Client</Label>
+        <Label htmlFor="clientName">Subject</Label>
         <Input
           id="clientName"
           name="clientName"
-          placeholder="Sarah Hendricks"
+          placeholder="Northwind Logistics"
           required
           disabled={isPending}
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="practiceArea">Practice area</Label>
+        <Label htmlFor="practiceArea">Category</Label>
         <Input
           id="practiceArea"
           name="practiceArea"
-          placeholder="Employment"
+          placeholder="Compliance"
           required
           disabled={isPending}
         />
@@ -58,14 +58,14 @@ export function MatterForm() {
         <Textarea
           id="description"
           name="description"
-          placeholder="Brief summary of the matter…"
+          placeholder="What are you trying to understand from these documents?"
           rows={3}
           disabled={isPending}
         />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" disabled={isPending}>
-        {isPending ? "Creating…" : "Create matter"}
+        {isPending ? "Creating…" : "Create project"}
       </Button>
     </form>
   );
