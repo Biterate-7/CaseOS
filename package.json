@@ -1,4 +1,4 @@
-
+{
   "name": "caseos",
   "version": "0.1.0",
   "private": true,
@@ -15,7 +15,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "doctor": "tsx scripts/doctor.ts",
-    "warm:embedder": "tsx scripts/warm-embedder.ts",
+    "db:reset-embeddings": "node --conditions=react-server --import tsx scripts/reset-embeddings.ts",
     "test:ingest": "node --conditions=react-server --import tsx scripts/test-ingest.ts",
     "test:ai": "node --conditions=react-server --import tsx scripts/test-ai.ts",
     "test:citations": "tsx scripts/test-citations.ts"
@@ -24,7 +24,6 @@
     "@base-ui/react": "^1.6.0",
     "@clerk/nextjs": "^7.5.20",
     "@google/genai": "^2.12.0",
-    "@huggingface/transformers": "^4.2.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@supabase/supabase-js": "^2.110.7",

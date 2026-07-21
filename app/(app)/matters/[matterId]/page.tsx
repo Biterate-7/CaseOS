@@ -5,6 +5,12 @@ import { loadWorkspace } from "@/lib/matter-data";
 export const metadata = { title: "Matter workspace" };
 export const dynamic = "force-dynamic";
 
+// Server actions inherit this segment's limit. Ingestion (extract → chunk →
+// embed → store) runs inline in finalizeDocumentUpload and comfortably exceeds
+// the 10s default on a long PDF. 60s is the Vercel Hobby ceiling; raise it on
+// Pro if large documents still time out.
+export const maxDuration = 60;
+
 export default async function MatterWorkspacePage({
   params,
 }: {

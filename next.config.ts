@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Native/heavy server deps that must not be bundled by Turbopack.
-  serverExternalPackages: ["@huggingface/transformers", "onnxruntime-node"],
+  // serverExternalPackages previously held @huggingface/transformers and
+  // onnxruntime-node to keep Turbopack from bundling the native ONNX binary.
+  // Embeddings moved to the Gemini API, so both dependencies are gone and the
+  // serverless function no longer carries ~349 MB of native code.
 };
 
 export default nextConfig;

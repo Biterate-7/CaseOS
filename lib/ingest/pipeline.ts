@@ -51,12 +51,29 @@ export async function ingestDocument(documentId: string): Promise<void> {
       orderBy: { chunkIndex: "asc" },
       select: { id: true, chunkIndex: true },
     });
+
+    // One statement rather than one round trip per chunk. A 34-page PDF is
+    // ~96 chunks, and 96 sequential UPDATEs over a pooled connection was a
+    // material part of the ingestion time budget.
+    const ids: string[] = [];
+    const literals: string[] = [];
     for (const row of stored) {
       const vector = vectors[row.chunkIndex];
+      if (!vector) continue;
+      ids.push(row.id);
+      literals.push(`[${vector.join(",")}]`);
+    }
+
+    if (ids.length > 0) {
       await db.$executeRaw`
-        UPDATE "DocumentChunk"
-        SET embedding = ${`[${vector.join(",")}]`}::vector
-        WHERE id = ${row.id}
+        UPDATE "DocumentChunk" AS c
+        SET embedding = data.vec::vector
+        FROM (
+          SELECT
+            unnest(${ids}::text[]) AS id,
+            unnest(${literals}::text[]) AS vec
+        ) AS data
+        WHERE c.id = data.id
       `;
     }
 
