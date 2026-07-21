@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, FileText } from "lucide-react";
+import { ChevronRight, FileText, TriangleAlert } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 
@@ -99,6 +99,41 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
           </p>
         </div>
       </div>
+
+      {/* Ingestion is the gate on whether this document can ground anything,
+          so the two states that block it say so in words, not just colour. */}
+      {document.status === "PROCESSING" && (
+        <div className="border-t px-3 py-2">
+          <div
+            role="progressbar"
+            aria-label="Ingesting document"
+            className="h-0.5 w-full overflow-hidden rounded-full bg-pending-surface"
+          >
+            <motion.div
+              className="h-full w-1/3 rounded-full bg-pending"
+              animate={reduceMotion ? undefined : { x: ["-100%", "300%"] }}
+              transition={{
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          </div>
+          <p className="mt-1.5 text-[0.6875rem] text-muted-foreground">
+            Extracting and embedding — not yet searchable.
+          </p>
+        </div>
+      )}
+
+      {document.status === "FAILED" && (
+        <p className="flex items-start gap-1.5 border-t border-rejected-border/60 bg-rejected-surface/50 px-3 py-2 text-[0.6875rem] leading-relaxed text-rejected">
+          <TriangleAlert className="mt-px size-3 shrink-0" />
+          <span>
+            Ingestion failed — often a scan with no text layer. This document
+            contributes nothing to answers. Re-upload a text-based copy.
+          </span>
+        </p>
+      )}
 
       {canExpand && (
         <>

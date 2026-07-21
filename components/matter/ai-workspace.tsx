@@ -2,6 +2,7 @@
 
 import { FileSearch, Quote } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { useMemo } from "react";
 
 import { AnswerBody } from "@/components/matter/answer-body";
 import { AskComposer } from "@/components/matter/ask-composer";
@@ -32,7 +33,12 @@ function InteractionCard({
   onFocus: () => void;
   onSelectCitation: (citationId: string | null) => void;
 }) {
-  const aligned = alignAnswer(interaction.response, interaction.citations);
+  // Re-parsing the answer on every parent state change (citation select,
+  // panel toggle) is pure waste — the response is immutable once persisted.
+  const aligned = useMemo(
+    () => alignAnswer(interaction.response, interaction.citations),
+    [interaction.response, interaction.citations]
+  );
 
   return (
     <article
@@ -129,7 +135,11 @@ function AiWorkspace({
   return (
     <section
       aria-label="AI research"
-      className="flex flex-col gap-4 p-4 lg:p-5"
+      // Measure cap. Without it the centre column grows with the viewport and
+      // the answer hits ~90 characters per line on a 1440 display — past the
+      // point where the eye reliably finds the next line. Below xl the column
+      // is already narrower than this, so the cap only bites on wide screens.
+      className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4 lg:p-5"
     >
       <div>
         <h2 className="text-sm font-semibold">Research</h2>

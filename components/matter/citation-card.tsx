@@ -41,10 +41,11 @@ function CitationCard({
       layout={reduceMotion ? false : "position"}
       transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
       className={cn(
-        "overflow-hidden rounded-lg border bg-card transition-[border-color,box-shadow] duration-200 ease-(--ease-out-quart)",
+        "relative overflow-hidden rounded-lg border bg-card",
+        "transition-[border-color,box-shadow,transform] duration-200 ease-(--ease-out-quart)",
         active
           ? "border-citation shadow-sm ring-1 ring-citation/30"
-          : "hover:border-foreground/15 hover:shadow-xs"
+          : "hover:-translate-y-px hover:border-foreground/15 hover:shadow-sm"
       )}
     >
       <button
@@ -70,15 +71,18 @@ function CitationCard({
             {citation.claimText}
           </span>
 
-          <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-muted-foreground">
-            <span className="inline-flex min-w-0 items-center gap-1">
-              <FileText className="size-3 shrink-0" />
-              <span className="truncate font-medium text-foreground">
-                {citation.documentTitle}
-              </span>
+          {/* Provenance line. Document is the primary fact and gets weight;
+              the page is a discrete locator chip, because "which page" is the
+              thing a lawyer actually goes and checks. */}
+          <span className="mt-2 flex items-center gap-1.5 text-[0.6875rem]">
+            <FileText className="size-3 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+              {citation.documentTitle}
             </span>
             {citation.pageNumber != null && (
-              <span className="tabular-nums">page {citation.pageNumber}</span>
+              <span className="shrink-0 rounded border bg-muted px-1.5 py-px font-mono text-[0.625rem] text-muted-foreground tabular-nums">
+                p.{citation.pageNumber}
+              </span>
             )}
           </span>
         </span>

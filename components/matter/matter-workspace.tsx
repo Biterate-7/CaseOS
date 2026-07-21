@@ -77,14 +77,19 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
   return (
     <>
       {/* ---------- Wide: three columns ---------- */}
-      <div className="hidden xl:flex xl:items-stretch">
+      <div className="hidden xl:flex xl:items-start">
+        {/* Side panels pin to the viewport and scroll independently. Without
+            this, scrolling to the audit trail drags the evidence column off
+            screen — which defeats the entire point of reading a claim beside
+            its proof. */}
         <aside
           className={cn(
-            "shrink-0 border-r bg-sidebar/40 transition-[width] duration-300 ease-(--ease-out-quart)",
-            showDocuments ? "w-80" : "w-0 overflow-hidden"
+            "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-r bg-sidebar/40",
+            "transition-[width] duration-300 ease-(--ease-out-quart)",
+            showDocuments ? "w-72 2xl:w-80" : "w-0 overflow-hidden"
           )}
         >
-          <div className="w-80">{documentsPanel}</div>
+          <div className="w-72 2xl:w-80">{documentsPanel}</div>
         </aside>
 
         <div className="min-w-0 flex-1">
@@ -148,11 +153,12 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
 
         <aside
           className={cn(
-            "shrink-0 border-l bg-sidebar/40 transition-[width] duration-300 ease-(--ease-out-quart)",
-            showEvidence ? "w-96" : "w-0 overflow-hidden"
+            "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-l bg-sidebar/40",
+            "transition-[width] duration-300 ease-(--ease-out-quart)",
+            showEvidence ? "w-80 2xl:w-96" : "w-0 overflow-hidden"
           )}
         >
-          <div className="w-96">{evidencePanel}</div>
+          <div className="w-80 2xl:w-96">{evidencePanel}</div>
         </aside>
       </div>
 

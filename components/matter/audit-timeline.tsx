@@ -71,7 +71,10 @@ function AuditTimeline({ entries }: { entries: WorkspaceAuditEntry[] }) {
   }
 
   return (
-    <section aria-label="Audit trail" className="flex flex-col gap-3 p-4 lg:p-5">
+    <section
+      aria-label="Audit trail"
+      className="mx-auto flex w-full max-w-2xl flex-col gap-3 p-4 lg:p-5"
+    >
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold">Audit trail</h2>
         <span className="text-xs text-muted-foreground">

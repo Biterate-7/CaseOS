@@ -36,8 +36,12 @@ function AnswerBody({
             key={sentence.key}
             className={cn(
               sentence.startsParagraph && "mt-3 block",
-              "rounded-sm transition-colors duration-200 ease-(--ease-out-quart)",
-              isActive && "bg-citation-surface shadow-[0_0_0_3px_var(--citation-surface)]"
+              "rounded-sm transition-[background-color,box-shadow] duration-200 ease-(--ease-out-quart)",
+              // A claim under inspection gets a tinted field plus a bronze
+              // underline — reads as "this is the cited assertion" rather than
+              // a highlighter smear across the paragraph.
+              isActive &&
+                "bg-citation-surface shadow-[0_0_0_3px_var(--citation-surface),inset_0_-1px_0_0_var(--citation)]"
             )}
           >
             {sentence.segments.map((segment, i) => {
@@ -60,7 +64,7 @@ function AnswerBody({
               const markerActive = activeCitationId === segment.citationId;
 
               return (
-                <sup key={i} className="mx-0.5">
+                <sup key={i} className="mx-0.5 leading-none">
                   <button
                     type="button"
                     onClick={() =>
@@ -69,12 +73,20 @@ function AnswerBody({
                     aria-pressed={markerActive}
                     aria-label={`Show source ${segment.sourceNumber}`}
                     className={cn(
-                      "inline-flex min-w-4 items-center justify-center rounded px-1 py-px font-sans text-[0.625rem] font-semibold",
-                      "transition-colors duration-150 outline-none",
+                      // A superscript chip is inherently a tiny target. The
+                      // pseudo-element extends the touch area well past the
+                      // visible chip without disturbing the text flow — on a
+                      // phone this is the difference between the signature
+                      // interaction working and being unusable.
+                      "relative before:absolute before:-inset-x-2 before:-inset-y-3 before:content-['']",
+                      "inline-flex min-h-4 min-w-4 items-center justify-center rounded px-1 py-px font-sans text-[0.625rem] font-semibold",
+                      "transition-[background-color,color,box-shadow] duration-150 outline-none",
                       "focus-visible:ring-3 focus-visible:ring-ring/50",
                       markerActive
-                        ? "bg-citation text-card"
-                        : "bg-citation-surface text-citation hover:bg-citation hover:text-card"
+                        ? "bg-citation text-card shadow-xs"
+                        : // The ring keeps the chip delineated even when its
+                          // own sentence is highlighted in the same tint.
+                          "bg-citation-surface text-citation ring-1 ring-citation/30 hover:bg-citation hover:text-card hover:ring-citation"
                     )}
                   >
                     S{segment.sourceNumber}

@@ -2,6 +2,7 @@
 
 import { AlertTriangle, ShieldCheck, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
+import { useMemo } from "react";
 
 import { CitationCard } from "@/components/matter/citation-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -27,7 +28,18 @@ function EvidencePanel({
 }) {
   const reduceMotion = useReducedMotion();
 
-  if (!interaction) {
+  // Must run before the early return below — hook order has to be identical
+  // on every render, and `interaction` goes from null to present the first
+  // time an answer lands.
+  const aligned = useMemo(
+    () =>
+      interaction
+        ? alignAnswer(interaction.response, interaction.citations)
+        : null,
+    [interaction]
+  );
+
+  if (!interaction || !aligned) {
     return (
       <section aria-label="Evidence" className="p-4 lg:p-5">
         <h2 className="mb-3 text-sm font-semibold">Evidence</h2>
@@ -41,7 +53,6 @@ function EvidencePanel({
     );
   }
 
-  const aligned = alignAnswer(interaction.response, interaction.citations);
   const { citations } = interaction;
 
   return (
