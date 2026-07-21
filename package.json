@@ -1,10 +1,11 @@
-{
+
   "name": "caseos",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "prisma generate",
