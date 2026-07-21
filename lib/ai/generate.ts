@@ -1,6 +1,6 @@
 import "server-only";
 
-import { GROK_MODEL, grok } from "./client";
+import { getChatProvider } from "./provider";
 import type { RetrievedChunk } from "./retrieve";
 
 export type ParsedCitation = {
@@ -65,26 +65,15 @@ export async function generateGroundedAnswer(
   question: string,
   chunks: RetrievedChunk[]
 ): Promise<GroundedAnswer> {
-  const completion = await grok.chat.completions.create({
-    model: GROK_MODEL,
+  const { text, model } = await getChatProvider().generate({
+    system: SYSTEM_PROMPT,
+    user: `Sources from this matter's documents:\n\n${buildSourcesBlock(chunks)}\n\nQuestion: ${question}`,
     temperature: 0.2,
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: `Sources from this matter's documents:\n\n${buildSourcesBlock(chunks)}\n\nQuestion: ${question}`,
-      },
-    ],
   });
 
-  const answer = completion.choices[0]?.message?.content?.trim();
-  if (!answer) {
-    throw new Error("The AI model returned an empty answer.");
-  }
-
   return {
-    answer,
-    citations: parseCitations(answer, chunks),
-    model: completion.model ?? GROK_MODEL,
+    answer: text,
+    citations: parseCitations(text, chunks),
+    model,
   };
 }

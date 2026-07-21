@@ -20,7 +20,7 @@ Every AI interaction in CaseOS is:
 | Database | PostgreSQL + Prisma 7 (pgvector for embeddings) |
 | Auth | Clerk |
 | Storage | Supabase Storage |
-| AI | xAI Grok (generation) + local bge-small embeddings — RAG over per-matter document chunks |
+| AI | Pluggable generation provider (Gemini default, Grok/OpenAI switchable via `AI_PROVIDER`) + local bge-small embeddings — RAG over per-matter document chunks |
 
 ## Getting started
 
@@ -53,5 +53,9 @@ lib/         Shared utilities, Prisma client, AI pipeline
 prisma/      Database schema and migrations
 docs/        Product and architecture documentation
 ```
+
+## AI provider
+
+Answer generation runs through a provider abstraction (`lib/ai/provider.ts`). Set `AI_PROVIDER` in `.env` to `gemini` (default), `grok`, or `openai`, and supply the matching key (`GEMINI_API_KEY`, `XAI_API_KEY`, or `OPENAI_API_KEY`). Retrieval, prompting, citation extraction, and persistence are provider-independent — only the model call changes. Embeddings always run locally (bge-small) regardless of provider.
 
 See [docs/product-spec.md](docs/product-spec.md) and [docs/architecture.md](docs/architecture.md) for the full product and technical foundation.

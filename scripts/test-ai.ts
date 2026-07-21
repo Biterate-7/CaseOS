@@ -45,16 +45,18 @@ async function main() {
     throw new Error("MATTER ISOLATION VIOLATED: retrieved chunks from another matter's query scope");
   }
 
-  // --- Generation + persistence (requires xAI credits) ---
+  // --- Generation + persistence (requires the active provider to have quota) ---
   let generated;
   try {
     generated = await generateGroundedAnswer(QUESTION, chunks);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    if (/credits|permission-denied|403/i.test(message)) {
+    if (/credits|permission-denied|quota|api key|API_KEY|429|403/i.test(message)) {
       console.warn(
-        "\nRETRIEVAL PASSED — generation skipped: the xAI team has no credits yet.\n" +
-          "Add credits at console.x.ai, then re-run npm run test:ai."
+        `\nRETRIEVAL PASSED — generation skipped: the active AI provider ` +
+          `(AI_PROVIDER=${process.env.AI_PROVIDER ?? "gemini"}) has no credits/quota or an invalid key.\n` +
+          `Fix billing/keys for that provider, then re-run npm run test:ai.\n` +
+          `Underlying error: ${message}`
       );
       process.exit(2);
     }
