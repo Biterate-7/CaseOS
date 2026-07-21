@@ -46,3 +46,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Vercel CLI link + downloaded OIDC token (.env.local).
+# NOTE: `vercel link` also appends a bare `.env*` here. Don't keep it — it
+# lands after the `!.env.example` exception above and silently re-ignores the
+# env contract file.
+.vercel
