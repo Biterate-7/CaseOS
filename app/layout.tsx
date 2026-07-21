@@ -1,6 +1,9 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+
+import { ThemeProvider } from "@/components/theme-provider";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,11 +50,17 @@ export default function RootLayout({
           `font-sans` at the html level, so declaring them lower means the
           family resolves to nothing and the browser falls back to a serif
           default. */}
+      {/* suppressHydrationWarning: next-themes writes the theme class onto
+          <html> before React hydrates, so server and client markup
+          intentionally differ on this one element. */}
       <html
         lang="en"
+        suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable}`}
       >
-        <body className="antialiased">{children}</body>
+        <body className="antialiased">
+          <ThemeProvider>{children}</ThemeProvider>
+        </body>
       </html>
     </ClerkProvider>
   );

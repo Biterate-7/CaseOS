@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 
@@ -111,13 +112,16 @@ function AppSidebar({
       </div>
 
       <Separator />
-      <div className="flex items-center gap-2.5 p-3">
-        <UserButton
-          appearance={{ elements: { userButtonAvatarBox: "size-7" } }}
-        />
-        <div className="min-w-0 leading-tight">
-          <p className="truncate text-[0.8125rem] font-medium">{userName}</p>
-          <p className="truncate text-xs text-muted-foreground">{firmName}</p>
+      <div className="flex flex-col gap-3 p-3">
+        <ThemeToggle />
+        <div className="flex items-center gap-2.5">
+          <UserButton
+            appearance={{ elements: { userButtonAvatarBox: "size-7" } }}
+          />
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-[0.8125rem] font-medium">{userName}</p>
+            <p className="truncate text-xs text-muted-foreground">{firmName}</p>
+          </div>
         </div>
       </div>
     </div>

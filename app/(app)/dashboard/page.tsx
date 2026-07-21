@@ -12,6 +12,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Reveal, RevealItem } from "@/components/ui/reveal";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -196,14 +197,15 @@ export default async function DashboardPage() {
         </Button>
       </header>
 
-      <section
+      <Reveal
+        as="section"
         aria-label="Overview"
         className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
       >
         {overview.map((card) => (
-          <div
+          <RevealItem
             key={card.label}
-            className="rounded-xl border bg-card p-4 shadow-xs"
+            className="rounded-xl border bg-card p-4 shadow-xs transition-[box-shadow,border-color] duration-200 ease-(--ease-out-quart) hover:border-foreground/15 hover:shadow-sm"
           >
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-medium text-muted-foreground">
@@ -220,16 +222,16 @@ export default async function DashboardPage() {
               {card.value}
             </p>
             <p className="mt-1.5 text-xs text-muted-foreground">{card.hint}</p>
-          </div>
+          </RevealItem>
         ))}
-      </section>
+      </Reveal>
 
       <section aria-label="Quick actions" className="mb-6">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <Reveal className="grid gap-3 sm:grid-cols-3">
           {quickActions.map((action) => (
-            <Link
-              key={action.title}
-              href={action.href}
+            <RevealItem key={action.title}>
+              <Link
+                href={action.href}
               className="group flex items-start gap-3 rounded-xl border bg-card p-4 shadow-xs transition-[box-shadow,transform,border-color] duration-200 ease-(--ease-out-quart) hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-primary">
@@ -241,10 +243,11 @@ export default async function DashboardPage() {
                   {action.body}
                 </span>
               </span>
-              <ArrowRight className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
-            </Link>
+                <ArrowRight className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Link>
+            </RevealItem>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">

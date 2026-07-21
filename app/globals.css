@@ -171,29 +171,33 @@
 }
 
 .dark {
-  /* Deep navy-black rather than neutral black — the brand hue survives into
-     dark mode instead of washing out to grey. */
-  --background: oklch(0.1822 0.0204 258);
-  --foreground: oklch(0.9683 0.0043 248);
-  --card: oklch(0.2246 0.0234 257);
-  --card-foreground: oklch(0.9683 0.0043 248);
-  --popover: oklch(0.2246 0.0234 257);
-  --popover-foreground: oklch(0.9683 0.0043 248);
+  /* Near-black ground with a trace of navy so the brand hue survives instead
+     of washing out to grey. Deep enough to read as OLED black; the surfaces
+     above it climb in small, even lightness steps (0.129 -> 0.168 -> 0.215 ->
+     0.242) so depth is legible without any surface glowing. */
+  --background: oklch(0.129 0.011 258);
+  --foreground: oklch(0.968 0.0043 248);
+  --card: oklch(0.168 0.0135 258);
+  --card-foreground: oklch(0.968 0.0043 248);
+  --popover: oklch(0.184 0.0145 258);
+  --popover-foreground: oklch(0.968 0.0043 248);
 
   /* Navy inverts to a light steel of the same hue so the brand reads. */
-  --primary: oklch(0.7118 0.0879 250);
-  --primary-foreground: oklch(0.1822 0.0204 258);
-  --secondary: oklch(0.2712 0.0256 257);
-  --secondary-foreground: oklch(0.9683 0.0043 248);
-  --muted: oklch(0.2712 0.0256 257);
-  --muted-foreground: oklch(0.7118 0.0208 258);
-  --accent: oklch(0.3012 0.0289 257);
-  --accent-foreground: oklch(0.9683 0.0043 248);
+  --primary: oklch(0.745 0.0785 250);
+  --primary-foreground: oklch(0.129 0.011 258);
+  --secondary: oklch(0.215 0.015 258);
+  --secondary-foreground: oklch(0.968 0.0043 248);
+  --muted: oklch(0.215 0.015 258);
+  --muted-foreground: oklch(0.712 0.0208 258);
+  --accent: oklch(0.242 0.017 258);
+  --accent-foreground: oklch(0.968 0.0043 248);
   --destructive: oklch(0.7045 0.1912 22);
 
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.5834 0.0912 251);
+  /* Hairlines rather than borders. On a near-black ground a 9% white line
+     reads as a hard edge; 7% reads as a seam. */
+  --border: oklch(1 0 0 / 7%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.612 0.0912 251);
 
   --grounded: oklch(0.7623 0.1456 155);
   --grounded-surface: oklch(0.2812 0.0456 155);
@@ -219,14 +223,16 @@
   --chart-4: oklch(0.7912 0.1123 82);
   --chart-5: oklch(0.7623 0.1456 155);
 
-  --sidebar: oklch(0.2046 0.0219 258);
-  --sidebar-foreground: oklch(0.9683 0.0043 248);
-  --sidebar-primary: oklch(0.7118 0.0879 250);
-  --sidebar-primary-foreground: oklch(0.1822 0.0204 258);
-  --sidebar-accent: oklch(0.2712 0.0256 257);
-  --sidebar-accent-foreground: oklch(0.9683 0.0043 248);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.5834 0.0912 251);
+  /* Sidebar sits *below* the page ground in dark mode — the rail recedes and
+     content comes forward. In light mode the relationship is inverted. */
+  --sidebar: oklch(0.108 0.0095 258);
+  --sidebar-foreground: oklch(0.968 0.0043 248);
+  --sidebar-primary: oklch(0.745 0.0785 250);
+  --sidebar-primary-foreground: oklch(0.129 0.011 258);
+  --sidebar-accent: oklch(0.196 0.0145 258);
+  --sidebar-accent-foreground: oklch(0.968 0.0043 248);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.612 0.0912 251);
 }
 
 @layer base {
