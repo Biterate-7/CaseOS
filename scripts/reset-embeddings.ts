@@ -18,6 +18,8 @@
  *
  *   npm run db:reset-embeddings
  */
+import "dotenv/config";
+
 import { db } from "../lib/db";
 import { embeddingDimensions, embeddingModel } from "../lib/ingest/embed";
 import { ingestDocument } from "../lib/ingest/pipeline";
