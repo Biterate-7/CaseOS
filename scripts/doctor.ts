@@ -14,6 +14,40 @@ function report(label: string, ok: boolean, detail?: string) {
   if (!ok) failures++;
 }
 
+/**
+ * Prints the host and project ref that DATABASE_URL points at.
+ *
+ * Every other check in this file passes identically against development and
+ * production, so a green run proves connectivity but says nothing about which
+ * database you are about to migrate. That ambiguity has already caused one
+ * production outage. This makes the target impossible to miss.
+ */
+function reportTarget() {
+  const raw = process.env.DATABASE_URL;
+  if (!raw) return;
+
+  let host = "(unparseable)";
+  let ref = "(unknown)";
+  try {
+    const url = new URL(raw);
+    host = url.hostname;
+    // Supabase pooler usernames are `postgres.<project-ref>`; the ref is the
+    // only part that uniquely identifies the project.
+    const user = decodeURIComponent(url.username);
+    if (user.includes(".")) ref = user.slice(user.indexOf(".") + 1);
+  } catch {
+    // Fall through with placeholders rather than failing the whole run.
+  }
+
+  console.log("");
+  console.log("  ── target database ──────────────────────────────────");
+  console.log(`     host:        ${host}`);
+  console.log(`     project ref: ${ref}`);
+  console.log("     Confirm this is the database you intend to change.");
+  console.log("  ─────────────────────────────────────────────────────");
+  console.log("");
+}
+
 async function main() {
   // 1. Env vars present
   const required = [
@@ -26,7 +60,13 @@ async function main() {
     report(`env: ${name}`, Boolean(process.env[name]?.trim()));
   }
 
-  // 2. Database connectivity (pooled URL, what the app uses at runtime)
+  // 2. WHICH database. Reported before anything else, and loudly, because
+  //    "all checks passed" against the wrong database is worse than a
+  //    failure — every check here passes just as well on production, which
+  //    is how a developer ends up migrating it by accident.
+  reportTarget();
+
+  // 3. Database connectivity (pooled URL, what the app uses at runtime)
   const pooled = new Client({ connectionString: process.env.DATABASE_URL });
   try {
     await pooled.connect();
@@ -95,7 +135,12 @@ async function main() {
   }
 
   console.log(failures === 0 ? "\nAll checks passed." : `\n${failures} check(s) failed.`);
-  process.exit(failures === 0 ? 0 : 1);
+
+  // process.exit() during an active libuv teardown trips
+  // "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)" on Windows,
+  // which surfaces as exit 255 on an otherwise clean run. Setting exitCode
+  // and letting Node drain its handles avoids it and reports the same code.
+  process.exitCode = failures === 0 ? 0 : 1;
 }
 
 main();
