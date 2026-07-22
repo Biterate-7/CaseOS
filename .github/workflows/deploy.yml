@@ -1,0 +1,59 @@
+name: Deploy to Vercel
+
+# Workaround for Vercel's Git integration not firing on push.
+#
+# The repository IS connected (`vercel git connect` confirms it), but pushes
+# do not trigger builds and the cause is a dashboard-only setting we could not
+# read from the CLI. A deploy hook bypasses the integration entirely: this
+# workflow POSTs to it, and Vercel builds the branch the hook is bound to.
+#
+# If the Git integration is later fixed, delete this file — otherwise every
+# push will deploy twice.
+#
+# Setup:
+#   1. Vercel -> Settings -> Git -> Deploy Hooks -> create one for `main`
+#   2. GitHub -> Settings -> Secrets and variables -> Actions
+#      -> new secret VERCEL_DEPLOY_HOOK with the hook URL
+#
+# The URL is a credential: anyone holding it can trigger a deployment, which
+# is why it lives in a secret rather than in this file.
+
+on:
+  push:
+    branches: [main]
+  # Lets you re-deploy from the Actions tab without an empty commit.
+  workflow_dispatch:
+
+# A newer push supersedes an in-flight run; no value in deploying a commit
+# that is already stale.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  trigger:
+    name: Trigger Vercel deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment
+        env:
+          # Read as an env var rather than checked in an `if:` — the secrets
+          # context is not dependably available in step conditionals.
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${HOOK_URL:-}" ]; then
+            echo "::error::VERCEL_DEPLOY_HOOK is not set."
+            echo "Vercel -> Settings -> Git -> Deploy Hooks -> create one for 'main',"
+            echo "then add the URL as a repository secret named VERCEL_DEPLOY_HOOK."
+            exit 1
+          fi
+
+          # --fail-with-body so a non-2xx response fails the step and prints
+          # Vercel's reason, rather than curl exiting 0 on an HTTP error.
+          response=$(curl --silent --show-error --fail-with-body \
+            --request POST "$HOOK_URL")
+
+          echo "Vercel responded: $response"
+          echo "Deployment queued — track it in the Vercel dashboard."
