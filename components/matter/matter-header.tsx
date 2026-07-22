@@ -13,8 +13,7 @@ import {
   initials,
   matterStatusLabel,
   matterStatusTone,
-  roleLabel,
-  type Role,
+  projectRoleLabel,
 } from "@/lib/format";
 import type { WorkspaceData } from "@/lib/matter-data";
 import { cn } from "@/lib/utils";
@@ -112,7 +111,7 @@ function MatterHeader({
                       render={
                         <span
                           className="flex size-7 items-center justify-center rounded-full bg-secondary text-[0.6875rem] font-semibold text-secondary-foreground ring-2 ring-card"
-                          aria-label={`${member.name}, ${roleLabel[member.role as Role] ?? member.role}`}
+                          aria-label={`${member.name}, ${projectRoleLabel[member.role]}`}
                         >
                           {initials(member.name)}
                         </span>
@@ -120,7 +119,7 @@ function MatterHeader({
                     />
                     <TooltipContent>
                       {member.name} ·{" "}
-                      {roleLabel[member.role as Role] ?? member.role}
+                      {projectRoleLabel[member.role]}
                     </TooltipContent>
                   </Tooltip>
                 ))}

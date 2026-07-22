@@ -48,7 +48,7 @@ async function main() {
       },
     ].map((data) =>
       db.matter.create({
-        data: { ...data, firmId: firm.id, members: { connect: { id: user.id } } },
+        data: { ...data, firmId: firm.id, members: { create: { userId: user.id, role: "OWNER" } } },
       })
     )
   );

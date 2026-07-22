@@ -34,7 +34,8 @@ export async function createMatter(
       clientName,
       practiceArea,
       description: description || null,
-      members: { connect: { id: user.id } },
+      // Creator owns the project outright.
+      members: { create: { userId: user.id, role: "OWNER", addedById: user.id } },
     },
   });
 

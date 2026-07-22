@@ -89,6 +89,25 @@ export const roleLabel: Record<Role, string> = {
   STAFF: "Contributor",
 };
 
+export type ProjectRole = "OWNER" | "EDITOR" | "VIEWER";
+
+/**
+ * Per-project permission. Distinct from `roleLabel` above, which is the
+ * workspace-wide role — a workspace administrator can still be a viewer on
+ * someone else's project.
+ */
+export const projectRoleLabel: Record<ProjectRole, string> = {
+  OWNER: "Owner",
+  EDITOR: "Editor",
+  VIEWER: "Viewer",
+};
+
+export const projectRoleDescription: Record<ProjectRole, string> = {
+  OWNER: "Full control, including sharing and deletion",
+  EDITOR: "Can upload documents and ask questions",
+  VIEWER: "Read-only access",
+};
+
 /** Audit actions rendered as past-tense sentences rather than constants. */
 const auditActionLabel: Record<string, string> = {
   AI_QUESTION_ASKED: "asked a question",

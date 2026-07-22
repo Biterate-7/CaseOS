@@ -41,15 +41,44 @@ enum ReviewStatus {
   REJECTED
 }
 
+/// Per-project permission. Distinct from `Role`, which is workspace-wide:
+/// a workspace ADMIN may still be only a VIEWER on someone else's project.
+enum ProjectRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+enum NotificationType {
+  PROJECT_SHARED
+  PROJECT_ROLE_CHANGED
+  PROJECT_ACCESS_REMOVED
+  INVITATION_ACCEPTED
+  DOCUMENT_UPLOADED
+  REVIEW_COMPLETED
+  THREAD_REPLY
+  THREAD_MENTION
+  THREAD_RESOLVED
+}
+
 model Firm {
   id        String   @id @default(cuid())
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users     User[]
-  matters   Matter[]
-  auditLogs AuditLog[]
+  users         User[]
+  matters       Matter[]
+  auditLogs     AuditLog[]
+  invitations   Invitation[]
+  notifications Notification[]
 }
 
 model User {
@@ -63,10 +92,15 @@ model User {
   updatedAt DateTime @updatedAt
 
   firm              Firm            @relation(fields: [firmId], references: [id])
-  matters           Matter[]        @relation("MatterMembers")
+  memberships       MatterMember[]
   aiInteractions    AIInteraction[]
   auditLogs         AuditLog[]
   uploadedDocuments Document[]      @relation("DocumentUploader")
+
+  invitationsSent     Invitation[]   @relation("InvitationInviter")
+  invitationsAccepted Invitation[]   @relation("InvitationAcceptor")
+  notifications       Notification[] @relation("NotificationRecipient")
+  notificationsCaused Notification[] @relation("NotificationActor")
 
   @@index([firmId])
 }
@@ -83,12 +117,97 @@ model Matter {
   updatedAt    DateTime     @updatedAt
 
   firm           Firm            @relation(fields: [firmId], references: [id])
-  members        User[]          @relation("MatterMembers")
+  members        MatterMember[]
   documents      Document[]
   aiInteractions AIInteraction[]
   auditLogs      AuditLog[]
+  notifications  Notification[]
 
   @@index([firmId])
+}
+
+/// Explicit join between Matter and User so membership can carry a role.
+///
+/// This replaced an implicit many-to-many (`@relation("MatterMembers")`),
+/// which Prisma backs with a hidden two-column table that has nowhere to put
+/// one. Existing rows were migrated across as OWNER, since the only way to
+/// become a member before this existed was to create the project.
+model MatterMember {
+  id        String      @id @default(cuid())
+  matterId  String
+  userId    String
+  role      ProjectRole @default(VIEWER)
+  /// Null for memberships that predate this table.
+  addedById String?
+  createdAt DateTime    @default(now())
+
+  matter Matter @relation(fields: [matterId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matterId, userId])
+  @@index([userId])
+  @@index([matterId])
+}
+
+/// Pending invitation to join a workspace.
+///
+/// Needed because onboarding creates a new Firm for every signup, so without
+/// this there is no way for two people to end up in the same workspace and
+/// nothing to share a project with.
+model Invitation {
+  id     String           @id @default(cuid())
+  firmId String
+  email  String
+  /// Workspace-wide role granted on acceptance.
+  role   Role             @default(ATTORNEY)
+  /// Unguessable; the accept link is the only proof of invitation.
+  token  String           @unique
+  status InvitationStatus @default(PENDING)
+
+  invitedById  String
+  acceptedById String?
+  expiresAt    DateTime
+  acceptedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  firm       Firm  @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  invitedBy  User  @relation("InvitationInviter", fields: [invitedById], references: [id])
+  acceptedBy User? @relation("InvitationAcceptor", fields: [acceptedById], references: [id])
+
+  @@index([firmId, status])
+  @@index([email, status])
+}
+
+/// In-app notification. Delivery is pull-based: the bell polls and every
+/// navigation refreshes it. No transport dependency, and adding email or a
+/// websocket later needs no change to this shape.
+model Notification {
+  id     String           @id @default(cuid())
+  /// Recipient.
+  userId String
+  firmId String
+  type   NotificationType
+
+  title String
+  body  String?
+  /// Where clicking it should land, e.g. /matters/:id?tab=review
+  href  String?
+
+  /// Who caused it. Null for system-generated entries.
+  actorId  String?
+  matterId String?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user     User    @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor    User?   @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  firm     Firm    @relation(fields: [firmId], references: [id], onDelete: Cascade)
+  matter   Matter? @relation(fields: [matterId], references: [id], onDelete: Cascade)
+
+  /// Drives the unread badge and the newest-first list in one index each.
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 model Document {

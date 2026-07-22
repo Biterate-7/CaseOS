@@ -71,7 +71,12 @@ export type WorkspaceData = {
     createdAt: Date;
     updatedAt: Date;
   };
-  members: { id: string; name: string; role: string }[];
+  members: {
+    id: string;
+    name: string;
+    /** Per-project permission, not the workspace-wide Role. */
+    role: "OWNER" | "EDITOR" | "VIEWER";
+  }[];
   documents: WorkspaceDocument[];
   interactions: WorkspaceInteraction[];
   auditLog: WorkspaceAuditEntry[];
@@ -95,8 +100,13 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
     where: { id: matterId, firmId: user.firmId },
     include: {
       members: {
-        select: { id: true, name: true, role: true },
-        orderBy: { name: "asc" },
+        select: {
+          role: true,
+          user: { select: { id: true, name: true } },
+        },
+        // Owners first, then alphabetically — the person accountable for the
+        // project should be the first avatar, not whoever sorts earliest.
+        orderBy: [{ role: "asc" }, { user: { name: "asc" } }],
       },
       documents: { orderBy: { createdAt: "desc" } },
       auditLogs: {
@@ -198,7 +208,11 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
       createdAt: matter.createdAt,
       updatedAt: matter.updatedAt,
     },
-    members: matter.members,
+    members: matter.members.map((m) => ({
+      id: m.user.id,
+      name: m.user.name,
+      role: m.role,
+    })),
     documents,
     interactions,
     auditLog: matter.auditLogs.map((entry) => ({
