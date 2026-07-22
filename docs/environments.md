@@ -54,12 +54,17 @@ These steps need account access and cannot be scripted from this repo.
 
    Use the session pooler for `DIRECT_URL`, not the `db.<ref>.supabase.co`
    direct host — that host is IPv6-only and unreachable from this network.
-3. Enable pgvector on the new project:
-   ```sql
-   CREATE EXTENSION IF NOT EXISTS vector;
-   ```
-4. Create the storage bucket: **Storage → New bucket** → name `documents`,
+3. Create the storage bucket: **Storage → New bucket** → name `documents`,
    **not public**.
+
+   pgvector needs no manual step — the init migration opens with
+   `CREATE EXTENSION IF NOT EXISTS vector;` before creating the column that
+   depends on it, so `db:migrate` enables it.
+
+   If that line fails on a permissions error (pooler connections cannot
+   always create extensions), enable it by hand and re-run the migration:
+   SQL Editor → `CREATE EXTENSION IF NOT EXISTS vector;`, or
+   **Database → Extensions** → search `vector` → toggle on.
 
 ### 2. Point local development at it
 
