@@ -35,7 +35,18 @@ These steps need account access and cannot be scripted from this repo.
 ### 1. Create the development database
 
 1. Supabase dashboard → **New project** → name it `caseos-dev`.
-   Pick the same region (`ap-southeast-1`) so local latency matches.
+
+   **Region does not matter.** Supabase preselects one from your location and
+   some organisations pin a default, so it may not offer production's region
+   (`ap-southeast-1`). Take whatever it gives you — region affects latency
+   only, and this database exists for local development. Nothing about the
+   schema, pgvector, or storage differs.
+
+   It does change your connection hostname, though: a Sydney project is
+   `aws-0-ap-southeast-2.pooler.supabase.com`, not `-1`. Copy the strings
+   verbatim in step 2 rather than adapting production's — the region, the
+   project ref, and the `aws-0`/`aws-1` prefix all differ per project, and a
+   hand-edited host fails with an opaque DNS error.
 2. Once provisioned, open **Project Settings → Database → Connection string**
    and copy both:
    - **Transaction pooler** (port `6543`) → this becomes `DATABASE_URL`
