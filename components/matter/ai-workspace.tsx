@@ -1,12 +1,13 @@
 "use client";
 
-import { FileSearch, Quote } from "lucide-react";
+import { CheckCircle2, FileSearch, Quote, ShieldQuestion, X } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { AnswerBody } from "@/components/matter/answer-body";
 import { AskComposer } from "@/components/matter/ask-composer";
 import { ReviewGate } from "@/components/matter/review-gate";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { alignAnswer } from "@/lib/citations";
@@ -20,15 +21,23 @@ import {
 import type { WorkspaceInteraction } from "@/lib/matter-data";
 import { cn } from "@/lib/utils";
 
+/** DOM id used by `#interaction-<id>` deep links. */
+function anchorId(interactionId: string) {
+  return `interaction-${interactionId}`;
+}
+
 function InteractionCard({
   interaction,
   focused,
+  highlighted,
   activeCitationId,
   onFocus,
   onSelectCitation,
 }: {
   interaction: WorkspaceInteraction;
   focused: boolean;
+  /** Briefly ringed after arriving via a deep link. */
+  highlighted: boolean;
   activeCitationId: string | null;
   onFocus: () => void;
   onSelectCitation: (citationId: string | null) => void;
@@ -42,14 +51,19 @@ function InteractionCard({
 
   return (
     <article
+      id={anchorId(interaction.id)}
       onFocusCapture={onFocus}
       onMouseDown={onFocus}
       aria-current={focused ? "true" : undefined}
       className={cn(
-        "flex flex-col gap-3 rounded-xl border bg-card p-4 transition-[border-color,box-shadow] duration-200 ease-(--ease-out-quart)",
+        // scroll-mt keeps the card clear of the sticky panel header when a
+        // deep link scrolls it into view.
+        "flex scroll-mt-20 flex-col gap-3 rounded-xl border bg-card p-4",
+        "transition-[border-color,box-shadow] duration-200 ease-(--ease-out-quart)",
         focused
           ? "border-foreground/20 shadow-sm"
-          : "hover:border-foreground/15 hover:shadow-xs"
+          : "hover:border-foreground/15 hover:shadow-xs",
+        highlighted && "border-primary/50 ring-2 ring-primary/25"
       )}
     >
       {/* The question, set as a question — indented behind a rule the way a
@@ -116,6 +130,8 @@ function AiWorkspace({
   matterId,
   readyDocumentCount,
   interactions,
+  reviewMode,
+  onExitReviewMode,
   focusedInteractionId,
   activeCitationId,
   onFocusInteraction,
@@ -124,20 +140,49 @@ function AiWorkspace({
   matterId: string;
   readyDocumentCount: number;
   interactions: WorkspaceInteraction[];
+  /** Filtered to items awaiting review, via `?tab=review`. */
+  reviewMode: boolean;
+  onExitReviewMode: () => void;
   focusedInteractionId: string | null;
   activeCitationId: string | null;
   onFocusInteraction: (id: string) => void;
   onSelectCitation: (citationId: string | null) => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // Deep link support: `#interaction-<id>` scrolls that answer into view,
+  // focuses it so the sources column follows, and rings it briefly so the eye
+  // lands in the right place after the jump.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.startsWith("#interaction-")) return;
+
+    const id = hash.slice("#interaction-".length);
+    if (!interactions.some((i) => i.id === id)) return;
+
+    const element = document.getElementById(anchorId(id));
+    if (!element) return;
+
+    onFocusInteraction(id);
+    element.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
+    setHighlightedId(id);
+
+    const timer = setTimeout(() => setHighlightedId(null), 2400);
+    return () => clearTimeout(timer);
+    // Runs once per mount: a deep link is an arrival, not an ongoing binding.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section
       aria-label="AI research"
       // Measure cap. Without it the centre column grows with the viewport and
       // the answer hits ~90 characters per line on a 1440 display — past the
-      // point where the eye reliably finds the next line. Below xl the column
-      // is already narrower than this, so the cap only bites on wide screens.
+      // point where the eye reliably finds the next line.
       className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4 lg:p-5"
     >
       <div>
@@ -153,16 +198,47 @@ function AiWorkspace({
         readyDocumentCount={readyDocumentCount}
       />
 
+      {reviewMode && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-pending-border bg-pending-surface/50 px-3 py-2">
+          <p className="inline-flex items-center gap-1.5 text-xs font-medium text-pending">
+            <ShieldQuestion className="size-3.5 shrink-0" />
+            Showing only answers awaiting review
+          </p>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={onExitReviewMode}
+            className="text-pending hover:text-pending"
+          >
+            <X className="size-3" />
+            Show all
+          </Button>
+        </div>
+      )}
+
       {interactions.length === 0 ? (
-        <EmptyState
-          icon={FileSearch}
-          title="No research yet"
-          description={
-            readyDocumentCount > 0
-              ? "Ask a question above. The assistant will search this project's passages and return an answer with its sources attached."
-              : "Upload a document first. Without indexed sources there is nothing for the assistant to ground an answer in."
-          }
-        />
+        reviewMode ? (
+          <EmptyState
+            icon={CheckCircle2}
+            title="Nothing awaiting review"
+            description="Every answer in this project has been approved or rejected."
+            action={
+              <Button size="sm" variant="outline" onClick={onExitReviewMode}>
+                Show all answers
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={FileSearch}
+            title="No research yet"
+            description={
+              readyDocumentCount > 0
+                ? "Ask a question above. The assistant will search this project's passages and return an answer with its sources attached."
+                : "Upload a document first. Without indexed sources there is nothing for the assistant to ground an answer in."
+            }
+          />
+        )
       ) : (
         <div className="flex flex-col gap-3">
           {interactions.map((interaction, index) => (
@@ -177,6 +253,7 @@ function AiWorkspace({
               <InteractionCard
                 interaction={interaction}
                 focused={focusedInteractionId === interaction.id}
+                highlighted={highlightedId === interaction.id}
                 activeCitationId={
                   focusedInteractionId === interaction.id
                     ? activeCitationId

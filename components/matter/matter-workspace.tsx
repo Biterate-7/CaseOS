@@ -1,7 +1,14 @@
 "use client";
 
-import { FileStack, PanelLeftClose, PanelRightClose, Sparkles } from "lucide-react";
-import { useState } from "react";
+import {
+  FileStack,
+  PanelLeftClose,
+  PanelRightClose,
+  ShieldQuestion,
+  Sparkles,
+} from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 
 import { AiWorkspace } from "@/components/matter/ai-workspace";
 import { AuditTimeline } from "@/components/matter/audit-timeline";
@@ -17,23 +24,51 @@ import {
 import type { WorkspaceData } from "@/lib/matter-data";
 import { cn } from "@/lib/utils";
 
+/** Panels the tab strip can show. */
+const PANELS = ["research", "documents", "evidence", "activity"] as const;
+type Panel = (typeof PANELS)[number];
+
+/**
+ * `?tab=review` is deliberately not its own panel — it selects the research
+ * panel with a filter applied. Making it a real panel would unmount the
+ * research column on every toggle, discarding an in-flight question, which
+ * takes 30-60s to complete and cannot be resumed.
+ */
+function parsePanel(raw: string | null): Panel {
+  if (raw === "review") return "research";
+  return PANELS.includes(raw as Panel) ? (raw as Panel) : "research";
+}
+
 /**
  * Workspace shell.
  *
- * Owns the only cross-panel state in the matter view: which answer is in
- * focus (drives the evidence column) and which citation is selected (drives
+ * Owns the only cross-panel state in the project view: which answer is in
+ * focus (drives the sources column) and which citation is selected (drives
  * claim highlighting in the answer). Everything below this is either a server
  * component or a presentational client component, so this file is the single
  * place that behaviour lives.
  *
+ * The active panel is mirrored into `?tab=` so the dashboard can deep-link
+ * straight to work that needs attention. Panel changes use replaceState
+ * rather than a push: the back button should return you to wherever you came
+ * from, not walk you back through every tab you glanced at.
+ *
  * Layout is three columns on wide screens, and a tabbed single column below
- * that — an analyst on a phone gets the same five layers without a horizontal
- * scroll or a squeezed evidence rail.
+ * that — an analyst on a phone gets the same layers without a horizontal
+ * scroll or a squeezed sources rail.
  */
 function MatterWorkspace({ data }: { data: WorkspaceData }) {
   const { matter, documents, interactions, auditLog, stats } = data;
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
-  // Default focus to the most recent answer so the evidence column is
+  // Derived from the URL rather than mirrored into state, so browser
+  // back/forward and deep links stay correct with no synchronising effect.
+  const rawTab = searchParams.get("tab");
+  const panel = parsePanel(rawTab);
+  const reviewMode = rawTab === "review";
+
+  // Default focus to the most recent answer so the sources column is
   // populated on arrival rather than empty until you click something.
   const [focusedInteractionId, setFocusedInteractionId] = useState<
     string | null
@@ -41,6 +76,28 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
   const [activeCitationId, setActiveCitationId] = useState<string | null>(null);
   const [showDocuments, setShowDocuments] = useState(true);
   const [showEvidence, setShowEvidence] = useState(true);
+
+  const setTab = useCallback(
+    (next: Panel | "review") => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (next === "research") params.delete("tab");
+      else params.set("tab", next);
+      const query = params.toString();
+      window.history.replaceState(
+        null,
+        "",
+        query ? `${pathname}?${query}` : pathname
+      );
+    },
+    [pathname, searchParams]
+  );
+
+  const pendingInteractions = useMemo(
+    () => interactions.filter((i) => i.reviewStatus === "PENDING_REVIEW"),
+    [interactions]
+  );
+  const shownInteractions = reviewMode ? pendingInteractions : interactions;
+  const reviewCount = pendingInteractions.length;
 
   const focused =
     interactions.find((i) => i.id === focusedInteractionId) ?? null;
@@ -65,7 +122,9 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
     <AiWorkspace
       matterId={matter.id}
       readyDocumentCount={stats.readyDocumentCount}
-      interactions={interactions}
+      interactions={shownInteractions}
+      reviewMode={reviewMode}
+      onExitReviewMode={() => setTab("research")}
       focusedInteractionId={focusedInteractionId}
       activeCitationId={activeCitationId}
       onFocusInteraction={focusInteraction}
@@ -74,12 +133,27 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
   );
   const auditPanel = <AuditTimeline entries={auditLog} />;
 
+  const reviewToggle = reviewCount > 0 && (
+    <Button
+      variant={reviewMode ? "secondary" : "ghost"}
+      size="sm"
+      aria-pressed={reviewMode}
+      onClick={() => setTab(reviewMode ? "research" : "review")}
+    >
+      <ShieldQuestion className="size-3.5" />
+      Awaiting review
+      <span className="ml-0.5 rounded bg-pending-surface px-1.5 text-[0.6875rem] font-semibold text-pending tabular-nums">
+        {reviewCount}
+      </span>
+    </Button>
+  );
+
   return (
     <>
       {/* ---------- Wide: three columns ---------- */}
       <div className="hidden xl:flex xl:items-start">
         {/* Side panels pin to the viewport and scroll independently. Without
-            this, scrolling to the audit trail drags the evidence column off
+            this, scrolling to the audit trail drags the sources column off
             screen — which defeats the entire point of reading a claim beside
             its proof. */}
         <aside
@@ -119,6 +193,10 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
                 {showDocuments ? "Hide documents" : "Show documents"}
               </TooltipContent>
             </Tooltip>
+
+            {/* The review filter needs a home on wide screens too, where
+                there is no tab strip to carry it. */}
+            {reviewToggle}
 
             <span className="flex-1" />
 
@@ -164,8 +242,12 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
 
       {/* ---------- Narrow: tabbed single column ---------- */}
       <div className="xl:hidden">
-        <Tabs defaultValue="research" className="gap-0">
-          <div className="border-b px-4 py-2 lg:px-5">
+        <Tabs
+          value={panel}
+          onValueChange={(value) => setTab(value as Panel)}
+          className="gap-0"
+        >
+          <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 lg:px-5">
             <TabsList>
               <TabsTab value="research">
                 <Sparkles />
@@ -181,6 +263,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
               <TabsTab value="evidence">Sources</TabsTab>
               <TabsTab value="activity">Activity</TabsTab>
             </TabsList>
+            {panel === "research" && reviewToggle}
           </div>
 
           <TabsPanel value="research">{researchPanel}</TabsPanel>

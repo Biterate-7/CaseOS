@@ -5,6 +5,7 @@ import {
   Plus,
   ScrollText,
   Search,
+  ShieldQuestion,
   Sparkles,
   Upload,
 } from "lucide-react";
@@ -71,6 +72,7 @@ export default async function DashboardPage() {
     recentProjects,
     auditEntries,
     documentDates,
+    pendingReviews,
   ] = await Promise.all([
     db.document.count({ where: { matter: { firmId } } }),
     db.document.count({ where: { matter: { firmId }, status: "READY" } }),
@@ -97,6 +99,21 @@ export default async function DashboardPage() {
     db.document.findMany({
       where: { matter: { firmId } },
       select: { createdAt: true },
+    }),
+    // The actual items behind the "awaiting review" count. Scoped through
+    // matter.firmId like every other query here, so another workspace's
+    // pending work can never surface on this dashboard.
+    db.aIInteraction.findMany({
+      where: { matter: { firmId }, reviewStatus: "PENDING_REVIEW" },
+      orderBy: { createdAt: "desc" },
+      take: 6,
+      select: {
+        id: true,
+        prompt: true,
+        createdAt: true,
+        user: { select: { name: true } },
+        matter: { select: { id: true, title: true } },
+      },
     }),
   ]);
 
@@ -139,8 +156,11 @@ export default async function DashboardPage() {
       label: "Awaiting review",
       value: pendingReviewCount,
       hint: pendingReviewCount === 0 ? "Nothing pending" : "Needs a decision",
-      icon: ScrollText,
+      icon: ShieldQuestion,
       emphasis: pendingReviewCount > 0,
+      // Only actionable when there is something to act on; a link to an empty
+      // section is worse than no link.
+      href: pendingReviewCount > 0 ? "#awaiting-review" : undefined,
     },
   ];
 
@@ -205,8 +225,20 @@ export default async function DashboardPage() {
         {overview.map((card) => (
           <RevealItem
             key={card.label}
-            className="rounded-xl border bg-card p-4 shadow-xs transition-[box-shadow,border-color] duration-200 ease-(--ease-out-quart) hover:border-foreground/15 hover:shadow-sm"
+            className={cn(
+              "relative rounded-xl border bg-card p-4 shadow-xs transition-[box-shadow,border-color] duration-200 ease-(--ease-out-quart) hover:border-foreground/15 hover:shadow-sm",
+              card.href && "hover:border-pending-border"
+            )}
           >
+            {/* Overlay link keeps the whole card clickable while the content
+                below stays plain text — no nested interactive elements. */}
+            {card.href && (
+              <Link
+                href={card.href}
+                aria-label={`${card.value} ${card.label.toLowerCase()} — jump to the list`}
+                className="absolute inset-0 z-1 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              />
+            )}
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-medium text-muted-foreground">
                 {card.label}
@@ -249,6 +281,57 @@ export default async function DashboardPage() {
           ))}
         </Reveal>
       </section>
+
+      {/* Work queue. Previously the dashboard reported a pending-review count
+          that linked nowhere, so the only way to find the actual items was to
+          open each project and look. Each row deep-links to the answer itself:
+          the project, filtered to review, scrolled to that interaction. */}
+      {pendingReviews.length > 0 && (
+        <section
+          id="awaiting-review"
+          aria-label="Awaiting review"
+          className="mb-6 scroll-mt-6 overflow-hidden rounded-xl border border-pending-border bg-card shadow-xs"
+        >
+          <div className="flex items-baseline justify-between gap-3 border-b border-pending-border/60 bg-pending-surface/40 px-5 py-3">
+            <h2 className="inline-flex items-center gap-1.5 text-sm font-semibold text-pending">
+              <ShieldQuestion className="size-4" />
+              Awaiting your review
+            </h2>
+            <p className="text-xs text-pending/90 tabular-nums">
+              {countLabel(pendingReviewCount, "answer")}
+            </p>
+          </div>
+
+          <ul className="flex flex-col">
+            {pendingReviews.map((item) => (
+              <li key={item.id} className="border-b last:border-0">
+                <Link
+                  href={`/matters/${item.matter.id}?tab=review#interaction-${item.id}`}
+                  className="group flex items-start justify-between gap-4 px-5 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  <span className="min-w-0">
+                    <span className="line-clamp-2 block font-serif text-sm leading-snug text-foreground">
+                      {item.prompt}
+                    </span>
+                    <span className="mt-1 block truncate text-xs text-muted-foreground">
+                      {item.matter.title} · {item.user.name} ·{" "}
+                      {formatRelativeTime(item.createdAt)}
+                    </span>
+                  </span>
+                  <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {pendingReviewCount > pendingReviews.length && (
+            <p className="border-t px-5 py-2.5 text-xs text-muted-foreground tabular-nums">
+              {pendingReviewCount - pendingReviews.length} more awaiting review
+              across your projects
+            </p>
+          )}
+        </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="flex min-w-0 flex-col gap-6">
