@@ -75,6 +75,7 @@ export async function prepareDocumentUpload(
       mimeType,
       sizeBytes,
       status: "UPLOADED",
+      uploadedById: user.id,
     },
   });
 

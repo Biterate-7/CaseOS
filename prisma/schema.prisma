@@ -62,10 +62,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  firm           Firm            @relation(fields: [firmId], references: [id])
-  matters        Matter[]        @relation("MatterMembers")
-  aiInteractions AIInteraction[]
-  auditLogs      AuditLog[]
+  firm              Firm            @relation(fields: [firmId], references: [id])
+  matters           Matter[]        @relation("MatterMembers")
+  aiInteractions    AIInteraction[]
+  auditLogs         AuditLog[]
+  uploadedDocuments Document[]      @relation("DocumentUploader")
 
   @@index([firmId])
 }
@@ -102,10 +103,20 @@ model Document {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  matter Matter          @relation(fields: [matterId], references: [id])
-  chunks DocumentChunk[]
+  // Nullable: rows created before this column existed have no uploader, and
+  // the backfill can only recover one where a DOCUMENT_UPLOADED audit entry
+  // survives. Treat null as "unknown", never as "nobody".
+  uploadedById String?
+
+  matter     Matter          @relation(fields: [matterId], references: [id])
+  uploadedBy User?           @relation("DocumentUploader", fields: [uploadedById], references: [id])
+  chunks     DocumentChunk[]
 
   @@index([matterId])
+  @@index([uploadedById])
+  // Supports the global documents list, which orders by recency across every
+  // project in a workspace.
+  @@index([createdAt])
 }
 
 model DocumentChunk {

@@ -1,7 +1,7 @@
 "use client"
 
 import { UserButton } from "@clerk/nextjs"
-import { FolderOpen, LayoutDashboard, Network } from "lucide-react"
+import { FileStack, FolderOpen, LayoutDashboard, Network } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/matters", label: "Projects", icon: FolderOpen },
+  { href: "/documents", label: "Documents", icon: FileStack },
 ]
 
 function BrandMark() {

@@ -83,6 +83,16 @@ export async function downloadDocumentFile(storagePath: string): Promise<Buffer>
   return Buffer.from(await data.arrayBuffer());
 }
 
+/**
+ * Removes a stored object. Called only after the database row is gone, so a
+ * storage failure leaves an orphaned blob rather than a document row pointing
+ * at nothing — the recoverable direction of the two.
+ */
+export async function deleteDocumentFile(storagePath: string) {
+  const { error } = await supabase.storage.from(BUCKET).remove([storagePath]);
+  if (error) throw new Error(`Storage delete failed: ${error.message}`);
+}
+
 /** Signed URL for temporary read access (e.g. viewing a source document). */
 export async function getDocumentSignedUrl(storagePath: string, expiresInSeconds = 600) {
   const { data, error } = await supabase.storage
