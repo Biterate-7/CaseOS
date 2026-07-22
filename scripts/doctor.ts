@@ -46,6 +46,56 @@ function reportTarget() {
   console.log("     Confirm this is the database you intend to change.");
   console.log("  ─────────────────────────────────────────────────────");
   console.log("");
+
+  // Every Supabase variable must resolve to the SAME project. Updating the
+  // database URL while leaving the old API keys produces a half-configured
+  // state where rows land in one project and uploaded files in another —
+  // which happened during this setup and was caught only because Supabase
+  // rejected the mismatched JWT signature. Checked explicitly so it cannot
+  // pass silently if the signature check ever stops covering it.
+  const refs: Record<string, string> = {
+    DIRECT_URL: projectRefFromPostgresUrl(process.env.DIRECT_URL),
+    NEXT_PUBLIC_SUPABASE_URL:
+      process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https:\/\/([^.]+)/)?.[1] ??
+      "?",
+    SUPABASE_SERVICE_ROLE_KEY: projectRefFromJwt(
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    ),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: projectRefFromJwt(
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    ),
+  };
+
+  const mismatched = Object.entries(refs).filter(
+    ([, value]) => value !== "?" && value !== ref
+  );
+  report(
+    "env: all Supabase vars target one project",
+    mismatched.length === 0,
+    mismatched.length === 0
+      ? ref
+      : mismatched.map(([k, v]) => `${k} -> ${v}`).join(", ")
+  );
+}
+
+function projectRefFromPostgresUrl(url: string | undefined): string {
+  return url?.match(/postgres\.([a-z0-9]+)/)?.[1] ?? "?";
+}
+
+/** Supabase anon/service keys are JWTs carrying the project in `ref`. */
+function projectRefFromJwt(key: string | undefined): string {
+  const payload = key?.split(".")[1];
+  if (!payload) return "?";
+  try {
+    const json = Buffer.from(
+      payload.replace(/-/g, "+").replace(/_/g, "/"),
+      "base64"
+    ).toString();
+    return (JSON.parse(json) as { ref?: string }).ref ?? "?";
+  } catch {
+    // Newer non-JWT publishable keys can't be decoded; skip rather than fail.
+    return "?";
+  }
 }
 
 async function main() {

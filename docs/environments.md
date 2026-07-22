@@ -28,6 +28,27 @@ and each environment supplies its own. This is deliberate — introducing
 between them at runtime, which is exactly how a process ends up writing to the
 wrong one. The application should only ever know `DATABASE_URL`.
 
+## Status
+
+**Database separation is complete.** Local development runs against the
+`caseos-dev` Supabase project (`dgxxmyfroswiwrgtnazh`, `ap-southeast-2`);
+production remains `fwvtsetlkirhxxdrzfwt` (`ap-southeast-1`), untouched by
+local work. All three migrations replayed cleanly into the dev database and it
+is seeded.
+
+Two things caught during that setup, both now guarded by `npm run doctor`:
+
+- The first attempt migrated production again, because `.env` had not actually
+  been edited and every check still passed. `doctor` now prints the target host
+  and project ref before any connection check.
+- The second attempt updated `NEXT_PUBLIC_SUPABASE_URL` but kept the
+  production API keys — a dev database paired with production storage, which
+  would have written test uploads into the live bucket. Supabase rejected the
+  mismatched JWT signature, which was luck rather than design, so `doctor` now
+  decodes every Supabase variable and fails if they disagree on the project.
+
+Vercel environment scoping (step 4) and Git auto-deploy remain outstanding.
+
 ## One-time setup (requires your Supabase and Vercel accounts)
 
 These steps need account access and cannot be scripted from this repo.
