@@ -74,7 +74,6 @@ function InteractionCard({
           </span>
           <span>· {formatRelativeTime(interaction.createdAt)}</span>
           <span>· {interactionTypeLabel[interaction.type]}</span>
-          <span className="font-mono opacity-80">· {interaction.model}</span>
         </p>
       </header>
 
