@@ -10,6 +10,7 @@ import {
   type SortKey,
 } from "@/lib/documents-shared";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { searchChunks, searchSnippets } from "@/lib/search";
 
 /**
  * Workspace-wide document index.
@@ -65,19 +66,24 @@ export async function loadDocumentIndex(
   // Tenancy root. Every branch below is ANDed onto this.
   const where: Prisma.DocumentWhereInput = { matter: { firmId } };
 
+  // Passage text is matched through the GIN-indexed tsvector rather than an
+  // unindexed ILIKE, which had to sequentially scan every chunk in the
+  // workspace on each keystroke. The metadata columns keep using `contains`:
+  // they are short, they now have trigram indexes, and stemming a filename is
+  // usually wrong ("agreement-v2" should match the literal string).
+  let rankByDocument = new Map<string, number>();
   if (query.q) {
+    const matches = await searchChunks(firmId, query.q);
+    rankByDocument = new Map(matches.map((m) => [m.documentId, m.rank]));
+
     where.OR = [
       { title: { contains: query.q, mode: "insensitive" } },
       { fileName: { contains: query.q, mode: "insensitive" } },
       { matter: { title: { contains: query.q, mode: "insensitive" } } },
       { matter: { clientName: { contains: query.q, mode: "insensitive" } } },
-      // Extracted document text. This is what makes search useful on scans
-      // and long reports where the filename says nothing.
-      {
-        chunks: {
-          some: { content: { contains: query.q, mode: "insensitive" } },
-        },
-      },
+      ...(matches.length > 0
+        ? [{ id: { in: matches.map((m) => m.documentId) } }]
+        : []),
     ];
   }
 
@@ -95,13 +101,38 @@ export async function loadDocumentIndex(
     };
   }
 
+  // Relevance can't be expressed as a Prisma orderBy — the rank comes from a
+  // separate raw query, not a column. So for that one sort the ids are
+  // ordered and paginated in memory, then the page is fetched by id. The
+  // extra round trip selects ids only, and the set is already capped by the
+  // search limit.
+  const useRelevance = query.sort === "relevance" && Boolean(query.q);
+  let relevanceIds: string[] | null = null;
+  let relevanceTotal = 0;
+
+  if (useRelevance) {
+    const matching = await db.document.findMany({ where, select: { id: true } });
+    relevanceTotal = matching.length;
+    relevanceIds = matching
+      .map((r) => r.id)
+      .sort((a, b) => {
+        // Metadata-only hits have no passage rank. They sort above text
+        // matches: a document whose *title* contains the term is a stronger
+        // signal than one that mentions it once in the body.
+        const ra = rankByDocument.get(a) ?? Number.POSITIVE_INFINITY;
+        const rb = rankByDocument.get(b) ?? Number.POSITIVE_INFINITY;
+        return rb === ra ? a.localeCompare(b) : rb - ra;
+      })
+      .slice((query.page - 1) * PAGE_SIZE, query.page * PAGE_SIZE);
+  }
+
   const [total, rows, projects, uploaders, totalDocuments] = await Promise.all([
-    db.document.count({ where }),
+    useRelevance ? Promise.resolve(relevanceTotal) : db.document.count({ where }),
     db.document.findMany({
-      where,
-      orderBy: orderBy(query.sort),
-      skip: (query.page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      where: relevanceIds ? { id: { in: relevanceIds } } : where,
+      orderBy: useRelevance ? undefined : orderBy(query.sort),
+      skip: useRelevance ? undefined : (query.page - 1) * PAGE_SIZE,
+      take: useRelevance ? undefined : PAGE_SIZE,
       select: {
         id: true,
         title: true,
@@ -132,8 +163,14 @@ export async function loadDocumentIndex(
   // Page counts and text-match flags for the rows actually on screen. Scoped
   // to this page rather than the whole result set — a workspace can hold
   // thousands of passages and none of that is needed off-screen.
+  // `in` does not preserve order, so the relevance ranking is reapplied here.
+  if (relevanceIds) {
+    const position = new Map(relevanceIds.map((id, i) => [id, i]));
+    rows.sort((a, b) => (position.get(a.id) ?? 0) - (position.get(b.id) ?? 0));
+  }
+
   const ids = rows.map((r) => r.id);
-  const [chunkAgg, textMatches] = await Promise.all([
+  const [chunkAgg, snippets] = await Promise.all([
     ids.length
       ? db.documentChunk.groupBy({
           by: ["documentId"],
@@ -142,20 +179,13 @@ export async function loadDocumentIndex(
           _count: { _all: true },
         })
       : Promise.resolve([]),
-    query.q && ids.length
-      ? db.documentChunk.findMany({
-          where: {
-            documentId: { in: ids },
-            content: { contains: query.q, mode: "insensitive" },
-          },
-          distinct: ["documentId"],
-          select: { documentId: true },
-        })
-      : Promise.resolve([]),
+    // ts_headline re-parses the document text, so it runs only for the rows
+    // actually on screen — never the whole result set.
+    query.q ? searchSnippets(ids, query.q) : Promise.resolve([]),
   ]);
 
   const aggByDoc = new Map(chunkAgg.map((r) => [r.documentId, r]));
-  const matchedIds = new Set(textMatches.map((r) => r.documentId));
+  const snippetByDoc = new Map(snippets.map((s) => [s.documentId, s]));
 
   return {
     documents: rows.map((row) => {
@@ -175,7 +205,9 @@ export async function loadDocumentIndex(
         clientName: row.matter.clientName,
         uploadedById: row.uploadedById,
         uploaderName: row.uploadedBy?.name ?? null,
-        matchedInText: matchedIds.has(row.id),
+        matchedInText: snippetByDoc.has(row.id),
+        snippet: snippetByDoc.get(row.id)?.snippet ?? null,
+        snippetPage: snippetByDoc.get(row.id)?.pageNumber ?? null,
       };
     }),
     total,

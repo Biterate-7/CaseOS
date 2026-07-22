@@ -18,7 +18,8 @@
     "db:reset-embeddings": "node --conditions=react-server --import tsx scripts/reset-embeddings.ts",
     "test:ingest": "node --conditions=react-server --import tsx scripts/test-ingest.ts",
     "test:ai": "node --conditions=react-server --import tsx scripts/test-ai.ts",
-    "test:citations": "tsx scripts/test-citations.ts"
+    "test:citations": "tsx scripts/test-citations.ts",
+    "test:search": "node --conditions=react-server --import tsx scripts/test-search.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

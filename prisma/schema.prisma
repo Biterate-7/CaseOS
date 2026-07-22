@@ -247,6 +247,11 @@ model DocumentChunk {
   // Dimension left unspecified so the embedding provider can change without a
   // migration; all chunks must still use one provider at a time for retrieval.
   embedding  Unsupported("vector")?
+  /// Generated column: to_tsvector('english', content), maintained by
+  /// Postgres so it can never drift from `content`. Backed by a GIN index.
+  /// Unsupported so Prisma never tries to write it — generated columns
+  /// reject writes.
+  contentTsv Unsupported("tsvector")?
   createdAt  DateTime                    @default(now())
 
   document  Document   @relation(fields: [documentId], references: [id])

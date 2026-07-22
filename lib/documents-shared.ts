@@ -11,6 +11,7 @@ import type { DocumentStatus } from "@/lib/format";
  */
 
 export const SORT_KEYS = [
+  "relevance",
   "newest",
   "oldest",
   "name",
@@ -20,6 +21,7 @@ export const SORT_KEYS = [
 export type SortKey = (typeof SORT_KEYS)[number];
 
 export const SORT_LABELS: Record<SortKey, string> = {
+  relevance: "Most relevant",
   newest: "Newest first",
   oldest: "Oldest first",
   name: "Name A–Z",
@@ -68,6 +70,13 @@ export type IndexedDocument = {
   uploaderName: string | null;
   /** Set when the search term matched passage text rather than metadata. */
   matchedInText: boolean;
+  /**
+   * Best-matching excerpt with <mark> around hits, from ts_headline.
+   * Server-generated and escaped there; the only markup is <mark>.
+   */
+  snippet: string | null;
+  /** Page the excerpt came from, when the source is paginated. */
+  snippetPage: number | null;
 };
 
 export type DocumentIndex = {
@@ -119,9 +128,14 @@ export function parseDocumentQuery(
       : null,
     from: one("from"),
     to: one("to"),
+    // Relevance is only meaningful alongside a search term — with nothing to
+    // rank against it would be an arbitrary order — so it is the default when
+    // searching and falls back to recency when the box is empty.
     sort: SORT_KEYS.includes(sortRaw as SortKey)
       ? (sortRaw as SortKey)
-      : "newest",
+      : one("q")
+        ? "relevance"
+        : "newest",
     page:
       Number.isFinite(pageRaw) && pageRaw > 0 ? Math.min(pageRaw, 10_000) : 1,
   };

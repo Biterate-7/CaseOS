@@ -156,9 +156,20 @@ export default async function DocumentsPage({
                     · {doc.uploaderName ?? "Unknown uploader"}
                   </span>
                 </p>
-                {doc.matchedInText && (
-                  <p className="mt-1 inline-flex items-center gap-1 rounded bg-citation-surface px-1.5 py-0.5 text-[0.625rem] font-medium text-citation">
-                    Matched inside document text
+                {doc.snippet && (
+                  <p className="mt-1.5 border-l-2 border-citation/40 pl-2 text-xs leading-relaxed text-muted-foreground">
+                    {/* ts_headline output, HTML-escaped in lib/search.ts with
+                        only <mark> restored — document text is
+                        attacker-controlled and must never render as markup. */}
+                    <span
+                      className="[&_mark]:rounded-sm [&_mark]:bg-citation-surface [&_mark]:px-0.5 [&_mark]:font-medium [&_mark]:text-citation"
+                      dangerouslySetInnerHTML={{ __html: `…${doc.snippet}…` }}
+                    />
+                    {doc.snippetPage != null && (
+                      <span className="ml-1.5 whitespace-nowrap text-[0.625rem] text-muted-foreground/70 tabular-nums">
+                        p.{doc.snippetPage}
+                      </span>
+                    )}
                   </p>
                 )}
               </div>
