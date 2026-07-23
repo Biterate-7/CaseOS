@@ -10,6 +10,11 @@ import { reconcileStuckDocuments } from "@/lib/ingest/reconcile";
  * document in a workspace nobody opens. It sweeps every workspace on a
  * schedule (see vercel.json) so recovery does not depend on someone looking.
  *
+ * Schedule is daily (`0 3 * * *`) because the Vercel Hobby plan limits cron to
+ * once per day — a sub-daily schedule there fails to register. Daily is ample:
+ * the lazy path is the primary mechanism, and this only needs to clean rows in
+ * workspaces that are never opened. On Pro, tighten it (e.g. `*/15 * * * *`).
+ *
  * Auth: Vercel Cron attaches `Authorization: Bearer $CRON_SECRET` when
  * CRON_SECRET is set. The route rejects anything else, so it cannot be
  * triggered by an anonymous request. If CRON_SECRET is unset the route refuses
