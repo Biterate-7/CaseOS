@@ -74,12 +74,20 @@ export async function generateGroundedAnswer(
   // Retries transient provider failures (503 capacity, 5xx, network stalls)
   // with exponential backoff, and converts everything else into an AiError
   // carrying a fixed user-facing message. No provider text escapes this call.
-  const { text, model } = await withAiRetry("generate", () =>
-    getChatProvider().generate({
-      system: SYSTEM_PROMPT,
-      user: `Sources from this project's documents:\n\n${buildSourcesBlock(chunks)}\n\nQuestion: ${question}`,
-      temperature: 0.2,
-    })
+  const provider = getChatProvider();
+  const { text, model } = await withAiRetry(
+    "generate",
+    (signal) =>
+      provider.generate({
+        system: SYSTEM_PROMPT,
+        user: `Sources from this project's documents:\n\n${buildSourcesBlock(chunks)}\n\nQuestion: ${question}`,
+        temperature: 0.2,
+        // Threaded through so the per-attempt timeout actually cancels the
+        // request instead of leaving a socket running for an answer nobody
+        // will read.
+        signal,
+      }),
+    { meta: { provider: provider.name } }
   );
 
   return {

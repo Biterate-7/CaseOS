@@ -32,13 +32,14 @@ const GEMINI_MODEL = process.env.GEMINI_CHAT_MODEL ?? "gemini-flash-latest";
  */
 export const geminiProvider: ChatProvider = {
   name: "gemini",
-  async generate({ system, user, temperature = 0.2 }: ChatRequest): Promise<ChatResult> {
+  async generate({ system, user, temperature = 0.2, signal }: ChatRequest): Promise<ChatResult> {
     const response = await client.models.generateContent({
       model: GEMINI_MODEL,
       contents: user,
       config: {
         systemInstruction: system,
         temperature,
+        abortSignal: signal,
       },
     });
 

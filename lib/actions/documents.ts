@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { classifyAiError, logAiError } from "@/lib/ai/errors";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { ingestDocument } from "@/lib/ingest/pipeline";
@@ -161,9 +162,18 @@ export async function finalizeDocumentUpload(
       data: { status: "FAILED" },
     });
     revalidatePath(`/matters/${document.matterId}`);
+
+    // Ingestion embeds through Gemini, so a capacity 503 surfaces here too.
+    // Returning error.message would have put the provider's JSON body in the
+    // upload panel — the same leak that was fixed in askQuestion.
+    const classified = classifyAiError(error);
+    logAiError("finalizeDocumentUpload", classified);
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "Upload failed.",
+      error:
+        classified.code === "UNKNOWN"
+          ? "This document could not be processed. Please try again."
+          : classified.userMessage,
     };
   }
 

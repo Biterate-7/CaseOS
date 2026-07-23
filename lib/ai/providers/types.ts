@@ -5,6 +5,8 @@ export type ChatRequest = {
   system: string;
   user: string;
   temperature?: number;
+  /** Cancels the in-flight request on timeout or client disconnect. */
+  signal?: AbortSignal;
 };
 
 export type ChatResult = {

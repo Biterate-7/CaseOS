@@ -1,5 +1,7 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 /**
  * AI provider error handling.
  *
@@ -28,6 +30,7 @@ export type AiErrorCode =
   | "BAD_REQUEST" // 400 — malformed request, our bug
   | "SERVER" // 500/502/504 — provider fault
   | "EMPTY" // provider replied, but with nothing usable
+  | "CANCELLED" // caller went away; not a failure worth reporting
   | "UNKNOWN";
 
 const USER_MESSAGES: Record<AiErrorCode, string> = {
@@ -43,6 +46,7 @@ const USER_MESSAGES: Record<AiErrorCode, string> = {
   BAD_REQUEST: "Something went wrong while generating the response.",
   SERVER: "The AI service is temporarily unavailable. Please try again shortly.",
   EMPTY: "The AI service returned an empty response. Please try again.",
+  CANCELLED: "The request was cancelled.",
   UNKNOWN: "Something went wrong while generating the response.",
 };
 
@@ -156,17 +160,36 @@ export function classifyAiError(error: unknown): AiError {
  * Deliberately not `console.error(error)` on the raw value — that can dump a
  * request object carrying the API key into the log.
  */
-export function logAiError(context: string, error: AiError) {
+export function logAiError(
+  context: string,
+  error: AiError,
+  meta: {
+    requestId?: string;
+    provider?: string;
+    model?: string;
+    attempts?: number;
+    latencyMs?: number;
+  } = {}
+) {
   const cause = error.cause;
   console.error(
     JSON.stringify({
       event: "ai_error",
       context,
+      requestId: meta.requestId ?? null,
+      provider: meta.provider ?? null,
+      model: meta.model ?? null,
       code: error.code,
       status: error.status,
       retryable: error.retryable,
+      attempts: meta.attempts ?? null,
+      latencyMs: meta.latencyMs ?? null,
+      // Truncated, and only ever the message string. Never the error object
+      // itself, which can carry request headers including the API key.
       providerMessage:
-        cause instanceof Error ? cause.message.slice(0, 800) : String(cause).slice(0, 800),
+        cause instanceof Error
+          ? cause.message.slice(0, 800)
+          : String(cause).slice(0, 800),
     })
   );
 }
@@ -174,7 +197,40 @@ export function logAiError(context: string, error: AiError) {
 const BASE_DELAY_MS = 1000;
 const MAX_ATTEMPTS = 3;
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Per-attempt ceiling. Three attempts plus 3s of backoff fits inside the
+ * route's 60s maxDuration with room for retrieval and persistence.
+ */
+export const DEFAULT_TIMEOUT_MS = 45_000;
+
+/** Abortable sleep, so backoff does not outlive a cancelled request. */
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(new AiError("CANCELLED"));
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      // Clearing the timer is what stops this promise dangling until the
+      // delay elapses on a request nobody is waiting for any more.
+      clearTimeout(timer);
+      reject(new AiError("CANCELLED"));
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
+export type AiCallMeta = {
+  /** Correlates every log line for one logical request. */
+  requestId: string;
+  provider: string;
+  model: string;
+};
+
+export function newRequestId(): string {
+  return randomUUID();
+}
 
 /**
  * Runs `operation`, retrying transient failures with exponential backoff.
@@ -188,19 +244,63 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export async function withAiRetry<T>(
   context: string,
-  operation: () => Promise<T>
+  operation: (signal: AbortSignal) => Promise<T>,
+  options: {
+    /** Caller cancellation, e.g. the client disconnecting. */
+    signal?: AbortSignal;
+    timeoutMs?: number;
+    meta?: Partial<AiCallMeta>;
+  } = {}
 ): Promise<T> {
+  const { signal, timeoutMs = DEFAULT_TIMEOUT_MS, meta = {} } = options;
+  const requestId = meta.requestId ?? newRequestId();
+  const started = Date.now();
   let lastError: AiError | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    // Fresh timeout per attempt; a slow first try must not eat the budget of
+    // the retry that would have succeeded.
+    const timeout = AbortSignal.timeout(timeoutMs);
+    const combined = signal
+      ? AbortSignal.any([signal, timeout])
+      : timeout;
+
     try {
-      return await operation();
+      const result = await operation(combined);
+      if (attempt > 1) {
+        console.warn(
+          JSON.stringify({
+            event: "ai_recovered",
+            context,
+            requestId,
+            provider: meta.provider ?? null,
+            model: meta.model ?? null,
+            attempt,
+            latencyMs: Date.now() - started,
+          })
+        );
+      }
+      return result;
     } catch (error) {
-      const aiError = classifyAiError(error);
+      // A caller-initiated abort is not a provider failure and must never be
+      // retried — the work has been abandoned.
+      if (signal?.aborted) {
+        throw new AiError("CANCELLED", error);
+      }
+
+      const aiError = timeout.aborted
+        ? new AiError("TIMEOUT", error)
+        : classifyAiError(error);
       lastError = aiError;
 
       if (!aiError.retryable || attempt === MAX_ATTEMPTS) {
-        logAiError(context, aiError);
+        logAiError(context, aiError, {
+          requestId,
+          provider: meta.provider,
+          model: meta.model,
+          attempts: attempt,
+          latencyMs: Date.now() - started,
+        });
         throw aiError;
       }
 
@@ -209,15 +309,19 @@ export async function withAiRetry<T>(
         JSON.stringify({
           event: "ai_retry",
           context,
+          requestId,
+          provider: meta.provider ?? null,
+          model: meta.model ?? null,
           code: aiError.code,
+          status: aiError.status,
           attempt,
           nextDelayMs: delay,
+          elapsedMs: Date.now() - started,
         })
       );
-      await sleep(delay);
+      await sleep(delay, signal);
     }
   }
 
-  // Unreachable: the loop either returns or throws.
   throw lastError ?? new AiError("UNKNOWN");
 }

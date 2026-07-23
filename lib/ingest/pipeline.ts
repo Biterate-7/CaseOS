@@ -1,5 +1,6 @@
 import "server-only";
 
+import { classifyAiError, logAiError } from "@/lib/ai/errors";
 import { db } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/storage";
 
@@ -108,7 +109,15 @@ export async function ingestDocument(documentId: string): Promise<void> {
         action: "DOCUMENT_INGEST_FAILED",
         entityType: "Document",
         entityId: documentId,
-        detail: { error: error instanceof Error ? error.message : String(error) },
+        // Classified, not raw. AuditTimeline renders every detail value as a
+        // chip, so putting error.message here wrote the provider's JSON body
+        // into the activity panel — and permanently, since audit rows are
+        // never deleted. The full payload goes to the server log instead.
+        detail: (() => {
+          const classified = classifyAiError(error);
+          logAiError("ingestDocument", classified);
+          return { reason: classified.userMessage, code: classified.code };
+        })(),
       },
     });
     throw error;

@@ -75,12 +75,21 @@ async function embed(
     // Embeddings run on the same Gemini backend as generation, so they hit
     // the same 503s. Retried per batch: a capacity blip partway through a
     // long document should not discard the batches already embedded.
-    const response = await withAiRetry("embed", () =>
-      client.models.embedContent({
-        model: EMBEDDING_MODEL,
-        contents: batch,
-        config: { taskType, outputDimensionality: EMBEDDING_DIMENSIONS },
-      })
+    const response = await withAiRetry(
+      "embed",
+      (signal) =>
+        client.models.embedContent({
+          model: EMBEDDING_MODEL,
+          contents: batch,
+          config: {
+            taskType,
+            outputDimensionality: EMBEDDING_DIMENSIONS,
+            // Threaded through so the timeout actually cancels the request
+            // rather than abandoning a socket that keeps running.
+            abortSignal: signal,
+          },
+        }),
+      { meta: { provider: "gemini", model: EMBEDDING_MODEL } }
     );
 
     const embeddings = response.embeddings;
