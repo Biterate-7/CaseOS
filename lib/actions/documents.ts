@@ -180,3 +180,94 @@ export async function finalizeDocumentUpload(
   revalidatePath(`/matters/${document.matterId}`);
   return { ok: true, documentId: document.id };
 }
+
+/**
+ * Re-runs ingestion for a document that previously failed — whether it errored
+ * during processing or was recovered from a stuck PROCESSING state.
+ *
+ * The stored file is untouched by a failure, so retry re-uses it rather than
+ * asking for another upload. Only FAILED documents are eligible; retrying a
+ * READY one would needlessly re-embed, and retrying a PROCESSING one could run
+ * two ingestions at once.
+ */
+export async function retryDocumentIngestion(
+  documentId: string
+): Promise<FinalizeUploadResult> {
+  const user = await requireUser();
+
+  const document = await db.document.findFirst({
+    where: { id: documentId, matter: { firmId: user.firmId } },
+    select: {
+      id: true,
+      status: true,
+      storagePath: true,
+      matterId: true,
+      matter: { select: { firmId: true } },
+    },
+  });
+  if (!document) {
+    return { ok: false, error: "Document not found." };
+  }
+  if (document.status !== "FAILED") {
+    return {
+      ok: false,
+      error:
+        document.status === "PROCESSING"
+          ? "This document is already being processed."
+          : "This document is already indexed.",
+    };
+  }
+  if (!document.storagePath) {
+    return {
+      ok: false,
+      error: "The original file is missing. Upload it again instead.",
+    };
+  }
+
+  // Claim the document atomically. If some other request retried it a moment
+  // ago, this update matches zero rows and we stop, so two ingestions of the
+  // same document can never run concurrently.
+  const claimed = await db.document.updateMany({
+    where: { id: document.id, status: "FAILED" },
+    data: { status: "PROCESSING" },
+  });
+  if (claimed.count === 0) {
+    return { ok: false, error: "This document is already being retried." };
+  }
+
+  await db.auditLog.create({
+    data: {
+      firmId: document.matter.firmId,
+      userId: user.id,
+      matterId: document.matterId,
+      action: "DOCUMENT_INGEST_RETRIED",
+      entityType: "Document",
+      entityId: document.id,
+    },
+  });
+
+  try {
+    await ingestDocument(document.id);
+  } catch (error) {
+    await db.document.updateMany({
+      where: { id: document.id, status: { not: "FAILED" } },
+      data: { status: "FAILED" },
+    });
+    revalidatePath(`/matters/${document.matterId}`);
+    revalidatePath("/documents");
+
+    const classified = classifyAiError(error);
+    logAiError("retryDocumentIngestion", classified);
+    return {
+      ok: false,
+      error:
+        classified.code === "UNKNOWN"
+          ? "This document could not be processed. Please try again."
+          : classified.userMessage,
+    };
+  }
+
+  revalidatePath(`/matters/${document.matterId}`);
+  revalidatePath("/documents");
+  return { ok: true, documentId: document.id };
+}

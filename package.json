@@ -22,7 +22,8 @@
     "test:search": "node --conditions=react-server --import tsx scripts/test-search.ts",
     "test:invitations": "node --conditions=react-server --import tsx scripts/test-invitations.ts",
     "test:ai-errors": "node --conditions=react-server --import tsx scripts/test-ai-errors.ts",
-    "test:ingest-budget": "node --conditions=react-server --import tsx scripts/test-ingest-budget.ts"
+    "test:ingest-budget": "node --conditions=react-server --import tsx scripts/test-ingest-budget.ts",
+    "test:reconcile": "node --conditions=react-server --import tsx scripts/test-reconcile.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

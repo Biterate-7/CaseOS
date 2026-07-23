@@ -1,10 +1,18 @@
 "use client";
 
-import { ChevronRight, FileText, TriangleAlert } from "lucide-react";
+import {
+  ChevronRight,
+  FileText,
+  Loader2,
+  RotateCw,
+  TriangleAlert,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { retryDocumentIngestion } from "@/lib/actions/documents";
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +36,8 @@ import { cn } from "@/lib/utils";
  */
 function DocumentCard({ document }: { document: WorkspaceDocument }) {
   const [expanded, setExpanded] = useState(false);
+  const [retrying, startRetry] = useTransition();
+  const [retryError, setRetryError] = useState<string | null>(null);
   const reduceMotion = useReducedMotion();
   const canExpand = document.excerpt != null;
 
@@ -126,13 +136,47 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
       )}
 
       {document.status === "FAILED" && (
-        <p className="flex items-start gap-1.5 border-t border-rejected-border/60 bg-rejected-surface/50 px-3 py-2 text-[0.6875rem] leading-relaxed text-rejected">
-          <TriangleAlert className="mt-px size-3 shrink-0" />
-          <span>
-            Ingestion failed — often a scan with no text layer. This document
-            contributes nothing to answers. Re-upload a text-based copy.
-          </span>
-        </p>
+        <div className="flex flex-col gap-2 border-t border-rejected-border/60 bg-rejected-surface/50 px-3 py-2">
+          <p className="flex items-start gap-1.5 text-[0.6875rem] leading-relaxed text-rejected">
+            <TriangleAlert className="mt-px size-3 shrink-0" />
+            <span>
+              Ingestion didn&apos;t finish. This can be a scan with no text
+              layer, or an interrupted upload. Retry, or re-upload a
+              text-based copy.
+            </span>
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              size="xs"
+              variant="outline"
+              disabled={retrying}
+              onClick={() =>
+                startRetry(async () => {
+                  setRetryError(null);
+                  const result = await retryDocumentIngestion(document.id);
+                  if (!result.ok) setRetryError(result.error);
+                })
+              }
+            >
+              {retrying ? (
+                <>
+                  <Loader2 className="size-3 animate-spin" />
+                  Retrying…
+                </>
+              ) : (
+                <>
+                  <RotateCw className="size-3" />
+                  Retry
+                </>
+              )}
+            </Button>
+            {retryError && (
+              <span className="text-[0.6875rem] text-rejected">
+                {retryError}
+              </span>
+            )}
+          </div>
+        </div>
       )}
 
       {canExpand && (

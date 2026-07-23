@@ -10,6 +10,7 @@ import {
   type SortKey,
 } from "@/lib/documents-shared";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { reconcileStuckDocuments } from "@/lib/ingest/reconcile";
 import { searchChunks, searchSnippets } from "@/lib/search";
 
 /**
@@ -62,6 +63,10 @@ export async function loadDocumentIndex(
   const user = await requireUser();
   const firmId = user.firmId;
   const query = parseDocumentQuery(params);
+
+  // Recover documents stranded in PROCESSING before listing them, so this page
+  // never displays a permanently-spinning row. Scoped to the workspace.
+  await reconcileStuckDocuments({ firmId });
 
   // Tenancy root. Every branch below is ANDed onto this.
   const where: Prisma.DocumentWhereInput = { matter: { firmId } };

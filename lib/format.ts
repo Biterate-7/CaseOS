@@ -116,6 +116,8 @@ const auditActionLabel: Record<string, string> = {
   DOCUMENT_UPLOADED: "uploaded a document",
   DOCUMENT_INGESTED: "finished ingesting a document",
   DOCUMENT_INGEST_FAILED: "hit an ingestion failure",
+  DOCUMENT_INGEST_TIMED_OUT: "had a stalled upload recovered",
+  DOCUMENT_INGEST_RETRIED: "retried a document upload",
   DOCUMENT_RENAMED: "renamed a document",
   DOCUMENT_MOVED_IN: "moved a document into this project",
   DOCUMENT_MOVED_OUT: "moved a document to another project",

@@ -11,7 +11,12 @@ const isProtectedRoute = createRouteMatcher([
   "/api/(.*)",
 ]);
 
+// Cron routes authenticate with a bearer secret, not a Clerk session, so
+// Clerk must not intercept them. Every other /api path stays protected.
+const isCronRoute = createRouteMatcher(["/api/cron/(.*)"]);
+
 export default clerkMiddleware(async (auth, req) => {
+  if (isCronRoute(req)) return;
   if (isProtectedRoute(req)) await auth.protect();
 });
 

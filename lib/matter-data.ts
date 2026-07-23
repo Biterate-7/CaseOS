@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { reconcileStuckDocuments } from "@/lib/ingest/reconcile";
 
 /**
  * Workspace data loader.
@@ -92,6 +93,12 @@ export type WorkspaceData = {
 
 export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
   const user = await requireUser();
+
+  // Reap any documents stranded in PROCESSING before reading them, so a row
+  // stuck by a crashed ingestion shows as FAILED here rather than spinning
+  // forever. Scoped to the caller's workspace and cheap — the partial index
+  // makes it an index probe that usually matches nothing.
+  await reconcileStuckDocuments({ firmId: user.firmId });
 
   // findFirst scoped by firmId (never findUnique by id alone) so a matter id
   // belonging to another workspace 404s instead of leaking across the tenant
