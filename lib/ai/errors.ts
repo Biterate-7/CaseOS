@@ -201,7 +201,22 @@ const MAX_ATTEMPTS = 3;
  * Per-attempt ceiling. Three attempts plus 3s of backoff fits inside the
  * route's 60s maxDuration with room for retrieval and persistence.
  */
-export const DEFAULT_TIMEOUT_MS = 45_000;
+export const DEFAULT_TIMEOUT_MS = 20_000;
+
+/**
+ * Hard ceiling on the whole retry sequence, backoff included.
+ *
+ * The route declares maxDuration = 60s. Before this existed the worst case
+ * was MAX_ATTEMPTS x timeout + backoff = 3 x 45s + 3s = 138s — more than
+ * twice the platform budget, so a slow provider produced a platform kill
+ * instead of a clean error.
+ *
+ * 45s leaves ~15s for retrieval (which embeds the query), the persistence
+ * transaction, and serialisation. Each attempt is capped at whatever remains,
+ * so the total cannot exceed this value no matter how attempts and backoff
+ * combine.
+ */
+export const DEFAULT_BUDGET_MS = 45_000;
 
 /** Abortable sleep, so backoff does not outlive a cancelled request. */
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
@@ -248,19 +263,41 @@ export async function withAiRetry<T>(
   options: {
     /** Caller cancellation, e.g. the client disconnecting. */
     signal?: AbortSignal;
+    /** Cap for a single attempt. */
     timeoutMs?: number;
+    /** Hard ceiling for the whole sequence, backoff included. */
+    budgetMs?: number;
     meta?: Partial<AiCallMeta>;
   } = {}
 ): Promise<T> {
-  const { signal, timeoutMs = DEFAULT_TIMEOUT_MS, meta = {} } = options;
+  const {
+    signal,
+    timeoutMs = DEFAULT_TIMEOUT_MS,
+    budgetMs = DEFAULT_BUDGET_MS,
+    meta = {},
+  } = options;
+  const deadline = Date.now() + budgetMs;
   const requestId = meta.requestId ?? newRequestId();
   const started = Date.now();
   let lastError: AiError | undefined;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    // Fresh timeout per attempt; a slow first try must not eat the budget of
-    // the retry that would have succeeded.
-    const timeout = AbortSignal.timeout(timeoutMs);
+    // Fresh signal per attempt, capped by whatever remains of the overall
+    // budget. This is what makes the worst case bounded: the sum of every
+    // attempt plus every backoff can never exceed budgetMs.
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) {
+      const exhausted = lastError ?? new AiError("TIMEOUT");
+      logAiError(context, exhausted, {
+        requestId,
+        provider: meta.provider,
+        model: meta.model,
+        attempts: attempt - 1,
+        latencyMs: Date.now() - started,
+      });
+      throw exhausted;
+    }
+    const timeout = AbortSignal.timeout(Math.min(timeoutMs, remaining));
     const combined = signal
       ? AbortSignal.any([signal, timeout])
       : timeout;
@@ -304,7 +341,19 @@ export async function withAiRetry<T>(
         throw aiError;
       }
 
-      const delay = BASE_DELAY_MS * 2 ** (attempt - 1);
+      // Never sleep past the deadline — a backoff that outlives the budget
+      // just delays the inevitable failure past the platform timeout.
+      const delay = Math.min(
+        BASE_DELAY_MS * 2 ** (attempt - 1),
+        Math.max(0, deadline - Date.now())
+      );
+      if (delay <= 0) {
+        logAiError(context, aiError, {
+          requestId, provider: meta.provider, model: meta.model,
+          attempts: attempt, latencyMs: Date.now() - started,
+        });
+        throw aiError;
+      }
       console.warn(
         JSON.stringify({
           event: "ai_retry",

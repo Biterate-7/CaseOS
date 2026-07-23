@@ -59,11 +59,18 @@ export async function getDocumentUrl(
     const url = await getDocumentSignedUrl(document.storagePath, 300);
     return { ok: true, data: { url, fileName: document.fileName } };
   } catch (error) {
-    return {
-      ok: false,
-      error:
-        error instanceof Error ? error.message : "Could not open this document.",
-    };
+    // Supabase storage errors can name internal paths and bucket policy
+    // details; the caller only needs to know it did not work.
+    console.error(
+      JSON.stringify({
+        event: "storage_error",
+        context: "getDocumentUrl",
+        documentId,
+        message:
+          error instanceof Error ? error.message.slice(0, 400) : String(error).slice(0, 400),
+      })
+    );
+    return { ok: false, error: "Could not open this document. Please try again." };
   }
 }
 
