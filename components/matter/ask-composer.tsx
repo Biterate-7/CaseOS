@@ -1,6 +1,6 @@
 "use client";
 
-import { CornerDownLeft, Lock } from "lucide-react";
+import { CornerDownLeft, Loader2, Lock, RotateCw, TriangleAlert } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRef, useState, useTransition } from "react";
 
@@ -23,21 +23,39 @@ function AskComposer({
   matterId: string;
   readyDocumentCount: number;
 }) {
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; retryable: boolean } | null>(null);
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reduceMotion = useReducedMotion();
 
   const grounded = readyDocumentCount > 0;
   const disabled = isPending || !grounded;
 
-  function handleSubmit(formData: FormData) {
+  // Transient provider failures already got three automatic attempts server
+  // side. Offering a manual retry is still worth it: capacity blips often
+  // clear in the seconds it takes to read the message.
+  const RETRYABLE = new Set(["OVERLOADED", "RATE_LIMITED", "TIMEOUT", "NETWORK", "SERVER", "EMPTY"]);
+
+  function run(question: string) {
+    const formData = new FormData();
+    formData.set("question", question);
+
     setError(null);
     startTransition(async () => {
       const result = await askQuestion(matterId, formData);
-      if (!result.ok) setError(result.error);
-      else formRef.current?.reset();
+      if (result.ok) {
+        // Only cleared on success — a failed request keeps the question in
+        // the box so nothing has to be retyped.
+        formRef.current?.reset();
+      } else {
+        setError({ message: result.error, retryable: RETRYABLE.has(result.code) });
+      }
     });
+  }
+
+  function handleSubmit(formData: FormData) {
+    run(String(formData.get("question") ?? ""));
   }
 
   return (
@@ -51,6 +69,7 @@ function AskComposer({
           )}
         >
           <Textarea
+            ref={textareaRef}
             name="question"
             rows={3}
             required
@@ -85,16 +104,44 @@ function AskComposer({
             </p>
 
             <Button type="submit" size="sm" disabled={disabled}>
-              {isPending ? "Researching…" : "Ask"}
-              {!isPending && <CornerDownLeft className="size-3" />}
+              {isPending ? (
+                <>
+                  <Loader2 className="size-3 animate-spin" />
+                  Researching…
+                </>
+              ) : (
+                <>
+                  Ask
+                  <CornerDownLeft className="size-3" />
+                </>
+              )}
             </Button>
           </div>
         </div>
 
         {error && (
-          <p role="alert" className="text-xs text-rejected">
-            {error}
-          </p>
+          <div
+            role="alert"
+            className="flex flex-col gap-2 rounded-lg border border-rejected-border bg-rejected-surface/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-rejected">
+              <TriangleAlert className="mt-px size-3.5 shrink-0" />
+              {error.message}
+            </p>
+            {error.retryable && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPending}
+                onClick={() => run(textareaRef.current?.value ?? "")}
+                className="shrink-0"
+              >
+                <RotateCw className="size-3.5" />
+                Try again
+              </Button>
+            )}
+          </div>
         )}
       </form>
 

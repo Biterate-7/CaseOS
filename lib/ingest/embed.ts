@@ -2,6 +2,7 @@ import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
 
+import { withAiRetry } from "@/lib/ai/errors";
 import { lazy } from "@/lib/lazy";
 
 /**
@@ -71,11 +72,16 @@ async function embed(
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE);
 
-    const response = await client.models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: batch,
-      config: { taskType, outputDimensionality: EMBEDDING_DIMENSIONS },
-    });
+    // Embeddings run on the same Gemini backend as generation, so they hit
+    // the same 503s. Retried per batch: a capacity blip partway through a
+    // long document should not discard the batches already embedded.
+    const response = await withAiRetry("embed", () =>
+      client.models.embedContent({
+        model: EMBEDDING_MODEL,
+        contents: batch,
+        config: { taskType, outputDimensionality: EMBEDDING_DIMENSIONS },
+      })
+    );
 
     const embeddings = response.embeddings;
     if (!embeddings || embeddings.length !== batch.length) {

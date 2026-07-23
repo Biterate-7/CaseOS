@@ -1,5 +1,6 @@
 import "server-only";
 
+import { withAiRetry } from "./errors";
 import { getChatProvider } from "./provider";
 import type { RetrievedChunk } from "./retrieve";
 
@@ -70,11 +71,16 @@ export async function generateGroundedAnswer(
   question: string,
   chunks: RetrievedChunk[]
 ): Promise<GroundedAnswer> {
-  const { text, model } = await getChatProvider().generate({
-    system: SYSTEM_PROMPT,
-    user: `Sources from this matter's documents:\n\n${buildSourcesBlock(chunks)}\n\nQuestion: ${question}`,
-    temperature: 0.2,
-  });
+  // Retries transient provider failures (503 capacity, 5xx, network stalls)
+  // with exponential backoff, and converts everything else into an AiError
+  // carrying a fixed user-facing message. No provider text escapes this call.
+  const { text, model } = await withAiRetry("generate", () =>
+    getChatProvider().generate({
+      system: SYSTEM_PROMPT,
+      user: `Sources from this project's documents:\n\n${buildSourcesBlock(chunks)}\n\nQuestion: ${question}`,
+      temperature: 0.2,
+    })
+  );
 
   return {
     answer: text,

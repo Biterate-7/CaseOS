@@ -2,14 +2,22 @@
 
 import { revalidatePath } from "next/cache";
 
+import { classifyAiError, logAiError, type AiErrorCode } from "@/lib/ai/errors";
 import { generateGroundedAnswer } from "@/lib/ai/generate";
 import { retrieveChunks } from "@/lib/ai/retrieve";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+/**
+ * Result shape returned to the client.
+ *
+ * `error` is always one of the fixed strings in lib/ai/errors.ts — never
+ * provider text. `code` is stable and machine-readable so the UI can vary its
+ * treatment (retry affordance, tone) without parsing the message.
+ */
 export type AskResult =
   | { ok: true; interactionId: string }
-  | { ok: false; error: string };
+  | { ok: false; error: string; code: AiErrorCode | "VALIDATION" | "NOT_FOUND" };
 
 const MAX_QUESTION_CHARS = 2000;
 /** Excerpt length stored as Citation.quotedText */
@@ -23,10 +31,10 @@ export async function askQuestion(
 
   const question = String(formData.get("question") ?? "").trim();
   if (question.length < 5) {
-    return { ok: false, error: "Enter a question (at least 5 characters)." };
+    return { ok: false, code: "VALIDATION", error: "Enter a question (at least 5 characters)." };
   }
   if (question.length > MAX_QUESTION_CHARS) {
-    return { ok: false, error: "Question is too long (2000 characters max)." };
+    return { ok: false, code: "VALIDATION", error: "Question is too long (2000 characters max)." };
   }
 
   const matter = await db.matter.findFirst({
@@ -38,20 +46,21 @@ export async function askQuestion(
     },
   });
   if (!matter) {
-    return { ok: false, error: "Matter not found." };
+    return { ok: false, code: "NOT_FOUND", error: "Project not found." };
   }
   if (matter._count.documents === 0) {
     return {
       ok: false,
+      code: "VALIDATION",
       error:
-        "This matter has no ingested documents yet. Upload a document first — answers are grounded only in this matter's sources.",
+        "This project has no indexed documents yet. Upload a document first — answers are grounded only in this project's sources.",
     };
   }
 
   try {
     const chunks = await retrieveChunks(matter.id, question);
     if (chunks.length === 0) {
-      return { ok: false, error: "No searchable content found in this matter's documents." };
+      return { ok: false, code: "VALIDATION", error: "No searchable content found in this project's documents." };
     }
 
     const { answer, citations, model } = await generateGroundedAnswer(question, chunks);
@@ -108,9 +117,21 @@ export async function askQuestion(
     revalidatePath(`/matters/${matter.id}`);
     return { ok: true, interactionId };
   } catch (error) {
+    // This used to be `error.message`, which forwarded the provider's raw
+    // HTTP body to the browser — the Gemini SDK puts the whole
+    // {"error":{"code":503,...}} payload in that field, and it rendered in
+    // the research panel.
+    //
+    // Now the full payload is logged server-side and the client receives only
+    // a fixed message plus a stable code. Nothing derived from the provider's
+    // response crosses this boundary.
+    const aiError = classifyAiError(error);
+    logAiError("askQuestion", aiError);
+
     return {
       ok: false,
-      error: error instanceof Error ? error.message : "The AI request failed.",
+      code: aiError.code,
+      error: aiError.userMessage,
     };
   }
 }
