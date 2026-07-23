@@ -267,6 +267,13 @@ export async function withAiRetry<T>(
     timeoutMs?: number;
     /** Hard ceiling for the whole sequence, backoff included. */
     budgetMs?: number;
+    /**
+     * Absolute deadline (ms epoch), overriding budgetMs. Lets several calls
+     * share one ceiling — every embedding batch in a document passes the same
+     * value, so the whole sequence is bounded rather than each call getting a
+     * fresh budget.
+     */
+    deadline?: number;
     meta?: Partial<AiCallMeta>;
   } = {}
 ): Promise<T> {
@@ -276,7 +283,7 @@ export async function withAiRetry<T>(
     budgetMs = DEFAULT_BUDGET_MS,
     meta = {},
   } = options;
-  const deadline = Date.now() + budgetMs;
+  const deadline = options.deadline ?? Date.now() + budgetMs;
   const requestId = meta.requestId ?? newRequestId();
   const started = Date.now();
   let lastError: AiError | undefined;

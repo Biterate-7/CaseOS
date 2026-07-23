@@ -63,34 +63,78 @@ function normalize(vector: number[]): number[] {
   return vector.map((value) => value / magnitude);
 }
 
+/**
+ * Thrown when a document's shared ingestion budget runs out before every
+ * batch is embedded. Distinct from a per-request AiError so the pipeline can
+ * mark the document FAILED with an accurate reason rather than "the AI service
+ * is unavailable", which it was not — we simply ran out of execution time.
+ */
+export class IngestBudgetExceededError extends Error {
+  readonly embeddedBatches: number;
+  readonly totalBatches: number;
+  constructor(embeddedBatches: number, totalBatches: number) {
+    super(
+      `Ingestion exceeded its execution budget after ${embeddedBatches} of ${totalBatches} batches.`
+    );
+    this.name = "IngestBudgetExceededError";
+    this.embeddedBatches = embeddedBatches;
+    this.totalBatches = totalBatches;
+  }
+}
+
 async function embed(
   texts: string[],
-  taskType: "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY"
+  taskType: "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY",
+  deadline?: number
 ): Promise<number[][]> {
   const vectors: number[][] = [];
+  const totalBatches = Math.ceil(texts.length / BATCH_SIZE);
 
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+    const batchIndex = i / BATCH_SIZE;
+
+    // The whole point of the shared deadline: check BEFORE spending on the
+    // next batch. Once no time remains we stop immediately rather than start
+    // work that cannot finish, so the total can never exceed the budget.
+    if (deadline != null && Date.now() >= deadline) {
+      throw new IngestBudgetExceededError(batchIndex, totalBatches);
+    }
+
     const batch = texts.slice(i, i + BATCH_SIZE);
 
     // Embeddings run on the same Gemini backend as generation, so they hit
-    // the same 503s. Retried per batch: a capacity blip partway through a
-    // long document should not discard the batches already embedded.
-    const response = await withAiRetry(
-      "embed",
-      (signal) =>
-        client.models.embedContent({
-          model: EMBEDDING_MODEL,
-          contents: batch,
-          config: {
-            taskType,
-            outputDimensionality: EMBEDDING_DIMENSIONS,
-            // Threaded through so the timeout actually cancels the request
-            // rather than abandoning a socket that keeps running.
-            abortSignal: signal,
-          },
-        }),
-      { meta: { provider: "gemini", model: EMBEDDING_MODEL } }
-    );
+    // the same 503s. Retried, but bounded by the SHARED deadline — the retry
+    // sequence for this batch may not run past the document's overall
+    // ceiling, so a blip late in a long document fails fast instead of each
+    // batch getting a fresh 45s.
+    let response;
+    try {
+      response = await withAiRetry(
+        "embed",
+        (signal) =>
+          client.models.embedContent({
+            model: EMBEDDING_MODEL,
+            contents: batch,
+            config: {
+              taskType,
+              outputDimensionality: EMBEDDING_DIMENSIONS,
+              // Threaded through so the timeout actually cancels the request
+              // rather than abandoning a socket that keeps running.
+              abortSignal: signal,
+            },
+          }),
+        { meta: { provider: "gemini", model: EMBEDDING_MODEL }, deadline }
+      );
+    } catch (error) {
+      // If the shared deadline has passed, this batch was cut short by the
+      // budget, not by an unhealthy provider — the deadline-capped per-attempt
+      // timeout aborts an in-flight request that would run past the ceiling.
+      // Relabel it so the document fails with an accurate reason.
+      if (deadline != null && Date.now() >= deadline) {
+        throw new IngestBudgetExceededError(batchIndex, totalBatches);
+      }
+      throw error;
+    }
 
     const embeddings = response.embeddings;
     if (!embeddings || embeddings.length !== batch.length) {
@@ -114,9 +158,12 @@ async function embed(
  * Embeds document passages. Uses RETRIEVAL_DOCUMENT so the vectors sit in the
  * space Gemini optimises for being *searched against*.
  */
-export async function embedTexts(texts: string[]): Promise<number[][]> {
+export async function embedTexts(
+  texts: string[],
+  options: { deadline?: number } = {}
+): Promise<number[][]> {
   if (texts.length === 0) return [];
-  return embed(texts, "RETRIEVAL_DOCUMENT");
+  return embed(texts, "RETRIEVAL_DOCUMENT", options.deadline);
 }
 
 /**

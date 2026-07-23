@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { downloadDocumentFile } from "@/lib/storage";
 
 import { chunkPages } from "./chunk";
-import { embedTexts } from "./embed";
+import { embedTexts, IngestBudgetExceededError } from "./embed";
 import { extractPages } from "./extract";
 
 /**
@@ -13,7 +13,22 @@ import { extractPages } from "./extract";
  * download from storage → extract text → chunk → store chunks → embed →
  * write vectors. Sets Document.status to READY on success, FAILED on error.
  */
+/**
+ * Wall-clock ceiling for one document's ingestion, shared across every
+ * embedding batch.
+ *
+ * The upload route runs with maxDuration = 60s. This leaves headroom for the
+ * download, extraction, chunking, and the vector write that follow embedding.
+ * Because it is ONE deadline for the whole document — not a fresh budget per
+ * batch — total ingestion time can never exceed it regardless of chunk count.
+ */
+const INGEST_BUDGET_MS = 50_000;
+
 export async function ingestDocument(documentId: string): Promise<void> {
+  // Anchored the moment ingestion begins. Every embedding batch is measured
+  // against this same instant, so batch N cannot restart the clock.
+  const deadline = Date.now() + INGEST_BUDGET_MS;
+
   const document = await db.document.findUniqueOrThrow({
     where: { id: documentId },
     include: { matter: { select: { firmId: true } } },
@@ -46,7 +61,10 @@ export async function ingestDocument(documentId: string): Promise<void> {
       }),
     ]);
 
-    const vectors = await embedTexts(chunks.map((c) => c.content));
+    const vectors = await embedTexts(
+      chunks.map((c) => c.content),
+      { deadline }
+    );
     const stored = await db.documentChunk.findMany({
       where: { documentId },
       orderBy: { chunkIndex: "asc" },
@@ -98,10 +116,35 @@ export async function ingestDocument(documentId: string): Promise<void> {
       },
     });
   } catch (error) {
+    // FAILED is set unconditionally in this catch, so a document can never be
+    // left stuck in PROCESSING by a thrown error, budget or otherwise.
     await db.document.update({
       where: { id: documentId },
       data: { status: "FAILED" },
     });
+
+    // The budget-exceeded case is its own thing: nothing went wrong with the
+    // provider, we simply ran out of execution time. Recording it as a
+    // classified AiError would mislabel it "the AI service is unavailable".
+    const detail =
+      error instanceof IngestBudgetExceededError
+        ? {
+            reason:
+              "Processing exceeded the execution budget. This document is too large to ingest in a single request — split it into smaller files and re-upload.",
+            code: "BUDGET_EXCEEDED",
+            embeddedBatches: error.embeddedBatches,
+            totalBatches: error.totalBatches,
+          }
+        : (() => {
+            // Classified, not raw. AuditTimeline renders every detail value as
+            // a chip, so putting error.message here wrote the provider's JSON
+            // body into the activity panel — permanently, since audit rows are
+            // never deleted. The full payload goes to the server log instead.
+            const classified = classifyAiError(error);
+            logAiError("ingestDocument", classified);
+            return { reason: classified.userMessage, code: classified.code };
+          })();
+
     await db.auditLog.create({
       data: {
         firmId: document.matter.firmId,
@@ -109,15 +152,7 @@ export async function ingestDocument(documentId: string): Promise<void> {
         action: "DOCUMENT_INGEST_FAILED",
         entityType: "Document",
         entityId: documentId,
-        // Classified, not raw. AuditTimeline renders every detail value as a
-        // chip, so putting error.message here wrote the provider's JSON body
-        // into the activity panel — and permanently, since audit rows are
-        // never deleted. The full payload goes to the server log instead.
-        detail: (() => {
-          const classified = classifyAiError(error);
-          logAiError("ingestDocument", classified);
-          return { reason: classified.userMessage, code: classified.code };
-        })(),
+        detail,
       },
     });
     throw error;
