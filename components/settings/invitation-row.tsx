@@ -1,0 +1,117 @@
+"use client";
+
+import { Check, Copy, Mail, X } from "lucide-react";
+import { useState, useTransition } from "react";
+
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { revokeInvitation } from "@/lib/actions/invitations";
+import { formatRelativeTime, roleLabel, type Role } from "@/lib/format";
+
+type PendingInvitation = {
+  id: string;
+  email: string;
+  role: Role;
+  token: string;
+  invitedByName: string;
+  createdAt: Date;
+  expiresAt: Date;
+  /** Computed server-side; nothing sweeps PENDING rows to EXPIRED. */
+  expired: boolean;
+};
+
+function InvitationRow({
+  invitation,
+  canManage,
+}: {
+  invitation: PendingInvitation;
+  canManage: boolean;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/invite/${invitation.token}`
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy to clipboard.");
+    }
+  }
+
+  function revoke() {
+    setError(null);
+    startTransition(async () => {
+      const result = await revokeInvitation(invitation.id);
+      if (!result.ok) setError(result.error);
+    });
+  }
+
+  return (
+    <li className="flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs sm:flex-row sm:items-center">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+        <Mail className="size-4" />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{invitation.email}</p>
+        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          {roleLabel[invitation.role]} · invited by {invitation.invitedByName} ·{" "}
+          {invitation.expired
+            ? "expired"
+            : `expires ${formatRelativeTime(invitation.expiresAt)}`}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1.5">
+        <StatusBadge
+          size="sm"
+          tone={invitation.expired ? "rejected" : "pending"}
+        >
+          {invitation.expired ? "Expired" : "Pending"}
+        </StatusBadge>
+
+        {canManage && !invitation.expired && (
+          <Button variant="ghost" size="sm" onClick={copyLink}>
+            {copied ? (
+              <>
+                <Check className="size-3.5" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="size-3.5" />
+                Link
+              </>
+            )}
+          </Button>
+        )}
+
+        {canManage && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Revoke invitation for ${invitation.email}`}
+            disabled={isPending}
+            onClick={revoke}
+            className="text-muted-foreground hover:text-rejected"
+          >
+            <X />
+          </Button>
+        )}
+      </div>
+
+      {error && (
+        <p role="alert" className="text-xs text-rejected sm:w-full">
+          {error}
+        </p>
+      )}
+    </li>
+  );
+}
+
+export { InvitationRow };

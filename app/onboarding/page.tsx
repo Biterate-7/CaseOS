@@ -23,6 +23,24 @@ export default async function OnboardingPage() {
   if (existing) redirect("/dashboard");
 
   const clerkUser = await currentUser();
+  const email = clerkUser?.primaryEmailAddress?.emailAddress?.toLowerCase();
+
+  // Someone who was invited and then signed up arrives here, where the only
+  // offer is "create a workspace" — which would strand them in a new, empty
+  // one instead of the workspace they were invited to. Send them to the
+  // invitation instead.
+  //
+  // Expiry is compared here rather than filtered on status, because nothing
+  // sweeps PENDING invitations to EXPIRED on a schedule.
+  if (email) {
+    const invitation = await db.invitation.findFirst({
+      where: { email, status: "PENDING", expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+      select: { token: true },
+    });
+    if (invitation) redirect(`/invite/${invitation.token}`);
+  }
+
   const defaultName =
     [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ") || "";
 
