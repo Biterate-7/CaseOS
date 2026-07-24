@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { reconcileStuckDocuments } from "@/lib/ingest/reconcile";
+import { logError } from "@/lib/log";
 
 /**
  * Workspace data loader.
@@ -40,19 +41,35 @@ export type WorkspaceCitation = {
   pageNumber: number | null;
 };
 
+/** A server-verified external source cited by an [En] marker. */
+export type WorkspaceExternalCitation = {
+  id: string;
+  /** The n in [En] — how the answer's markers resolve to this row. */
+  marker: number;
+  title: string;
+  publisher: string;
+  publishedAt: string | null;
+  url: string;
+  finalUrl: string | null;
+  domain: string;
+  tier: string;
+  accessedAt: Date;
+};
+
 export type WorkspaceInteraction = {
   id: string;
   prompt: string;
   response: string;
   model: string;
   type: "RESEARCH" | "SUMMARIZE" | "DRAFT" | "EXTRACT";
-  /** Whether the answer was allowed a clearly-labelled AI-knowledge section. */
-  knowledgeMode: "DOCUMENT_ONLY" | "DOCUMENT_PLUS_AI";
+  /** Whether the answer was allowed a labelled AI-knowledge or external section. */
+  knowledgeMode: "DOCUMENT_ONLY" | "DOCUMENT_PLUS_AI" | "DOCUMENT_PLUS_EXTERNAL";
   reviewStatus: "PENDING_REVIEW" | "APPROVED" | "REJECTED";
   reviewedAt: Date | null;
   createdAt: Date;
   authorName: string;
   citations: WorkspaceCitation[];
+  externalCitations: WorkspaceExternalCitation[];
 };
 
 export type WorkspaceAuditEntry = {
@@ -83,6 +100,16 @@ export type WorkspaceData = {
   documents: WorkspaceDocument[];
   interactions: WorkspaceInteraction[];
   auditLog: WorkspaceAuditEntry[];
+  /**
+   * Which auxiliary sections failed to load. The essential data (matter,
+   * members, documents) either loads or the whole call throws / 404s; these
+   * flags let a failure in one secondary section render an inline error while
+   * the rest of the page renders normally, instead of crashing everything.
+   */
+  errors: {
+    interactions: boolean;
+    auditLog: boolean;
+  };
   stats: {
     documentCount: number;
     readyDocumentCount: number;
@@ -93,18 +120,37 @@ export type WorkspaceData = {
   };
 };
 
+/**
+ * Loads everything the matter workspace renders.
+ *
+ * Structured so a failure in any one secondary section (research history, the
+ * audit trail, per-document aggregates, the stuck-document sweep) cannot bring
+ * down the whole page. Only the *essential* query — matter + members +
+ * documents — is allowed to throw, because there is nothing to render without
+ * it (and a missing matter must still 404). Everything else is loaded inside
+ * its own try/catch: on failure it degrades to an empty result plus a flag the
+ * UI turns into an inline error, and the rest of the page renders normally.
+ *
+ * This is what prevents the class of crash where, e.g., one bad interaction row
+ * or a transient DB blip on the aiInteractions query collapses the entire
+ * authenticated shell to the global error boundary.
+ */
 export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
   const user = await requireUser();
+  const logCtx = { userId: user.id, firmId: user.firmId, matterId };
 
-  // Reap any documents stranded in PROCESSING before reading them, so a row
-  // stuck by a crashed ingestion shows as FAILED here rather than spinning
-  // forever. Scoped to the caller's workspace and cheap — the partial index
-  // makes it an index probe that usually matches nothing.
-  await reconcileStuckDocuments({ firmId: user.firmId });
+  // Reap any documents stranded in PROCESSING before reading them. Best-effort
+  // maintenance — a failure here (e.g. a DB blip) must never block the page, so
+  // it is logged and swallowed rather than propagated.
+  try {
+    await reconcileStuckDocuments({ firmId: user.firmId });
+  } catch (error) {
+    logError("workspace_reconcile_failed", logCtx, error);
+  }
 
-  // findFirst scoped by firmId (never findUnique by id alone) so a matter id
-  // belonging to another workspace 404s instead of leaking across the tenant
-  // boundary.
+  // Essential data. findFirst scoped by firmId (never findUnique by id alone)
+  // so a matter id belonging to another workspace 404s instead of leaking
+  // across the tenant boundary. A throw here is a genuine page-load failure.
   const matter = await db.matter.findFirst({
     where: { id: matterId, firmId: user.firmId },
     include: {
@@ -118,29 +164,6 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
         orderBy: [{ role: "asc" }, { user: { name: "asc" } }],
       },
       documents: { orderBy: { createdAt: "desc" } },
-      auditLogs: {
-        orderBy: { createdAt: "desc" },
-        take: 25,
-        include: { user: { select: { name: true } } },
-      },
-      aiInteractions: {
-        orderBy: { createdAt: "desc" },
-        take: 20,
-        include: {
-          user: { select: { name: true } },
-          citations: {
-            include: {
-              chunk: {
-                select: {
-                  pageNumber: true,
-                  documentId: true,
-                  document: { select: { title: true } },
-                },
-              },
-            },
-          },
-        },
-      },
     },
   });
 
@@ -148,23 +171,28 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
 
   // Derived per-document facts. Two small aggregates rather than pulling every
   // chunk body into memory — a long matter can hold thousands of passages.
-  const [chunkAgg, openingChunks] = await Promise.all([
-    db.documentChunk.groupBy({
-      by: ["documentId"],
-      where: { document: { matterId: matter.id } },
-      _max: { pageNumber: true },
-      _count: { _all: true },
-    }),
-    db.documentChunk.findMany({
-      where: { document: { matterId: matter.id }, chunkIndex: 0 },
-      select: { documentId: true, content: true },
-    }),
-  ]);
-
-  const aggByDoc = new Map(chunkAgg.map((row) => [row.documentId, row]));
-  const excerptByDoc = new Map(
-    openingChunks.map((row) => [row.documentId, row.content])
-  );
+  // Defensive: if this fails, documents still render (without page/chunk counts
+  // and previews) rather than taking the page down.
+  let aggByDoc = new Map<string, { _max: { pageNumber: number | null }; _count: { _all: number } }>();
+  let excerptByDoc = new Map<string, string>();
+  try {
+    const [chunkAgg, openingChunks] = await Promise.all([
+      db.documentChunk.groupBy({
+        by: ["documentId"],
+        where: { document: { matterId: matter.id } },
+        _max: { pageNumber: true },
+        _count: { _all: true },
+      }),
+      db.documentChunk.findMany({
+        where: { document: { matterId: matter.id }, chunkIndex: 0 },
+        select: { documentId: true, content: true },
+      }),
+    ]);
+    aggByDoc = new Map(chunkAgg.map((row) => [row.documentId, row]));
+    excerptByDoc = new Map(openingChunks.map((row) => [row.documentId, row.content]));
+  } catch (error) {
+    logError("workspace_aggregates_failed", logCtx, error);
+  }
 
   const documents: WorkspaceDocument[] = matter.documents.map((doc) => {
     const agg = aggByDoc.get(doc.id);
@@ -183,8 +211,34 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
     };
   });
 
-  const interactions: WorkspaceInteraction[] = matter.aiInteractions.map(
-    (interaction) => ({
+  // Research history. Isolated in its own query + try/catch: this is the
+  // section most likely to fail (it joins interactions, citations, chunks, and
+  // external citations), and its failure must leave documents and the rest of
+  // the page fully usable, with an inline error in the research column.
+  let interactions: WorkspaceInteraction[] = [];
+  let interactionsFailed = false;
+  try {
+    const rows = await db.aIInteraction.findMany({
+      where: { matterId: matter.id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      include: {
+        user: { select: { name: true } },
+        citations: {
+          include: {
+            chunk: {
+              select: {
+                pageNumber: true,
+                documentId: true,
+                document: { select: { title: true } },
+              },
+            },
+          },
+        },
+        externalCitations: { orderBy: { marker: "asc" } },
+      },
+    });
+    interactions = rows.map((interaction) => ({
       id: interaction.id,
       prompt: interaction.prompt,
       response: interaction.response,
@@ -204,8 +258,46 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
         documentTitle: citation.chunk.document.title,
         pageNumber: citation.chunk.pageNumber,
       })),
-    })
-  );
+      externalCitations: interaction.externalCitations.map((c) => ({
+        id: c.id,
+        marker: c.marker,
+        title: c.title,
+        publisher: c.publisher,
+        publishedAt: c.publishedAt,
+        url: c.url,
+        finalUrl: c.finalUrl,
+        domain: c.domain,
+        tier: c.tier,
+        accessedAt: c.accessedAt,
+      })),
+    }));
+  } catch (error) {
+    interactionsFailed = true;
+    logError("workspace_interactions_failed", logCtx, error);
+  }
+
+  // Audit trail. Also isolated — the record is important but not essential to
+  // asking a question or reading documents.
+  let auditLog: WorkspaceAuditEntry[] = [];
+  let auditFailed = false;
+  try {
+    const rows = await db.auditLog.findMany({
+      where: { matterId: matter.id },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+      include: { user: { select: { name: true } } },
+    });
+    auditLog = rows.map((entry) => ({
+      id: entry.id,
+      action: entry.action,
+      actorName: entry.user?.name ?? null,
+      createdAt: entry.createdAt,
+      detail: (entry.detail as Record<string, unknown> | null) ?? null,
+    }));
+  } catch (error) {
+    auditFailed = true;
+    logError("workspace_audit_failed", logCtx, error);
+  }
 
   return {
     matter: {
@@ -225,13 +317,11 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
     })),
     documents,
     interactions,
-    auditLog: matter.auditLogs.map((entry) => ({
-      id: entry.id,
-      action: entry.action,
-      actorName: entry.user?.name ?? null,
-      createdAt: entry.createdAt,
-      detail: (entry.detail as Record<string, unknown> | null) ?? null,
-    })),
+    auditLog,
+    errors: {
+      interactions: interactionsFailed,
+      auditLog: auditFailed,
+    },
     stats: {
       documentCount: documents.length,
       readyDocumentCount: documents.filter((d) => d.status === "READY").length,

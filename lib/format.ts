@@ -76,11 +76,15 @@ export const interactionTypeLabel: Record<InteractionType, string> = {
   EXTRACT: "Extraction",
 };
 
-export type KnowledgeMode = "DOCUMENT_ONLY" | "DOCUMENT_PLUS_AI";
+export type KnowledgeMode =
+  | "DOCUMENT_ONLY"
+  | "DOCUMENT_PLUS_AI"
+  | "DOCUMENT_PLUS_EXTERNAL";
 
 export const knowledgeModeLabel: Record<KnowledgeMode, string> = {
   DOCUMENT_ONLY: "Documents only",
   DOCUMENT_PLUS_AI: "Documents + AI context",
+  DOCUMENT_PLUS_EXTERNAL: "Documents + external research",
 };
 
 /** What each mode actually permits — shown on the composer selector. */
@@ -89,6 +93,33 @@ export const knowledgeModeDescription: Record<KnowledgeMode, string> = {
     "Every claim comes from this project's documents, with a citation.",
   DOCUMENT_PLUS_AI:
     "Document-grounded answer first, plus a clearly-labelled section of general background from the model. Citations never apply to that section.",
+  DOCUMENT_PLUS_EXTERNAL:
+    "Documents first. When they fall short, the model adds an external-research section whose every source is checked against a quality policy and its URL verified before it's shown.",
+};
+
+/** Support level the model declared in the Confidence section. */
+export type ConfidenceLevel = "DOCUMENTS" | "MIXED" | "EXTERNAL";
+
+export const confidenceLabel: Record<ConfidenceLevel, string> = {
+  DOCUMENTS: "Fully supported by uploaded documents",
+  MIXED: "Partially supported by documents and external research",
+  EXTERNAL: "Primarily based on external research",
+};
+
+export const confidenceTone: Record<ConfidenceLevel, StatusTone> = {
+  DOCUMENTS: "grounded",
+  MIXED: "pending",
+  EXTERNAL: "rejected",
+};
+
+/** Source-quality tier of a verified external citation. */
+export type SourceTier = "preferred" | "acceptable" | "unknown" | "avoid";
+
+export const sourceTierLabel: Record<SourceTier, string> = {
+  preferred: "Authoritative source",
+  acceptable: "Reputable publisher",
+  unknown: "Unverified quality",
+  avoid: "Low-quality source",
 };
 
 /**

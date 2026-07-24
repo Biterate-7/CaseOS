@@ -3,6 +3,7 @@
 import {
   CornerDownLeft,
   FileText,
+  Globe,
   Loader2,
   Lock,
   RotateCw,
@@ -27,13 +28,29 @@ import { cn } from "@/lib/utils";
 const MODE_ICON: Record<KnowledgeMode, typeof FileText> = {
   DOCUMENT_ONLY: FileText,
   DOCUMENT_PLUS_AI: Sparkles,
+  DOCUMENT_PLUS_EXTERNAL: Globe,
 };
 
+// The accent a mode wears when selected — matches how its content is rendered
+// in the answer (violet AI context, teal external), so the control previews
+// what you'll get.
+const MODE_SELECTED_CLASS: Record<KnowledgeMode, string> = {
+  DOCUMENT_ONLY: "bg-card text-foreground shadow-xs ring-1 ring-border",
+  DOCUMENT_PLUS_AI: "bg-card text-ai-context shadow-xs ring-1 ring-ai-context-border",
+  DOCUMENT_PLUS_EXTERNAL: "bg-card text-external shadow-xs ring-1 ring-external-border",
+};
+
+const MODE_OPTIONS = [
+  "DOCUMENT_ONLY",
+  "DOCUMENT_PLUS_AI",
+  "DOCUMENT_PLUS_EXTERNAL",
+] as const;
+
 /**
- * Enhanced Research knowledge-mode selector. A segmented control rather than
- * a dropdown: both options stay visible, so the existence of the stricter
- * default is itself communicated. The description line spells out exactly
- * what the selected mode permits before anything is asked.
+ * Knowledge-mode selector. A segmented control rather than a dropdown: every
+ * option stays visible, so the existence of the stricter default is itself
+ * communicated. The description line spells out exactly what the selected mode
+ * permits before anything is asked.
  */
 function KnowledgeModeSelector({
   mode,
@@ -50,9 +67,9 @@ function KnowledgeModeSelector({
       <div
         role="radiogroup"
         aria-label="Knowledge mode"
-        className="flex w-fit items-center gap-0.5 rounded-lg border bg-muted/60 p-0.5"
+        className="flex w-fit flex-wrap items-center gap-0.5 rounded-lg border bg-muted/60 p-0.5"
       >
-        {(["DOCUMENT_ONLY", "DOCUMENT_PLUS_AI"] as const).map((option) => {
+        {MODE_OPTIONS.map((option) => {
           const Icon = MODE_ICON[option];
           const selected = mode === option;
           return (
@@ -68,9 +85,7 @@ function KnowledgeModeSelector({
                 "transition-[background-color,color,box-shadow] duration-150 outline-none",
                 "focus-visible:ring-3 focus-visible:ring-ring/50",
                 selected
-                  ? option === "DOCUMENT_PLUS_AI"
-                    ? "bg-card text-ai-context shadow-xs ring-1 ring-ai-context-border"
-                    : "bg-card text-foreground shadow-xs ring-1 ring-border"
+                  ? MODE_SELECTED_CLASS[option]
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -183,10 +198,15 @@ function AskComposer({
                   Answers use only this project&apos;s{" "}
                   {countLabel(readyDocumentCount, "indexed document")}
                 </>
-              ) : (
+              ) : mode === "DOCUMENT_PLUS_AI" ? (
                 <>
                   Grounded in {countLabel(readyDocumentCount, "indexed document")},
                   plus labelled AI context
+                </>
+              ) : (
+                <>
+                  Grounded in {countLabel(readyDocumentCount, "indexed document")},
+                  plus verified external sources when needed
                 </>
               )}
             </p>

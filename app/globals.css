@@ -84,6 +84,20 @@
   --color-ai-context-surface: var(--ai-context-surface);
   --color-ai-context-border: var(--ai-context-border);
 
+  /* External research only. A teal distinct from both citation-bronze and
+     ai-context-violet, so "this came from the open web, verified" reads as its
+     own category — not your documents, not the model's memory. */
+  --color-external: var(--external);
+  --color-external-surface: var(--external-surface);
+  --color-external-border: var(--external-border);
+
+  /* Premium depth layer. Frosted glass surfaces and a single accent glow,
+     used sparingly for elevation and lighting. The aurora tokens below feed
+     the ambient background only. */
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --color-glow: var(--glow);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -161,6 +175,25 @@
   --ai-context-surface: oklch(0.9712 0.0156 300);
   --ai-context-border: oklch(0.8756 0.0489 297);
 
+  --external: oklch(0.4912 0.0912 208);
+  --external-surface: oklch(0.9701 0.0189 205);
+  --external-border: oklch(0.8712 0.0489 205);
+
+  /* Frosted glass: a translucent card that lets the ambient light behind it
+     bleed through. Border is a hairline of the same cool ink as the page. */
+  --glass: oklch(1 0 0 / 0.6);
+  --glass-border: oklch(0.42 0.02 260 / 0.12);
+  /* Single restrained accent glow — the navy brand hue, never a rainbow. */
+  --glow: oklch(0.62 0.11 255 / 0.5);
+
+  /* Ambient background. Three low-chroma glows in the brand family (navy →
+     violet → teal) drifting over the near-white ground. Restrained on purpose:
+     luxurious, not loud. */
+  --aurora-1: oklch(0.7 0.1 258 / 0.16);
+  --aurora-2: oklch(0.72 0.11 300 / 0.1);
+  --aurora-3: oklch(0.78 0.09 205 / 0.12);
+  --aurora-ground: oklch(0.985 0.0025 248);
+
   --shadow-tint-weak: oklch(0.2077 0.0293 264 / 0.04);
   --shadow-tint: oklch(0.2077 0.0293 264 / 0.07);
   --shadow-tint-strong: oklch(0.2077 0.0293 264 / 0.1);
@@ -228,6 +261,19 @@
   --ai-context-surface: oklch(0.2734 0.0412 297);
   --ai-context-border: oklch(0.3834 0.0612 296);
 
+  /* On near-black, glass is a lifted dark pane with a faint white rim catching
+     the ambient light. */
+  --glass: oklch(0.22 0.018 260 / 0.55);
+  --glass-border: oklch(1 0 0 / 0.08);
+  --glow: oklch(0.68 0.13 258 / 0.55);
+
+  /* Richer, more luminous glows against the OLED ground — the brand hues read
+     as light sources in a dark room. */
+  --aurora-1: oklch(0.55 0.15 260 / 0.28);
+  --aurora-2: oklch(0.55 0.16 300 / 0.2);
+  --aurora-3: oklch(0.6 0.12 205 / 0.2);
+  --aurora-ground: oklch(0.129 0.011 258);
+
   --shadow-tint-weak: oklch(0 0 0 / 0.2);
   --shadow-tint: oklch(0 0 0 / 0.32);
   --shadow-tint-strong: oklch(0 0 0 / 0.45);
@@ -289,4 +335,140 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* ============================================================================
+   Premium visual layer — depth, lighting, and ambient motion.
+
+   Everything here animates only transform/opacity/filter-safe properties and
+   is neutralised by the reduced-motion rule above (which zeroes every
+   animation-duration globally), so nothing here moves for a user who asked for
+   stillness. Kept out of @layer so these utilities reliably win over Tailwind
+   utilities they compose with.
+   ============================================================================ */
+
+/* Slow, offset drifts for the three ambient glows. Pure transform + opacity so
+   the compositor carries them at 60fps with zero layout cost. The scale/translate
+   amounts are tiny — the eye reads "the light is breathing", not "things are
+   moving". */
+@keyframes aurora-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+@keyframes aurora-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1.05);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate3d(-5%, 2%, 0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes aurora-c {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(3%, -4%, 0) scale(1.1);
+    opacity: 0.95;
+  }
+}
+
+/* A soft elevation "breath" for hero elements. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Skeleton shimmer: a light sweep across a muted base. */
+@keyframes shimmer {
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Slow pan for gradient text, so the accent hue moves like light on metal. */
+@keyframes gradient-pan {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-aurora-a {
+  animation: aurora-a 22s ease-in-out infinite;
+}
+.animate-aurora-b {
+  animation: aurora-b 28s ease-in-out infinite;
+}
+.animate-aurora-c {
+  animation: aurora-c 25s ease-in-out infinite;
+}
+.animate-breathe {
+  animation: breathe 7s ease-in-out infinite;
+}
+
+/* Frosted glass surface. The blur is applied through Tailwind's backdrop
+   utilities (via @apply) rather than a raw `backdrop-filter` declaration:
+   Lightning CSS, Tailwind v4's engine, drops a bare backdrop-filter from a
+   plain rule, but keeps the utility-generated one. GPU-composited; the fallback
+   without backdrop support is simply the more opaque --glass colour. */
+.glass {
+  @apply backdrop-blur-xl backdrop-saturate-150;
+  background-color: var(--glass);
+  border: 1px solid var(--glass-border);
+}
+
+/* Gradient text that slowly pans. Restrained: brand navy → steel → a whisper
+   of violet, never a rainbow. */
+.text-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--foreground) 0%,
+    color-mix(in oklch, var(--primary), var(--foreground) 25%) 40%,
+    color-mix(in oklch, var(--ai-context), var(--foreground) 20%) 70%,
+    var(--foreground) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-pan 8s ease-in-out infinite;
+}
+
+/* Skeleton loading shimmer. Apply to a placeholder block. */
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    color-mix(in oklch, var(--muted), var(--foreground) 8%) 50%,
+    var(--muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Fine film grain, so large flat surfaces and gradients read as "material"
+   rather than banded digital fills. Inlined SVG turbulence — no network. */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }

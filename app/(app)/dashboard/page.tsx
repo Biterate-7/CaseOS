@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { IngestionChart } from "@/components/dashboard/ingestion-chart";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { CountUp } from "@/components/ui/motion/count-up";
 import { Reveal, RevealItem } from "@/components/ui/reveal";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth";
@@ -251,7 +253,7 @@ export default async function DashboardPage() {
                 card.emphasis && "text-pending"
               )}
             >
-              {card.value}
+              <CountUp value={card.value} />
             </p>
             <p className="mt-1.5 text-xs text-muted-foreground">{card.hint}</p>
           </RevealItem>
@@ -354,37 +356,7 @@ export default async function DashboardPage() {
                 description="Upload a document and this chart starts tracking ingestion over time."
               />
             ) : (
-              <div className="mt-5 flex h-28 items-end gap-1.5">
-                {weeks.map((week, i) => {
-                  const label = `Week ending ${week.end.toLocaleDateString(
-                    "en-US",
-                    { month: "short", day: "numeric" }
-                  )}: ${countLabel(week.count, "document")}`;
-                  return (
-                    <div
-                      key={i}
-                      title={label}
-                      aria-label={label}
-                      className="group flex h-full flex-1 flex-col justify-end"
-                    >
-                      <div
-                        className={cn(
-                          "w-full rounded-sm transition-colors duration-150",
-                          week.count > 0
-                            ? "bg-primary/80 group-hover:bg-primary"
-                            : "bg-muted"
-                        )}
-                        style={{
-                          height:
-                            week.count > 0
-                              ? `${Math.max((week.count / peak) * 100, 6)}%`
-                              : "2px",
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
+              <IngestionChart weeks={weeks} peak={peak} />
             )}
           </section>
 

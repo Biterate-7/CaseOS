@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertTriangle, Globe, ShieldCheck, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo } from "react";
 
@@ -64,15 +64,25 @@ function EvidencePanel({
         </span>
       </div>
 
-      {citations.length > 0 && (
-        <p className="inline-flex items-start gap-1.5 rounded-md border border-grounded-border bg-grounded-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-grounded">
-          <ShieldCheck className="mt-px size-3.5 shrink-0" />
-          <span>
-            Every source below was retrieved from this project. Nothing outside
-            it was searched.
-          </span>
-        </p>
-      )}
+      {citations.length > 0 &&
+        (interaction.externalCitations.length > 0 ? (
+          <p className="inline-flex items-start gap-1.5 rounded-md border border-external-border bg-external-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-external">
+            <ShieldCheck className="mt-px size-3.5 shrink-0" />
+            <span>
+              The passages below are from this project. This answer also cites{" "}
+              {countLabel(interaction.externalCitations.length, "verified external source")},
+              shown inside the answer.
+            </span>
+          </p>
+        ) : (
+          <p className="inline-flex items-start gap-1.5 rounded-md border border-grounded-border bg-grounded-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-grounded">
+            <ShieldCheck className="mt-px size-3.5 shrink-0" />
+            <span>
+              Every source below was retrieved from this project. Nothing
+              outside it was searched.
+            </span>
+          </p>
+        ))}
 
       {aligned.unresolvedMarkerCount > 0 && (
         <p className="inline-flex items-start gap-1.5 rounded-md border border-pending-border bg-pending-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-pending">
@@ -88,12 +98,21 @@ function EvidencePanel({
       )}
 
       {citations.length === 0 ? (
-        <EmptyState
-          icon={AlertTriangle}
-          size="sm"
-          title="No citations on this answer"
-          description="The assistant returned an answer without linking any claim to a source passage. Treat it as unverified."
-        />
+        interaction.externalCitations.length > 0 ? (
+          <EmptyState
+            icon={Globe}
+            size="sm"
+            title="Answered from external research"
+            description="This project's documents did not cover the question, so the answer relies on verified external sources — listed inside the answer, not here."
+          />
+        ) : (
+          <EmptyState
+            icon={AlertTriangle}
+            size="sm"
+            title="No citations on this answer"
+            description="The assistant returned an answer without linking any claim to a source passage. Treat it as unverified."
+          />
+        )
       ) : (
         <div className="flex flex-col gap-2">
           {citations.map((citation, index) => (

@@ -3,13 +3,17 @@
 import {
   CheckCircle2,
   FileSearch,
+  Globe,
   Quote,
+  RefreshCw,
   ShieldQuestion,
   Sparkles,
+  TriangleAlert,
   X,
 } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { AnswerBody } from "@/components/matter/answer-body";
 import { AskComposer } from "@/components/matter/ask-composer";
@@ -53,8 +57,13 @@ function InteractionCard({
   // Re-parsing the answer on every parent state change (citation select,
   // panel toggle) is pure waste — the response is immutable once persisted.
   const aligned = useMemo(
-    () => alignAnswer(interaction.response, interaction.citations),
-    [interaction.response, interaction.citations]
+    () =>
+      alignAnswer(
+        interaction.response,
+        interaction.citations,
+        interaction.externalCitations
+      ),
+    [interaction.response, interaction.citations, interaction.externalCitations]
   );
 
   return (
@@ -96,7 +105,7 @@ function InteractionCard({
           </span>
           <span>· {formatRelativeTime(interaction.createdAt)}</span>
           <span>· {interactionTypeLabel[interaction.type]}</span>
-          {/* Only the non-default mode is called out — a chip on every card
+          {/* Only the non-default modes are called out — a chip on every card
               would stop meaning anything. */}
           {interaction.knowledgeMode === "DOCUMENT_PLUS_AI" && (
             <span className="inline-flex items-center gap-1 rounded-full border border-ai-context-border bg-ai-context-surface/60 px-1.5 py-px font-medium text-ai-context">
@@ -104,11 +113,18 @@ function InteractionCard({
               {knowledgeModeLabel.DOCUMENT_PLUS_AI}
             </span>
           )}
+          {interaction.knowledgeMode === "DOCUMENT_PLUS_EXTERNAL" && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-external-border bg-external-surface/60 px-1.5 py-px font-medium text-external">
+              <Globe className="size-2.5 shrink-0" />
+              {knowledgeModeLabel.DOCUMENT_PLUS_EXTERNAL}
+            </span>
+          )}
         </p>
       </header>
 
       <AnswerBody
         aligned={aligned}
+        externalCitations={interaction.externalCitations}
         activeCitationId={activeCitationId}
         onSelectCitation={(id) => {
           onFocus();
@@ -117,16 +133,25 @@ function InteractionCard({
       />
 
       <footer className="flex flex-col gap-3">
-        <p className="inline-flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground">
+        <p className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.6875rem] text-muted-foreground">
           <Quote className="size-3 shrink-0" />
           {interaction.citations.length > 0 ? (
-            <>
+            <span>
               Grounded in{" "}
-              {countLabel(interaction.citations.length, "source passage")} ·
-              select a marker to see it
-            </>
+              {countLabel(interaction.citations.length, "source passage")}
+            </span>
           ) : (
-            <>No source passages linked to this answer</>
+            <span>No source passages linked to this answer</span>
+          )}
+          {interaction.externalCitations.length > 0 && (
+            <span className="inline-flex items-center gap-1 text-external">
+              <Globe className="size-2.5 shrink-0" />
+              {countLabel(interaction.externalCitations.length, "verified external source")}
+            </span>
+          )}
+          {(interaction.citations.length > 0 ||
+            interaction.externalCitations.length > 0) && (
+            <span>· select a marker to see it</span>
           )}
         </p>
         <ReviewGate interaction={interaction} />
@@ -146,6 +171,7 @@ function AiWorkspace({
   matterId,
   readyDocumentCount,
   interactions,
+  loadError = false,
   reviewMode,
   onExitReviewMode,
   focusedInteractionId,
@@ -156,6 +182,8 @@ function AiWorkspace({
   matterId: string;
   readyDocumentCount: number;
   interactions: WorkspaceInteraction[];
+  /** True when research history failed to load — the rest of the page is fine. */
+  loadError?: boolean;
   /** Filtered to items awaiting review, via `?tab=review`. */
   reviewMode: boolean;
   onExitReviewMode: () => void;
@@ -165,6 +193,8 @@ function AiWorkspace({
   onSelectCitation: (citationId: string | null) => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const router = useRouter();
+  const [isRetrying, startRetry] = useTransition();
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
   // Deep link support: `#interaction-<id>` scrolls that answer into view,
@@ -233,7 +263,31 @@ function AiWorkspace({
         </div>
       )}
 
-      {interactions.length === 0 ? (
+      {loadError ? (
+        // Research history failed to load — but the composer above still works,
+        // so a question can be asked. Documents and the rest of the page are
+        // unaffected. Offer an in-place retry rather than a global error.
+        <div
+          role="alert"
+          className="flex flex-col items-start gap-2 rounded-lg border border-rejected-border bg-rejected-surface/50 px-3.5 py-3"
+        >
+          <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-rejected">
+            <TriangleAlert className="mt-px size-3.5 shrink-0" />
+            Previous answers couldn&apos;t be loaded just now. Your documents and
+            saved answers are safe — this is usually temporary, and you can still
+            ask a new question above.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isRetrying}
+            onClick={() => startRetry(() => router.refresh())}
+          >
+            <RefreshCw className={isRetrying ? "size-3.5 animate-spin" : "size-3.5"} />
+            Reload answers
+          </Button>
+        </div>
+      ) : interactions.length === 0 ? (
         reviewMode ? (
           <EmptyState
             icon={CheckCircle2}

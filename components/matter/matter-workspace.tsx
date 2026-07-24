@@ -58,7 +58,7 @@ function parsePanel(raw: string | null): Panel {
  * scroll or a squeezed sources rail.
  */
 function MatterWorkspace({ data }: { data: WorkspaceData }) {
-  const { matter, documents, interactions, auditLog, stats } = data;
+  const { matter, documents, interactions, auditLog, stats, errors } = data;
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
@@ -123,6 +123,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
       matterId={matter.id}
       readyDocumentCount={stats.readyDocumentCount}
       interactions={shownInteractions}
+      loadError={errors.interactions}
       reviewMode={reviewMode}
       onExitReviewMode={() => setTab("research")}
       focusedInteractionId={focusedInteractionId}
@@ -131,7 +132,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
       onSelectCitation={setActiveCitationId}
     />
   );
-  const auditPanel = <AuditTimeline entries={auditLog} />;
+  const auditPanel = <AuditTimeline entries={auditLog} loadError={errors.auditLog} />;
 
   const reviewToggle = reviewCount > 0 && (
     <Button

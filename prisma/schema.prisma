@@ -44,11 +44,14 @@ enum ReviewStatus {
 /// Which knowledge the model was allowed to draw on for an interaction.
 /// DOCUMENT_ONLY answers use retrieved chunks exclusively; DOCUMENT_PLUS_AI
 /// additionally allows a clearly-labelled, citation-free "Additional Context"
-/// section from the model's own knowledge. Defaulted so every pre-existing
-/// row is (accurately) recorded as document-only.
+/// section from the model's own knowledge; DOCUMENT_PLUS_EXTERNAL allows a
+/// clearly-labelled "External Research" section whose every claim carries a
+/// server-verified external citation (see ExternalCitation). Defaulted so
+/// every pre-existing row is (accurately) recorded as document-only.
 enum KnowledgeMode {
   DOCUMENT_ONLY
   DOCUMENT_PLUS_AI
+  DOCUMENT_PLUS_EXTERNAL
 }
 
 /// Per-project permission. Distinct from `Role`, which is workspace-wide:
@@ -285,12 +288,57 @@ model AIInteraction {
   reviewedAt    DateTime?
   createdAt     DateTime        @default(now())
 
-  matter    Matter     @relation(fields: [matterId], references: [id])
-  user      User       @relation(fields: [userId], references: [id])
-  citations Citation[]
+  matter            Matter             @relation(fields: [matterId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+  citations         Citation[]
+  externalCitations ExternalCitation[]
 
   @@index([matterId])
   @@index([userId])
+}
+
+/// One verified external source cited by an [En] marker in an interaction's
+/// "External Research" section (DOCUMENT_PLUS_EXTERNAL mode). Rows exist only
+/// for citations that survived server-side verification — the URL was fetched
+/// and the domain passed the source-quality policy. Unverifiable candidates
+/// are removed from the answer before persistence and recorded only in the
+/// audit detail.
+model ExternalCitation {
+  id              String   @id @default(cuid())
+  aiInteractionId String
+  /// The n in [En], as emitted by the model. Survivors keep their original
+  /// numbers, so gaps mean a sibling citation failed verification.
+  marker          Int
+  title           String
+  publisher       String
+  /// Publication date as printed by the source; free text because real
+  /// citations carry everything from "2024-05-01" to "Spring 2019".
+  publishedAt     String?
+  url             String
+  /// Where the URL actually resolved after redirects, when different.
+  finalUrl        String?
+  domain          String
+  /// Source-quality tier at verification time: preferred | acceptable | unknown.
+  tier            String
+  httpStatus      Int?
+  /// When the server verified the URL — the access date shown when the
+  /// source carries no publication date.
+  accessedAt      DateTime @default(now())
+
+  aiInteraction AIInteraction @relation(fields: [aiInteractionId], references: [id])
+
+  @@index([aiInteractionId])
+}
+
+/// Verification cache for external URLs. A URL verified recently is not
+/// re-fetched on every question that cites it (TTL enforced in code).
+model ExternalSourceCache {
+  id         String   @id @default(cuid())
+  url        String   @unique
+  finalUrl   String?
+  httpStatus Int?
+  ok         Boolean
+  checkedAt  DateTime @default(now())
 }
 
 model Citation {

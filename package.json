@@ -19,6 +19,7 @@
     "test:ingest": "node --conditions=react-server --import tsx scripts/test-ingest.ts",
     "test:ai": "node --conditions=react-server --import tsx scripts/test-ai.ts",
     "test:citations": "tsx scripts/test-citations.ts",
+    "test:external": "node --conditions=react-server --import tsx scripts/test-external.ts",
     "test:search": "node --conditions=react-server --import tsx scripts/test-search.ts",
     "test:invitations": "node --conditions=react-server --import tsx scripts/test-invitations.ts",
     "test:ai-errors": "node --conditions=react-server --import tsx scripts/test-ai-errors.ts",

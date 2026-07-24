@@ -8,6 +8,7 @@ import { retrieveChunks } from "@/lib/ai/retrieve";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { KnowledgeMode } from "@/lib/format";
+import { logError } from "@/lib/log";
 
 /**
  * Result shape returned to the client.
@@ -30,7 +31,14 @@ const QUOTE_CHARS = 300;
  * a safe interpretation.
  */
 function parseKnowledgeMode(value: unknown): KnowledgeMode {
-  return value === "DOCUMENT_PLUS_AI" ? "DOCUMENT_PLUS_AI" : "DOCUMENT_ONLY";
+  if (value === "DOCUMENT_PLUS_AI") return "DOCUMENT_PLUS_AI";
+  if (value === "DOCUMENT_PLUS_EXTERNAL") return "DOCUMENT_PLUS_EXTERNAL";
+  return "DOCUMENT_ONLY";
+}
+
+/** Title/publisher/url can be long; keep audit + rows bounded. */
+function clip(value: string, max: number): string {
+  return value.length > max ? value.slice(0, max) : value;
 }
 
 export async function askQuestion(
@@ -74,7 +82,7 @@ export async function askQuestion(
       return { ok: false, code: "VALIDATION", error: "No searchable content found in this project's documents." };
     }
 
-    const { answer, citations, model, strippedMarkerCount } =
+    const { answer, citations, model, strippedMarkerCount, external } =
       await generateGroundedAnswer(question, chunks, knowledgeMode);
 
     const interactionId = await db.$transaction(async (tx) => {
@@ -107,6 +115,26 @@ export async function askQuestion(
         });
       }
 
+      // One ExternalCitation row per verified external source. Only citations
+      // that survived URL verification and the domain policy reach this point.
+      if (external && external.citations.length > 0) {
+        await tx.externalCitation.createMany({
+          data: external.citations.map((c) => ({
+            aiInteractionId: interaction.id,
+            marker: c.marker,
+            title: clip(c.title, 500),
+            publisher: clip(c.publisher, 300),
+            publishedAt: c.publishedAt ? clip(c.publishedAt, 60) : null,
+            url: clip(c.url, 2000),
+            finalUrl: c.finalUrl ? clip(c.finalUrl, 2000) : null,
+            domain: clip(c.domain, 253),
+            tier: c.tier,
+            httpStatus: c.httpStatus,
+            accessedAt: c.accessedAt,
+          })),
+        });
+      }
+
       await tx.auditLog.create({
         data: {
           firmId: matter.firmId,
@@ -125,6 +153,35 @@ export async function askQuestion(
             // before persistence. Non-zero means it tried to pass outside
             // knowledge off as document evidence.
             strippedContextMarkers: strippedMarkerCount,
+            // External research audit: whether it was used, every source
+            // consulted (verified and rejected) with URL/tier/status, plus
+            // the declared confidence. Timestamps live on the rows + this log.
+            ...(knowledgeMode === "DOCUMENT_PLUS_EXTERNAL" && external
+              ? {
+                  externalResearchUsed: external.used,
+                  confidence: external.confidence,
+                  externalSourcesVerified: external.citations.map((c) => ({
+                    marker: c.marker,
+                    url: c.url,
+                    finalUrl: c.finalUrl,
+                    domain: c.domain,
+                    tier: c.tier,
+                    httpStatus: c.httpStatus,
+                    accessedAt: c.accessedAt.toISOString(),
+                  })),
+                  externalSourcesRejected: external.rejected.map((r) => ({
+                    marker: r.marker,
+                    url: r.url,
+                    domain: r.domain,
+                    tier: r.tier,
+                    httpStatus: r.httpStatus,
+                    reason: r.reason,
+                  })),
+                  crossSectionMarkersStripped:
+                    external.strippedDocMarkers + external.strippedExternalMarkers,
+                  unverifiedMarkersRemoved: external.removedFailedMarkers,
+                }
+              : {}),
           },
         },
       });
@@ -145,6 +202,13 @@ export async function askQuestion(
     // response crosses this boundary.
     const aiError = classifyAiError(error);
     logAiError("askQuestion", aiError);
+    // Structured record with the request identifiers (user, workspace, matter)
+    // alongside the AI-specific provider log above.
+    logError(
+      "ask_question_failed",
+      { userId: user.id, firmId: user.firmId, matterId },
+      error
+    );
 
     return {
       ok: false,
@@ -160,50 +224,56 @@ export async function reviewInteraction(
   interactionId: string,
   decision: "APPROVED" | "REJECTED"
 ): Promise<ReviewResult> {
-  const verdict = requireReviewDecision(decision);
-  const user = await requireUser();
-
-  const interaction = await db.aIInteraction.findFirst({
-    where: { id: interactionId, matter: { firmId: user.firmId } },
-    select: {
-      id: true,
-      matterId: true,
-      knowledgeMode: true,
-      matter: { select: { firmId: true } },
-    },
-  });
-  if (!interaction) {
-    return { ok: false, error: "AI interaction not found." };
-  }
-
-  await db.$transaction([
-    db.aIInteraction.update({
-      where: { id: interaction.id },
-      data: { reviewStatus: verdict, reviewedAt: new Date() },
-    }),
-    db.auditLog.create({
-      data: {
-        firmId: interaction.matter.firmId,
-        userId: user.id,
-        matterId: interaction.matterId,
-        action: `AI_ANSWER_${verdict}`,
-        entityType: "AIInteraction",
-        entityId: interaction.id,
-        // Reviewers approve different things in different modes — a
-        // document-only answer vs one carrying AI-generated context — so the
-        // review record captures which one was judged.
-        detail: { knowledgeMode: interaction.knowledgeMode },
-      },
-    }),
-  ]);
-
-  revalidatePath(`/matters/${interaction.matterId}`);
-  return { ok: true };
-}
-
-function requireReviewDecision(decision: string): "APPROVED" | "REJECTED" {
+  // Never throw to the client: validation and every failure below resolve to a
+  // consistent { ok: false } result the review gate can render inline.
   if (decision !== "APPROVED" && decision !== "REJECTED") {
-    throw new Error("Invalid review decision.");
+    return { ok: false, error: "Invalid review decision." };
   }
-  return decision;
+
+  try {
+    const user = await requireUser();
+
+    const interaction = await db.aIInteraction.findFirst({
+      where: { id: interactionId, matter: { firmId: user.firmId } },
+      select: {
+        id: true,
+        matterId: true,
+        knowledgeMode: true,
+        matter: { select: { firmId: true } },
+      },
+    });
+    if (!interaction) {
+      return { ok: false, error: "AI interaction not found." };
+    }
+
+    await db.$transaction([
+      db.aIInteraction.update({
+        where: { id: interaction.id },
+        data: { reviewStatus: decision, reviewedAt: new Date() },
+      }),
+      db.auditLog.create({
+        data: {
+          firmId: interaction.matter.firmId,
+          userId: user.id,
+          matterId: interaction.matterId,
+          action: `AI_ANSWER_${decision}`,
+          entityType: "AIInteraction",
+          entityId: interaction.id,
+          // Reviewers approve different things in different modes — a
+          // document-only answer vs one carrying AI-generated context — so the
+          // review record captures which one was judged.
+          detail: { knowledgeMode: interaction.knowledgeMode },
+        },
+      }),
+    ]);
+
+    revalidatePath(`/matters/${interaction.matterId}`);
+    return { ok: true };
+  } catch (error) {
+    logError("review_interaction_failed", {}, error);
+    return {
+      ok: false,
+      error: "Couldn't save your review just now. Please try again.",
+    };
+  }
 }

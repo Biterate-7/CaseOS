@@ -53,8 +53,31 @@ const FALLBACK = { icon: ScrollText, tone: "text-muted-foreground bg-muted" };
  * Here the detail is unpacked into readable key/value chips, so a partner can
  * actually read what happened without parsing JSON.
  */
-function AuditTimeline({ entries }: { entries: WorkspaceAuditEntry[] }) {
+function AuditTimeline({
+  entries,
+  loadError = false,
+}: {
+  entries: WorkspaceAuditEntry[];
+  /** True when the audit trail failed to load — the rest of the page is fine. */
+  loadError?: boolean;
+}) {
   const reduceMotion = useReducedMotion();
+
+  if (loadError) {
+    return (
+      <section aria-label="Audit trail" className="p-4 lg:p-5">
+        <h2 className="mb-3 text-sm font-semibold">Audit trail</h2>
+        <div
+          role="alert"
+          className="flex items-start gap-1.5 rounded-lg border border-rejected-border bg-rejected-surface/50 px-3.5 py-3 text-xs leading-relaxed text-rejected"
+        >
+          <TriangleAlert className="mt-px size-3.5 shrink-0" />
+          The activity record couldn&apos;t be loaded just now. Nothing was lost
+          — reload the page to try again.
+        </div>
+      </section>
+    );
+  }
 
   if (entries.length === 0) {
     return (

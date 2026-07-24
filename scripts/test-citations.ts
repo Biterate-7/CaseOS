@@ -134,7 +134,7 @@ function check(name: string, actual: unknown, expected: unknown) {
   check(
     "hallucinated: S9 marker inert",
     r.sentences[1].segments.filter((s) => s.kind === "marker"),
-    [{ kind: "marker", sourceNumber: 9, citationId: null }]
+    [{ kind: "marker", markerType: "S", sourceNumber: 9, citationId: null }]
   );
   check(
     "hallucinated: LAST sentence still correctly grounds c2 (no theft)",
