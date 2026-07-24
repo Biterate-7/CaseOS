@@ -76,6 +76,21 @@ export const interactionTypeLabel: Record<InteractionType, string> = {
   EXTRACT: "Extraction",
 };
 
+export type KnowledgeMode = "DOCUMENT_ONLY" | "DOCUMENT_PLUS_AI";
+
+export const knowledgeModeLabel: Record<KnowledgeMode, string> = {
+  DOCUMENT_ONLY: "Documents only",
+  DOCUMENT_PLUS_AI: "Documents + AI context",
+};
+
+/** What each mode actually permits — shown on the composer selector. */
+export const knowledgeModeDescription: Record<KnowledgeMode, string> = {
+  DOCUMENT_ONLY:
+    "Every claim comes from this project's documents, with a citation.",
+  DOCUMENT_PLUS_AI:
+    "Document-grounded answer first, plus a clearly-labelled section of general background from the model. Citations never apply to that section.",
+};
+
 /**
  * The Role enum values are database identifiers and stay as-is; these are the
  * domain-neutral labels users actually see. CaseOS analyses any document

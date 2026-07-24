@@ -1,9 +1,10 @@
+import { splitSections, stripUngroundedMarkers } from "@/lib/answer-sections";
 import { alignAnswer } from "@/lib/citations";
 
 /**
- * Mirrors lib/ai/generate.ts parseCitations + lib/actions/ai.ts persistence
- * EXACTLY, so this test proves alignAnswer stays in sync with the real
- * producer rather than with hand-written fixtures.
+ * Mirrors lib/ai/generate.ts (sanitize + parseCitations) + lib/actions/ai.ts
+ * persistence EXACTLY, so this test proves alignAnswer stays in sync with the
+ * real producer rather than with hand-written fixtures.
  */
 type C = {
   id: string;
@@ -15,7 +16,12 @@ type C = {
   pageNumber: number | null;
 };
 
-function simulateBackend(answer: string, sourceCount: number): C[] {
+function simulateBackend(rawModelOutput: string, sourceCount: number) {
+  // generate.ts: markers inside AI-generated context are stripped BEFORE
+  // citation parsing, and the sanitized text is what gets persisted.
+  const { response: answer, strippedMarkerCount } =
+    stripUngroundedMarkers(rawModelOutput);
+
   // generate.ts: parseCitations
   const sentences = answer
     .split(/(?<=[.!?])\s+(?=[A-Z0-9"[])|\n+/)
@@ -37,7 +43,7 @@ function simulateBackend(answer: string, sourceCount: number): C[] {
   }
 
   // ai.ts: citations.filter(c => c.chunk != null), persisted in this order
-  return parsed
+  const citations = parsed
     .filter((p) => p.resolved)
     .map((p, i) => ({
       id: `c${i + 1}`,
@@ -47,7 +53,9 @@ function simulateBackend(answer: string, sourceCount: number): C[] {
       documentId: "d1",
       documentTitle: "Lease Agreement",
       pageNumber: 3,
-    }));
+    })) satisfies C[];
+
+  return { answer, citations, strippedMarkerCount };
 }
 
 let failures = 0;
@@ -63,9 +71,8 @@ function check(name: string, actual: unknown, expected: unknown) {
 
 // --- 1. Simple: one marker per sentence -----------------------------------
 {
-  const answer =
-    "The lease began on March 1 [S1]. Rent is $4,200 per month [S2].";
-  const citations = simulateBackend(answer, 8);
+  const raw = "The lease began on March 1 [S1]. Rent is $4,200 per month [S2].";
+  const { answer, citations } = simulateBackend(raw, 8);
   const r = alignAnswer(answer, citations);
   check("simple: 2 citations persisted", citations.length, 2);
   check("simple: no unresolved", r.unresolvedMarkerCount, 0);
@@ -79,12 +86,15 @@ function check(name: string, actual: unknown, expected: unknown) {
   );
   check("simple: sentence 1 grounds c1", r.sentences[0].citationIds, ["c1"]);
   check("simple: sentence 2 grounds c2", r.sentences[1].citationIds, ["c2"]);
+  check("simple: one implicit section", r.sections.length, 1);
+  check("simple: implicit section is grounded", r.sections[0].grounded, true);
+  check("simple: implicit section untitled", r.sections[0].title, null);
 }
 
 // --- 2. Two markers in one sentence ---------------------------------------
 {
-  const answer = "Both parties signed the amendment [S1][S3].";
-  const citations = simulateBackend(answer, 8);
+  const raw = "Both parties signed the amendment [S1][S3].";
+  const { answer, citations } = simulateBackend(raw, 8);
   const r = alignAnswer(answer, citations);
   check("multi-marker: 2 persisted", citations.length, 2);
   check("multi-marker: none unresolved", r.unresolvedMarkerCount, 0);
@@ -105,9 +115,9 @@ function check(name: string, actual: unknown, expected: unknown) {
 // --- 3. CRITICAL: hallucinated marker must not steal a later citation -----
 // Only 2 sources were retrieved, but the model emits [S9] mid-answer.
 {
-  const answer =
+  const raw =
     "The lease began on March 1 [S1]. The tenant waived inspection [S9]. Rent is $4,200 per month [S2].";
-  const citations = simulateBackend(answer, 2);
+  const { answer, citations } = simulateBackend(raw, 2);
   const r = alignAnswer(answer, citations);
 
   check("hallucinated: only 2 rows persisted (S9 dropped)", citations.length, 2);
@@ -135,8 +145,8 @@ function check(name: string, actual: unknown, expected: unknown) {
 
 // --- 4. Hallucinated marker FIRST -----------------------------------------
 {
-  const answer = "An unsupported assertion [S7]. A supported one [S1].";
-  const citations = simulateBackend(answer, 1);
+  const raw = "An unsupported assertion [S7]. A supported one [S1].";
+  const { answer, citations } = simulateBackend(raw, 1);
   const r = alignAnswer(answer, citations);
   check("leading-hallucination: 1 row persisted", citations.length, 1);
   check("leading-hallucination: 1 unresolved", r.unresolvedMarkerCount, 1);
@@ -146,8 +156,8 @@ function check(name: string, actual: unknown, expected: unknown) {
 
 // --- 5. Paragraphs ---------------------------------------------------------
 {
-  const answer = "First point [S1].\n\nSecond point [S2].";
-  const citations = simulateBackend(answer, 8);
+  const raw = "First point [S1].\n\nSecond point [S2].";
+  const { answer, citations } = simulateBackend(raw, 8);
   const r = alignAnswer(answer, citations);
   check("paragraphs: 2 sentences", r.sentences.length, 2);
   check("paragraphs: second starts paragraph", r.sentences[1].startsParagraph, true);
@@ -157,8 +167,8 @@ function check(name: string, actual: unknown, expected: unknown) {
 
 // --- 6. Repeated identical sentences (ambiguity stress test) --------------
 {
-  const answer = "The deposit is $5,000 [S1]. The deposit is $5,000 [S2].";
-  const citations = simulateBackend(answer, 8);
+  const raw = "The deposit is $5,000 [S1]. The deposit is $5,000 [S2].";
+  const { answer, citations } = simulateBackend(raw, 8);
   const r = alignAnswer(answer, citations);
   check("duplicate sentences: none unresolved", r.unresolvedMarkerCount, 0);
   check(
@@ -175,13 +185,129 @@ function check(name: string, actual: unknown, expected: unknown) {
 
 // --- 7. Refusal answer, no markers ----------------------------------------
 {
-  const answer =
+  const raw =
     "The uploaded documents do not contain enough information to answer this question. The lease term is missing.";
-  const citations = simulateBackend(answer, 8);
+  const { answer, citations } = simulateBackend(raw, 8);
   const r = alignAnswer(answer, citations);
   check("refusal: no citations", citations.length, 0);
   check("refusal: 2 sentences rendered", r.sentences.length, 2);
   check("refusal: none unresolved", r.unresolvedMarkerCount, 0);
+}
+
+// --- 8. Structured document-only answer (Enhanced Research) ---------------
+{
+  const raw = [
+    "## Summary",
+    "The lease began on March 1 [S1].",
+    "",
+    "## Evidence from Documents",
+    "The signed lease states a commencement date of March 1 [S1]. Rent is $4,200 per month [S2].",
+    "",
+    "## Practical Implications",
+    "The first payment was due at commencement [S2].",
+  ].join("\n");
+  const { answer, citations, strippedMarkerCount } = simulateBackend(raw, 8);
+  const r = alignAnswer(answer, citations);
+
+  check("structured: nothing stripped", strippedMarkerCount, 0);
+  check("structured: 4 citations persisted", citations.length, 4);
+  check("structured: none unresolved", r.unresolvedMarkerCount, 0);
+  check(
+    "structured: 3 sections in order",
+    r.sections.map((s) => s.kind),
+    ["summary", "evidence", "implications"]
+  );
+  check(
+    "structured: all sections grounded",
+    r.sections.map((s) => s.grounded),
+    [true, true, true]
+  );
+  check(
+    "structured: titles carried through",
+    r.sections.map((s) => s.title),
+    ["Summary", "Evidence from Documents", "Practical Implications"]
+  );
+  check(
+    "structured: cursor runs across sections in order",
+    [...r.sourceNumberByCitation.entries()],
+    [
+      ["c1", 1],
+      ["c2", 1],
+      ["c3", 2],
+      ["c4", 2],
+    ]
+  );
+  check(
+    "structured: implications sentence grounds last citation",
+    r.sections[2].sentences[0].citationIds,
+    ["c4"]
+  );
+}
+
+// --- 9. CRITICAL: marker inside Additional Context must be stripped -------
+// The model was told never to cite inside AI-generated context, but does it
+// anyway. The sanitizer must remove it before parsing, so no Citation row and
+// no clickable marker can ever point out of ungrounded text.
+{
+  const raw = [
+    "## Summary",
+    "Rent is $4,200 per month [S1].",
+    "",
+    "## Evidence from Documents",
+    "The lease sets rent at $4,200 per month [S1].",
+    "",
+    "## Additional Context",
+    "Escalation clauses of this kind are common in commercial leases [S1]. They typically track inflation.",
+    "",
+    "## Practical Implications",
+    "The rent obligation is fixed by the lease [S2].",
+  ].join("\n");
+  const { answer, citations, strippedMarkerCount } = simulateBackend(raw, 8);
+  const r = alignAnswer(answer, citations);
+
+  check("context-strip: 1 marker stripped from context", strippedMarkerCount, 1);
+  check("context-strip: sanitized text has no context marker", /Additional Context[\s\S]*\[S\d+\][\s\S]*Practical/.test(answer), false);
+  check("context-strip: only grounded markers persisted", citations.length, 3);
+  check("context-strip: none unresolved", r.unresolvedMarkerCount, 0);
+  check(
+    "context-strip: 4 sections in order",
+    r.sections.map((s) => s.kind),
+    ["summary", "evidence", "context", "implications"]
+  );
+  check(
+    "context-strip: context section is ungrounded",
+    r.sections[2].grounded,
+    false
+  );
+  check(
+    "context-strip: context sentences carry no markers",
+    r.sections[2].sentences.flatMap((s) =>
+      s.segments.filter((seg) => seg.kind === "marker")
+    ),
+    []
+  );
+  check(
+    "context-strip: citation after context still aligns (no theft)",
+    r.sections[3].sentences[0].citationIds,
+    ["c3"]
+  );
+  check(
+    "context-strip: source numbers preserved",
+    [...r.sourceNumberByCitation.entries()],
+    [
+      ["c1", 1],
+      ["c2", 1],
+      ["c3", 2],
+    ]
+  );
+}
+
+// --- 10. Section parser: legacy answers stay a single implicit section ----
+{
+  const sections = splitSections("Plain old answer [S1]. Second sentence.");
+  check("legacy split: one section", sections.length, 1);
+  check("legacy split: implicit kind", sections[0].kind, "answer");
+  check("legacy split: no title", sections[0].title, null);
 }
 
 console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILURE(S)`);

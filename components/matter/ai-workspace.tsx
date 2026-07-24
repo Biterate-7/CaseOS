@@ -1,6 +1,13 @@
 "use client";
 
-import { CheckCircle2, FileSearch, Quote, ShieldQuestion, X } from "lucide-react";
+import {
+  CheckCircle2,
+  FileSearch,
+  Quote,
+  ShieldQuestion,
+  Sparkles,
+  X,
+} from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -15,6 +22,7 @@ import {
   countLabel,
   formatRelativeTime,
   interactionTypeLabel,
+  knowledgeModeLabel,
   reviewStatusLabel,
   reviewStatusTone,
 } from "@/lib/format";
@@ -88,6 +96,14 @@ function InteractionCard({
           </span>
           <span>· {formatRelativeTime(interaction.createdAt)}</span>
           <span>· {interactionTypeLabel[interaction.type]}</span>
+          {/* Only the non-default mode is called out — a chip on every card
+              would stop meaning anything. */}
+          {interaction.knowledgeMode === "DOCUMENT_PLUS_AI" && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-ai-context-border bg-ai-context-surface/60 px-1.5 py-px font-medium text-ai-context">
+              <Sparkles className="size-2.5 shrink-0" />
+              {knowledgeModeLabel.DOCUMENT_PLUS_AI}
+            </span>
+          )}
         </p>
       </header>
 
@@ -188,8 +204,9 @@ function AiWorkspace({
       <div>
         <h2 className="text-sm font-semibold">Research</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Answers are drawn only from this project&apos;s documents, and every
-          claim carries the passage it came from.
+          Answers are grounded in this project&apos;s documents, and every
+          document claim carries the passage it came from. Optional AI-added
+          context is always labelled and never cited as evidence.
         </p>
       </div>
 

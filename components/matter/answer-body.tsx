@@ -1,7 +1,9 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
+
 import { cn } from "@/lib/utils";
-import type { AlignedAnswer } from "@/lib/citations";
+import type { AlignedAnswer, AnswerSentence } from "@/lib/citations";
 
 /**
  * The answer, rendered as claims rather than a wall of text.
@@ -14,19 +16,26 @@ import type { AlignedAnswer } from "@/lib/citations";
  * Markers the model invented (no citation row) render in a muted, inert style
  * with a title explaining why — they are never silently hidden, because a
  * analyst needs to see that the model over-cited.
+ *
+ * Structured answers (Enhanced Research) arrive as sections. Document-grounded
+ * sections read as one continuous answer under quiet labels; the AI-generated
+ * "Additional Context" section is set apart on its own tinted, bordered
+ * surface with an explicit provenance label — the visual system's job is to
+ * make "from your documents" and "from the model" impossible to confuse.
  */
-function AnswerBody({
-  aligned,
+
+function Sentences({
+  sentences,
   activeCitationId,
   onSelectCitation,
 }: {
-  aligned: AlignedAnswer;
+  sentences: AnswerSentence[];
   activeCitationId: string | null;
   onSelectCitation: (citationId: string | null) => void;
 }) {
   return (
     <div className="font-serif text-[0.9375rem] leading-[1.75] text-foreground">
-      {aligned.sentences.map((sentence) => {
+      {sentences.map((sentence) => {
         const isActive =
           activeCitationId != null &&
           sentence.citationIds.includes(activeCitationId);
@@ -95,6 +104,64 @@ function AnswerBody({
               );
             })}{" "}
           </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function AnswerBody({
+  aligned,
+  activeCitationId,
+  onSelectCitation,
+}: {
+  aligned: AlignedAnswer;
+  activeCitationId: string | null;
+  onSelectCitation: (citationId: string | null) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {aligned.sections.map((section) => {
+        if (section.sentences.length === 0) return null;
+
+        if (!section.grounded) {
+          return (
+            <aside
+              key={section.key}
+              aria-label="AI-generated context"
+              className="flex flex-col gap-2 rounded-lg border border-ai-context-border bg-ai-context-surface/60 px-3.5 py-3"
+            >
+              <p className="inline-flex items-start gap-1.5 font-sans text-[0.6875rem] leading-snug font-semibold tracking-wide text-ai-context uppercase">
+                <Sparkles className="mt-px size-3 shrink-0" />
+                Additional context — AI-generated, not from this project&apos;s
+                documents
+              </p>
+              <Sentences
+                sentences={section.sentences}
+                activeCitationId={activeCitationId}
+                onSelectCitation={onSelectCitation}
+              />
+              <p className="font-sans text-[0.6875rem] leading-snug text-muted-foreground">
+                Drawn from the model&apos;s general knowledge to supplement the
+                cited evidence above. Verify independently before relying on it.
+              </p>
+            </aside>
+          );
+        }
+
+        return (
+          <section key={section.key} className="flex flex-col gap-1">
+            {section.title != null && (
+              <h3 className="font-sans text-[0.6875rem] font-semibold tracking-wide text-muted-foreground uppercase">
+                {section.title}
+              </h3>
+            )}
+            <Sentences
+              sentences={section.sentences}
+              activeCitationId={activeCitationId}
+              onSelectCitation={onSelectCitation}
+            />
+          </section>
         );
       })}
     </div>

@@ -46,6 +46,8 @@ export type WorkspaceInteraction = {
   response: string;
   model: string;
   type: "RESEARCH" | "SUMMARIZE" | "DRAFT" | "EXTRACT";
+  /** Whether the answer was allowed a clearly-labelled AI-knowledge section. */
+  knowledgeMode: "DOCUMENT_ONLY" | "DOCUMENT_PLUS_AI";
   reviewStatus: "PENDING_REVIEW" | "APPROVED" | "REJECTED";
   reviewedAt: Date | null;
   createdAt: Date;
@@ -188,6 +190,7 @@ export async function loadWorkspace(matterId: string): Promise<WorkspaceData> {
       response: interaction.response,
       model: interaction.model,
       type: interaction.type,
+      knowledgeMode: interaction.knowledgeMode,
       reviewStatus: interaction.reviewStatus,
       reviewedAt: interaction.reviewedAt,
       createdAt: interaction.createdAt,

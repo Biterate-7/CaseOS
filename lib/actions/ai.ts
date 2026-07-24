@@ -7,6 +7,7 @@ import { generateGroundedAnswer } from "@/lib/ai/generate";
 import { retrieveChunks } from "@/lib/ai/retrieve";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { KnowledgeMode } from "@/lib/format";
 
 /**
  * Result shape returned to the client.
@@ -23,6 +24,15 @@ const MAX_QUESTION_CHARS = 2000;
 /** Excerpt length stored as Citation.quotedText */
 const QUOTE_CHARS = 300;
 
+/**
+ * Form values are untrusted; anything unrecognised falls back to the
+ * document-only default rather than erroring — the strictest mode is always
+ * a safe interpretation.
+ */
+function parseKnowledgeMode(value: unknown): KnowledgeMode {
+  return value === "DOCUMENT_PLUS_AI" ? "DOCUMENT_PLUS_AI" : "DOCUMENT_ONLY";
+}
+
 export async function askQuestion(
   matterId: string,
   formData: FormData
@@ -30,6 +40,7 @@ export async function askQuestion(
   const user = await requireUser();
 
   const question = String(formData.get("question") ?? "").trim();
+  const knowledgeMode = parseKnowledgeMode(formData.get("knowledgeMode"));
   if (question.length < 5) {
     return { ok: false, code: "VALIDATION", error: "Enter a question (at least 5 characters)." };
   }
@@ -63,7 +74,8 @@ export async function askQuestion(
       return { ok: false, code: "VALIDATION", error: "No searchable content found in this project's documents." };
     }
 
-    const { answer, citations, model } = await generateGroundedAnswer(question, chunks);
+    const { answer, citations, model, strippedMarkerCount } =
+      await generateGroundedAnswer(question, chunks, knowledgeMode);
 
     const interactionId = await db.$transaction(async (tx) => {
       const interaction = await tx.aIInteraction.create({
@@ -74,6 +86,7 @@ export async function askQuestion(
           prompt: question,
           response: answer,
           model,
+          knowledgeMode,
           reviewStatus: "PENDING_REVIEW",
         },
       });
@@ -104,9 +117,14 @@ export async function askQuestion(
           entityId: interaction.id,
           detail: {
             model,
+            knowledgeMode,
             chunksRetrieved: chunks.length,
             citations: resolved.length,
             unresolvedMarkers: citations.length - resolved.length,
+            // Markers the model put inside AI-generated context, stripped
+            // before persistence. Non-zero means it tried to pass outside
+            // knowledge off as document evidence.
+            strippedContextMarkers: strippedMarkerCount,
           },
         },
       });
@@ -147,7 +165,12 @@ export async function reviewInteraction(
 
   const interaction = await db.aIInteraction.findFirst({
     where: { id: interactionId, matter: { firmId: user.firmId } },
-    select: { id: true, matterId: true, matter: { select: { firmId: true } } },
+    select: {
+      id: true,
+      matterId: true,
+      knowledgeMode: true,
+      matter: { select: { firmId: true } },
+    },
   });
   if (!interaction) {
     return { ok: false, error: "AI interaction not found." };
@@ -166,6 +189,10 @@ export async function reviewInteraction(
         action: `AI_ANSWER_${verdict}`,
         entityType: "AIInteraction",
         entityId: interaction.id,
+        // Reviewers approve different things in different modes — a
+        // document-only answer vs one carrying AI-generated context — so the
+        // review record captures which one was judged.
+        detail: { knowledgeMode: interaction.knowledgeMode },
       },
     }),
   ]);

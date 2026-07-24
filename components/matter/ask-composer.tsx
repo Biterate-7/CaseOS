@@ -1,6 +1,14 @@
 "use client";
 
-import { CornerDownLeft, Loader2, Lock, RotateCw, TriangleAlert } from "lucide-react";
+import {
+  CornerDownLeft,
+  FileText,
+  Loader2,
+  Lock,
+  RotateCw,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRef, useState, useTransition } from "react";
 
@@ -8,8 +16,76 @@ import { ResearchProgress } from "@/components/matter/research-progress";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { askQuestion } from "@/lib/actions/ai";
-import { countLabel } from "@/lib/format";
+import {
+  countLabel,
+  knowledgeModeDescription,
+  knowledgeModeLabel,
+  type KnowledgeMode,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
+
+const MODE_ICON: Record<KnowledgeMode, typeof FileText> = {
+  DOCUMENT_ONLY: FileText,
+  DOCUMENT_PLUS_AI: Sparkles,
+};
+
+/**
+ * Enhanced Research knowledge-mode selector. A segmented control rather than
+ * a dropdown: both options stay visible, so the existence of the stricter
+ * default is itself communicated. The description line spells out exactly
+ * what the selected mode permits before anything is asked.
+ */
+function KnowledgeModeSelector({
+  mode,
+  onChange,
+  disabled,
+}: {
+  mode: KnowledgeMode;
+  onChange: (mode: KnowledgeMode) => void;
+  disabled: boolean;
+}) {
+  return (
+    <fieldset className="flex flex-col gap-1.5">
+      <legend className="sr-only">Knowledge mode</legend>
+      <div
+        role="radiogroup"
+        aria-label="Knowledge mode"
+        className="flex w-fit items-center gap-0.5 rounded-lg border bg-muted/60 p-0.5"
+      >
+        {(["DOCUMENT_ONLY", "DOCUMENT_PLUS_AI"] as const).map((option) => {
+          const Icon = MODE_ICON[option];
+          const selected = mode === option;
+          return (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={disabled}
+              onClick={() => onChange(option)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium",
+                "transition-[background-color,color,box-shadow] duration-150 outline-none",
+                "focus-visible:ring-3 focus-visible:ring-ring/50",
+                selected
+                  ? option === "DOCUMENT_PLUS_AI"
+                    ? "bg-card text-ai-context shadow-xs ring-1 ring-ai-context-border"
+                    : "bg-card text-foreground shadow-xs ring-1 ring-border"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="size-3 shrink-0" />
+              {knowledgeModeLabel[option]}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[0.6875rem] leading-snug text-muted-foreground">
+        {knowledgeModeDescription[mode]}
+      </p>
+    </fieldset>
+  );
+}
 
 /**
  * Query input. Not a chat box: the affordance is "ask this project a
@@ -24,6 +100,7 @@ function AskComposer({
   readyDocumentCount: number;
 }) {
   const [error, setError] = useState<{ message: string; retryable: boolean } | null>(null);
+  const [mode, setMode] = useState<KnowledgeMode>("DOCUMENT_ONLY");
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -40,6 +117,7 @@ function AskComposer({
   function run(question: string) {
     const formData = new FormData();
     formData.set("question", question);
+    formData.set("knowledgeMode", mode);
 
     setError(null);
     startTransition(async () => {
@@ -61,6 +139,11 @@ function AskComposer({
   return (
     <div className="flex flex-col gap-3">
       <form ref={formRef} action={handleSubmit} className="flex flex-col gap-2">
+        <KnowledgeModeSelector
+          mode={mode}
+          onChange={setMode}
+          disabled={disabled}
+        />
         <div
           className={cn(
             "rounded-xl border bg-card shadow-xs transition-[border-color,box-shadow] duration-200",
@@ -93,13 +176,18 @@ function AskComposer({
           <div className="flex items-center justify-between gap-3 border-t px-3 py-2">
             <p className="inline-flex items-center gap-1.5 text-[0.6875rem] leading-tight text-muted-foreground">
               <Lock className="size-3 shrink-0" />
-              {grounded ? (
+              {!grounded ? (
+                <>No indexed documents in this project yet</>
+              ) : mode === "DOCUMENT_ONLY" ? (
                 <>
                   Answers use only this project&apos;s{" "}
                   {countLabel(readyDocumentCount, "indexed document")}
                 </>
               ) : (
-                <>No indexed documents in this project yet</>
+                <>
+                  Grounded in {countLabel(readyDocumentCount, "indexed document")},
+                  plus labelled AI context
+                </>
               )}
             </p>
 

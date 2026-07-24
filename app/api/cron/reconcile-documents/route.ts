@@ -13,7 +13,9 @@ import { reconcileStuckDocuments } from "@/lib/ingest/reconcile";
  * Schedule is daily (`0 3 * * *`) because the Vercel Hobby plan limits cron to
  * once per day — a sub-daily schedule there fails to register. Daily is ample:
  * the lazy path is the primary mechanism, and this only needs to clean rows in
- * workspaces that are never opened. On Pro, tighten it (e.g. `*/15 * * * *`).
+ * workspaces that are never opened. On Pro, tighten it (e.g. every 15
+ * minutes — note a literal star-slash cron expression cannot appear in this
+ * comment without terminating it).
  *
  * Auth: Vercel Cron attaches `Authorization: Bearer $CRON_SECRET` when
  * CRON_SECRET is set. The route rejects anything else, so it cannot be

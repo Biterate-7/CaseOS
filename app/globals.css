@@ -77,6 +77,13 @@
   --color-citation-surface: var(--citation-surface);
   --color-citation-border: var(--citation-border);
 
+  /* AI-generated context only (Enhanced Research). Deliberately a hue used
+     nowhere else in the system, so "this came from the model, not your
+     documents" is legible at a glance. */
+  --color-ai-context: var(--ai-context);
+  --color-ai-context-surface: var(--ai-context-surface);
+  --color-ai-context-border: var(--ai-context-border);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -150,6 +157,10 @@
   --citation-surface: oklch(0.9742 0.0234 85);
   --citation-border: oklch(0.8823 0.0523 82);
 
+  --ai-context: oklch(0.4712 0.1287 296);
+  --ai-context-surface: oklch(0.9712 0.0156 300);
+  --ai-context-border: oklch(0.8756 0.0489 297);
+
   --shadow-tint-weak: oklch(0.2077 0.0293 264 / 0.04);
   --shadow-tint: oklch(0.2077 0.0293 264 / 0.07);
   --shadow-tint-strong: oklch(0.2077 0.0293 264 / 0.1);
@@ -212,6 +223,10 @@
   --citation: oklch(0.7912 0.1123 82);
   --citation-surface: oklch(0.2834 0.0389 80);
   --citation-border: oklch(0.3934 0.0578 80);
+
+  --ai-context: oklch(0.7812 0.1034 296);
+  --ai-context-surface: oklch(0.2734 0.0412 297);
+  --ai-context-border: oklch(0.3834 0.0612 296);
 
   --shadow-tint-weak: oklch(0 0 0 / 0.2);
   --shadow-tint: oklch(0 0 0 / 0.32);
