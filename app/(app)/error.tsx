@@ -33,7 +33,7 @@ export default function AppError({
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-6">
       <div className="flex max-w-md flex-col items-center text-center">
-        <span className="flex size-14 items-center justify-center rounded-2xl border border-rejected-border bg-rejected-surface text-rejected">
+        <span className="flex size-14 items-center justify-center rounded-xl border border-rejected-border bg-rejected-surface text-rejected">
           <TriangleAlert className="size-6" />
         </span>
 
@@ -60,7 +60,7 @@ export default function AppError({
         </div>
 
         {error.digest && (
-          <p className="mt-8 font-mono text-meta-xs text-muted-foreground/70">
+          <p className="mt-8 text-meta-xs text-muted-foreground/70">
             Reference: {error.digest}
           </p>
         )}

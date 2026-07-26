@@ -1,18 +1,15 @@
-import { ArrowRight, FileStack, FolderOpen, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageHeader } from "@/components/ui/page-header";
-import { Reveal, RevealItem } from "@/components/ui/reveal";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   countLabel,
   formatRelativeTime,
   matterStatusLabel,
-  matterStatusTone,
 } from "@/lib/format";
 
 export const metadata = { title: "Projects" };
@@ -29,13 +26,13 @@ export default async function MattersPage() {
   });
 
   return (
-    <div className="mx-auto flex max-w-(--container-page) flex-col gap-10 px-margin-mobile py-8 lg:px-margin-desktop lg:py-12">
+    <div className="mx-auto flex max-w-(--container-page) flex-col gap-8 px-margin-mobile py-8 lg:px-margin-desktop lg:py-12">
       <PageHeader
         title="Projects"
         description="Every project is a boundary. Documents, AI answers, and activity history stay inside the one they belong to."
         meta={
           matters.length > 0 ? (
-            <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+            <span className="text-meta-xs text-muted-foreground tabular-nums">
               {countLabel(matters.length, "project")}
             </span>
           ) : undefined
@@ -49,18 +46,12 @@ export default async function MattersPage() {
       />
 
       {matters.length === 0 ? (
-        <div className="rounded-3xl bg-card/40 ring-1 ring-border backdrop-blur-3xl">
+        <div className="rounded-xl bg-card ring-1 ring-border">
           <EmptyState
-            icon={FolderOpen}
             title="No projects yet"
             description="A project holds a document collection and everything the AI derives from it. Create one to start uploading and asking questions."
             action={
-              <Button
-                size="lg"
-                variant="hero"
-                nativeButton={false}
-                render={<Link href="/matters/new" />}
-              >
+              <Button nativeButton={false} render={<Link href="/matters/new" />}>
                 <Plus />
                 Create your first project
               </Button>
@@ -68,85 +59,51 @@ export default async function MattersPage() {
           />
         </div>
       ) : (
-        <Reveal
-          as="ul"
-          className="grid gap-gutter md:grid-cols-2 xl:grid-cols-3"
-        >
-          {matters.map((matter) => (
-            <RevealItem as="li" key={matter.id}>
+        // A ledger, not a card grid — full-bleed rows separated by a single
+        // hairline, distinguished from rest only by a tone shift on hover.
+        // Nothing here lifts, scales, or casts a shadow: Apparatus's flat-leaf
+        // law holds for list rows exactly as it does for panels.
+        <ul className="flex flex-col rounded-xl bg-card ring-1 ring-border">
+          {matters.map((matter, index) => (
+            <li key={matter.id} className={index === 0 ? "" : "border-t border-border"}>
               <Link
                 href={`/matters/${matter.id}`}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-card p-6 ring-1 ring-border transition-[background-color,box-shadow,transform] duration-250 ease-(--ease-liquid) outline-none hover:-translate-y-0.5 hover:bg-surface hover:shadow-xl hover:ring-primary/25 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
+                className="group flex items-center gap-4 px-5 py-4 outline-none transition-colors duration-[140ms] ease-(--ease-standard) hover:bg-surface focus-visible:ring-3 focus-visible:-ring-offset-1 focus-visible:ring-ring/50 sm:px-6"
               >
-                {/* Corner wash that only appears on hover — the card lighting up
-                    from the direction the pointer came from. */}
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/6 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-                />
-
-                <div className="relative flex items-start justify-between gap-3">
-                  <span className="rounded-full bg-surface-highest px-3 py-1 font-mono text-meta-xs uppercase text-muted-foreground ring-1 ring-border">
-                    {matter.practiceArea}
-                  </span>
-                  <span className="shrink-0 font-mono text-meta-xs text-muted-foreground">
-                    {formatRelativeTime(matter.updatedAt)}
-                  </span>
-                </div>
-
-                <h2 className="relative mt-5 font-display text-headline-sm text-balance text-foreground transition-colors duration-150 group-hover:text-primary">
-                  {matter.title}
-                </h2>
-
-                <p className="relative mt-1.5 font-mono text-meta-xs text-muted-foreground">
-                  {matter.clientName}
-                </p>
-
-                {matter.description && (
-                  <p className="relative mt-4 line-clamp-2 text-body-sm leading-relaxed text-muted-foreground">
-                    {matter.description}
-                  </p>
-                )}
-
-                <div className="relative mt-auto flex items-end justify-between gap-4 pt-6">
-                  <div className="flex items-center gap-5">
-                    <div className="flex flex-col gap-1">
-                      <span className="flex items-center gap-1.5 font-mono text-meta-xs uppercase text-muted-foreground">
-                        <FileStack className="size-3" />
-                        Docs
-                      </span>
-                      <span className="text-label-md text-foreground tabular-nums">
-                        {matter._count.documents}
-                      </span>
-                    </div>
-
-                    <span aria-hidden className="h-8 w-px bg-border" />
-
-                    <div className="flex flex-col gap-1">
-                      <span className="flex items-center gap-1.5 font-mono text-meta-xs uppercase text-muted-foreground">
-                        <Sparkles className="size-3" />
-                        Insights
-                      </span>
-                      <span className="text-label-md text-foreground tabular-nums">
-                        {matter._count.aiInteractions}
-                      </span>
-                    </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-3">
+                    <h2 className="truncate font-display text-headline-xs text-foreground">
+                      {matter.title}
+                    </h2>
+                    <span className="hidden shrink-0 text-body-sm text-muted-foreground sm:inline">
+                      {matterStatusLabel[matter.status]}
+                    </span>
                   </div>
 
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-highest text-muted-foreground transition-colors duration-150 group-hover:bg-primary group-hover:text-primary-foreground">
-                    <ArrowRight className="size-4" />
-                  </span>
+                  <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-body-sm text-muted-foreground">
+                    <span className="truncate">{matter.clientName}</span>
+                    <span aria-hidden>·</span>
+                    <span className="truncate">{matter.practiceArea}</span>
+                    <span aria-hidden>·</span>
+                    <span className="tabular-nums">
+                      {countLabel(matter._count.documents, "document")}
+                    </span>
+                    <span aria-hidden>·</span>
+                    <span className="tabular-nums">
+                      {countLabel(matter._count.aiInteractions, "answer")}
+                    </span>
+                  </p>
                 </div>
 
-                <div className="relative mt-5 border-t border-border pt-4">
-                  <StatusBadge size="sm" tone={matterStatusTone[matter.status]}>
-                    {matterStatusLabel[matter.status]}
-                  </StatusBadge>
-                </div>
+                <span className="shrink-0 text-meta-xs text-muted-foreground tabular-nums">
+                  {formatRelativeTime(matter.updatedAt)}
+                </span>
+
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground/60 transition-colors duration-[140ms] group-hover:text-foreground" />
               </Link>
-            </RevealItem>
+            </li>
           ))}
-        </Reveal>
+        </ul>
       )}
     </div>
   );

@@ -37,8 +37,8 @@ function MemberRow({
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-highest font-mono text-meta-xs text-foreground">
+    <li className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-surface-highest text-meta-xs text-foreground">
         {initials(member.name)}
       </span>
 
@@ -46,12 +46,12 @@ function MemberRow({
         <p className="truncate text-label-sm text-foreground">
           {member.name}
           {isSelf && (
-            <span className="ml-2 font-mono text-meta-xs text-muted-foreground">
+            <span className="ml-2 text-meta-xs text-muted-foreground">
               you
             </span>
           )}
         </p>
-        <p className="mt-0.5 truncate font-mono text-meta-xs text-muted-foreground">
+        <p className="mt-0.5 truncate text-meta-xs text-muted-foreground">
           {member.email} · joined {formatDate(member.createdAt)}
         </p>
       </div>
@@ -74,7 +74,7 @@ function MemberRow({
             </Select>
           </div>
         ) : (
-          <span className="font-mono text-meta-xs text-muted-foreground">
+          <span className="text-meta-xs text-muted-foreground">
             {roleLabel[role]}
           </span>
         )}

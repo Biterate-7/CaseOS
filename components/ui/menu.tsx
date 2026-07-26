@@ -47,8 +47,8 @@ function MenuContent({
         <MenuPrimitive.Popup
           data-slot="menu-content"
           className={cn(
-            "glass min-w-[12rem] origin-(--transform-origin) rounded-2xl p-1.5 shadow-2xl outline-none",
-            "transition-[transform,opacity] duration-150 ease-(--ease-out-quart)",
+            "glass min-w-[12rem] origin-(--transform-origin) rounded-xl p-1.5 shadow-lg outline-none",
+            "transition-[transform,opacity] duration-[140ms] ease-(--ease-out-quart)",
             "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
             "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
             className
@@ -72,7 +72,7 @@ function MenuItem({
       data-slot="menu-item"
       className={cn(
         "flex cursor-default items-center gap-2.5 rounded-xl px-3 py-2 text-label-md whitespace-nowrap select-none outline-none",
-        "transition-colors duration-100",
+        "transition-colors duration-[80ms]",
         "data-[highlighted]:bg-surface-highest data-[highlighted]:text-foreground",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -108,7 +108,7 @@ function MenuGroupLabel({
     <MenuPrimitive.GroupLabel
       data-slot="menu-group-label"
       className={cn(
-        "px-3 pt-2 pb-1.5 font-mono text-meta-xs uppercase text-muted-foreground/70",
+        "px-3 pt-2 pb-1.5 text-meta-xs text-muted-foreground/70",
         className
       )}
       {...props}

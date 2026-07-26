@@ -39,7 +39,7 @@ function DocumentPanel({
         <h2 className="font-display text-headline-xs text-foreground">
           Documents
         </h2>
-        <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+        <span className="text-meta-xs text-muted-foreground tabular-nums">
           {countLabel(documents.length, "source")}
         </span>
       </div>

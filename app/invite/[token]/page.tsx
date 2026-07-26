@@ -1,11 +1,10 @@
 import { SignInButton } from "@clerk/nextjs";
-import { Building2, Check, MailWarning, TriangleAlert } from "lucide-react";
+import { Check, MailWarning, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 import { AcceptInvitation } from "@/components/invite/accept-invitation";
 import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/eyebrow";
 import { previewInvitation } from "@/lib/actions/invitations";
 import { roleLabel } from "@/lib/format";
 
@@ -36,8 +35,8 @@ export default async function InvitePage({
   if (!invitation) {
     return (
       <AuthShell>
-        <div className="glass rounded-3xl p-8 text-center shadow-2xl">
-          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-highest/70 text-muted-foreground ring-1 ring-border">
+        <div className="glass rounded-xl p-8 text-center shadow-lg">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-surface-highest/70 text-muted-foreground ring-1 ring-border">
             <MailWarning className="size-5" />
           </span>
           <h1 className="mt-5 font-display text-headline-xs text-foreground">
@@ -79,16 +78,15 @@ export default async function InvitePage({
 
   return (
     <AuthShell>
-      <div className="glass rounded-3xl p-8 shadow-2xl">
-        <div className="flex flex-col items-center text-center">
-          <span className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
-            <Building2 className="size-5" />
-          </span>
-          <Eyebrow className="mt-5">Workspace invitation</Eyebrow>
-          <h1 className="mt-2 font-display text-headline-sm text-balance text-foreground">
+      <div className="glass rounded-xl p-8 shadow-lg">
+        <div className="flex flex-col">
+          <p className="text-meta-sm text-muted-foreground">
+            Workspace invitation
+          </p>
+          <h1 className="mt-1.5 text-headline-md text-balance text-foreground">
             {workspaceName}
           </h1>
-          <p className="mt-3 text-body-sm leading-relaxed text-muted-foreground">
+          <p className="mt-3 font-serif text-body-lg leading-relaxed text-muted-foreground">
             <span className="text-foreground">{inviterName}</span> invited{" "}
             <span className="text-foreground">{email}</span> to join as{" "}
             <span className="text-foreground">{roleLabel[role]}</span>.
@@ -109,7 +107,7 @@ export default async function InvitePage({
                   Sign in to accept
                 </Button>
               </SignInButton>
-              <p className="text-center font-mono text-meta-xs leading-relaxed text-muted-foreground">
+              <p className="text-center text-meta-xs leading-relaxed text-muted-foreground">
                 Use {email} — the invitation is tied to that address.
                 You&apos;ll come straight back here.
               </p>

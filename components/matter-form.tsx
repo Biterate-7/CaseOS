@@ -61,7 +61,7 @@ export function MatterForm() {
       <div className="flex flex-col gap-2.5">
         <Label htmlFor="description">
           Description
-          <span className="font-mono text-meta-xs uppercase text-muted-foreground">
+          <span className="font-mono text-meta-xs text-muted-foreground">
             Optional
           </span>
         </Label>

@@ -61,7 +61,7 @@ function ResearchProgress() {
     <div
       role="status"
       aria-live="polite"
-      className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border"
+      className="rounded-xl bg-card p-5 shadow-sm ring-1 ring-border"
     >
       <ol className="flex flex-col gap-3.5">
         {STAGES.map((item, index) => {
@@ -72,7 +72,7 @@ function ResearchProgress() {
             <li
               key={item.label}
               className={cn(
-                "flex items-start gap-2.5 transition-opacity duration-300",
+                "flex items-start gap-2.5 transition-opacity duration-[280ms]",
                 !done && !active && "opacity-40"
               )}
             >
@@ -87,7 +87,7 @@ function ResearchProgress() {
                     <Check className="size-2.5" strokeWidth={3} />
                   </motion.span>
                 ) : active ? (
-                  <Loader2 className="size-3.5 animate-spin text-primary" />
+                  <Loader2 className="size-3.5 animate-spin text-foreground" />
                 ) : (
                   <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                 )}
@@ -106,7 +106,7 @@ function ResearchProgress() {
                   <motion.p
                     initial={reduceMotion ? false : { opacity: 0, y: -2 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-1 font-mono text-meta-xs leading-relaxed text-muted-foreground"
+                    className="mt-1 text-meta-xs leading-relaxed text-muted-foreground"
                   >
                     {item.detail}
                   </motion.p>

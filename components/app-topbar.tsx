@@ -65,7 +65,7 @@ function AppTopbar() {
         <div className="group relative flex max-w-xl items-center">
           <Search
             aria-hidden
-            className="absolute left-3.5 size-4 text-muted-foreground transition-colors duration-150 group-focus-within:text-primary"
+            className="absolute left-3.5 size-4 text-muted-foreground transition-colors duration-[140ms] group-focus-within:text-foreground"
           />
           <input
             ref={inputRef}
@@ -76,16 +76,16 @@ function AppTopbar() {
             placeholder="Search across your documents"
             className={cn(
               "h-10 w-full rounded-xl border border-border bg-surface-lowest/60 py-2 pr-20 pl-10 text-sm text-foreground",
-              "transition-[background-color,border-color,box-shadow] duration-150 ease-(--ease-standard) outline-none",
+              "transition-[background-color,border-color,box-shadow] duration-[140ms] ease-(--ease-standard) outline-none",
               "placeholder:text-muted-foreground/70",
-              "focus-visible:border-primary/50 focus-visible:bg-surface focus-visible:ring-3 focus-visible:ring-ring/40",
+              "focus-visible:border-input focus-visible:bg-surface focus-visible:ring-3 focus-visible:ring-ring/40",
               // Safari renders its own clear affordance on type=search.
               "[&::-webkit-search-cancel-button]:hidden"
             )}
           />
           <kbd
             aria-hidden
-            className="pointer-events-none absolute right-3 flex items-center gap-1 font-mono text-meta-xs text-muted-foreground opacity-50 transition-opacity duration-150 group-focus-within:opacity-0"
+            className="pointer-events-none absolute right-3 flex items-center gap-1 font-mono text-meta-xs text-muted-foreground opacity-50 transition-opacity duration-[140ms] group-focus-within:opacity-0"
           >
             <span className="rounded border border-border px-1.5 py-0.5">⌘</span>
             <span className="rounded border border-border px-1.5 py-0.5">K</span>

@@ -42,10 +42,10 @@ function CitationCard({
       transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
       className={cn(
         "relative overflow-hidden rounded-xl bg-card ring-1",
-        "transition-[box-shadow,transform,--tw-ring-color] duration-250 ease-(--ease-liquid)",
+        "transition-[box-shadow,transform,--tw-ring-color] duration-200 ease-(--ease-liquid)",
         active
           ? "shadow-md ring-citation"
-          : "ring-border hover:-translate-y-px hover:shadow-md hover:ring-citation/40 motion-reduce:hover:translate-y-0"
+          : "ring-border hover:ring-citation/40"
       )}
     >
       <button
@@ -92,11 +92,11 @@ function CitationCard({
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 font-mono text-meta-xs text-muted-foreground transition-colors duration-150 outline-none hover:bg-surface-highest/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 font-mono text-meta-xs text-muted-foreground transition-colors duration-[140ms] outline-none hover:bg-surface-highest/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <ChevronRight
           className={cn(
-            "size-3.5 transition-transform duration-250 ease-(--ease-liquid)",
+            "size-3.5 transition-transform duration-200 ease-(--ease-liquid)",
             expanded && "rotate-90"
           )}
         />

@@ -40,7 +40,7 @@ function TooltipContent({
             "glass z-50 max-w-xs origin-(--transform-origin) rounded-lg px-3 py-1.5 text-xs leading-relaxed text-foreground shadow-lg",
             // Base UI drives enter/exit through data-starting-style /
             // data-ending-style rather than a class toggle.
-            "transition-[transform,opacity] duration-150 ease-(--ease-out-quart)",
+            "transition-[transform,opacity] duration-[140ms] ease-(--ease-out-quart)",
             "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
             "data-[ending-style]:scale-95 data-[ending-style]:opacity-0",
             className

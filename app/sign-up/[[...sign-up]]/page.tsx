@@ -11,7 +11,7 @@ export default function SignUpPage() {
       className="flex w-auto max-w-none justify-center"
       footer={<>You&apos;ll set up your workspace next.</>}
     >
-      <div className="glass rounded-3xl p-8 shadow-2xl">
+      <div className="glass rounded-xl p-8 shadow-lg">
         <SignUp appearance={clerkAppearance} />
       </div>
     </AuthShell>

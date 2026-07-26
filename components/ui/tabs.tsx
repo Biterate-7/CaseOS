@@ -60,11 +60,10 @@ function TabsList({
         <TabsPrimitive.Indicator
           className={cn(
             "absolute z-0 w-(--active-tab-width) translate-x-(--active-tab-left)",
-            "transition-[transform,width] duration-250 ease-(--ease-liquid)",
+            "transition-[transform,width] duration-200 ease-(--ease-liquid)",
             variant === "segmented" &&
               "top-1 h-9 rounded-lg bg-surface-highest shadow-sm",
-            variant === "underline" &&
-              "bottom-0 h-0.5 rounded-full bg-primary shadow-[0_0_12px_var(--glow)]"
+            variant === "underline" && "bottom-0 h-0.5 bg-primary"
           )}
         />
         {children}
@@ -81,14 +80,14 @@ function TabsTab({ className, ...props }: TabsPrimitive.Tab.Props) {
       data-slot="tabs-tab"
       className={cn(
         "relative z-1 inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap select-none",
-        "transition-colors duration-150 outline-none",
+        "transition-colors duration-[140ms] outline-none",
         "focus-visible:ring-3 focus-visible:ring-ring/50",
         "disabled:pointer-events-none disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         variant === "segmented" &&
-          "h-9 rounded-lg px-4 text-label-md text-muted-foreground hover:text-foreground data-[selected]:text-primary",
+          "h-9 rounded-lg px-4 text-label-md text-muted-foreground hover:text-foreground data-[selected]:text-foreground",
         variant === "underline" &&
-          "h-11 px-4 text-meta-sm uppercase text-muted-foreground hover:text-foreground data-[selected]:text-primary",
+          "h-11 px-4 text-meta-sm text-muted-foreground hover:text-foreground data-[selected]:text-foreground",
         className
       )}
       {...props}

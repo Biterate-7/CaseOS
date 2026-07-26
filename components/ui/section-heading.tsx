@@ -29,7 +29,7 @@ function SectionHeading({
     >
       <div className="flex min-w-0 flex-col gap-1">
         <Tag className="flex items-center gap-2.5 font-display text-headline-sm text-foreground">
-          {Icon && <Icon className="size-5 shrink-0 text-primary" />}
+          {Icon && <Icon className="size-5 shrink-0 text-foreground" />}
           {title}
         </Tag>
         {description && (

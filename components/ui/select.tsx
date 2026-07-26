@@ -30,9 +30,9 @@ Omit<React.ComponentProps<"select">, "size"> & {
       <select
         data-slot="select"
         className={cn(
-          "w-full appearance-none rounded-xl border border-border bg-surface-lowest/60 pr-9 text-foreground shadow-inner transition-[background-color,border-color,box-shadow] duration-150 ease-(--ease-standard) outline-none",
+          "w-full appearance-none rounded-xl border border-border bg-surface-lowest/60 pr-9 text-foreground shadow-inner transition-[background-color,border-color,box-shadow] duration-[140ms] ease-(--ease-standard) outline-none",
           "hover:border-border/80",
-          "focus-visible:border-primary/50 focus-visible:bg-surface focus-visible:ring-3 focus-visible:ring-ring/40",
+          "focus-visible:border-input focus-visible:bg-surface focus-visible:ring-3 focus-visible:ring-ring/40",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "[&>option]:bg-popover [&>option]:text-popover-foreground",
           size === "default" ? "h-10 pl-3.5 text-sm" : "h-8 pl-3 text-[0.8125rem]",

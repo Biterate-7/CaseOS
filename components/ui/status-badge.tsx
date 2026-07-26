@@ -24,7 +24,9 @@ import type { StatusTone } from "@/lib/format"
 type BadgeTone = StatusTone | "citation" | "ai-context" | "external"
 
 const statusBadgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-meta-xs font-medium whitespace-nowrap [&>svg]:size-3",
+  // Apparatus radius law: a chip is a control, not a pill — full-round
+  // shapes are reserved for genuinely circular objects (dots, avatars).
+  "inline-flex w-fit shrink-0 items-center gap-1.5 rounded-sm border px-2.5 py-0.5 text-meta-xs font-medium whitespace-nowrap [&>svg]:size-3",
   {
     variants: {
       tone: {

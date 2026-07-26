@@ -7,7 +7,7 @@ import {
   Loader2,
   Lock,
   RotateCw,
-  Sparkles,
+  PenLine,
   TriangleAlert,
 } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 const MODE_ICON: Record<KnowledgeMode, typeof FileText> = {
   DOCUMENT_ONLY: FileText,
-  DOCUMENT_PLUS_AI: Sparkles,
+  DOCUMENT_PLUS_AI: PenLine,
   DOCUMENT_PLUS_EXTERNAL: Globe,
 };
 
@@ -84,7 +84,7 @@ function KnowledgeModeSelector({
               onClick={() => onChange(option)}
               className={cn(
                 "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-label-sm",
-                "transition-[background-color,color,box-shadow] duration-150 outline-none",
+                "transition-[background-color,color,box-shadow] duration-[140ms] outline-none",
                 "focus-visible:ring-3 focus-visible:ring-ring/50",
                 "disabled:pointer-events-none disabled:opacity-50",
                 selected
@@ -164,8 +164,8 @@ function AskComposer({
         />
         <div
           className={cn(
-            "overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-[box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid)",
-            "focus-within:shadow-lg focus-within:ring-primary/40",
+            "overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-border transition-[box-shadow,--tw-ring-color] duration-200 ease-(--ease-liquid)",
+            "focus-within:shadow-lg focus-within:ring-input",
             disabled && "opacity-70"
           )}
         >
@@ -192,7 +192,7 @@ function AskComposer({
           />
 
           <div className="flex items-center justify-between gap-3 border-t border-border bg-surface-lowest/40 px-5 py-3">
-            <p className="inline-flex items-center gap-2 font-mono text-meta-xs leading-tight text-muted-foreground">
+            <p className="inline-flex items-center gap-2 text-meta-xs leading-tight text-muted-foreground">
               <Lock className="size-3.5 shrink-0" />
               {!grounded ? (
                 <>No indexed documents in this project yet</>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Gauge, GitCompareArrows, Globe, Sparkles } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 import { confidenceLabel, formatDate, sourceTierLabel, type ConfidenceLevel, type SourceTier } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -102,7 +102,7 @@ function Sentences({
                     className={cn(
                       "relative before:absolute before:-inset-x-2 before:-inset-y-3 before:content-['']",
                       "inline-flex min-h-4 min-w-4 items-center justify-center rounded-sm px-1 py-px font-mono text-[0.625rem] font-semibold",
-                      "transition-[background-color,color,box-shadow] duration-150 outline-none",
+                      "transition-[background-color,color,box-shadow] duration-[140ms] outline-none",
                       "focus-visible:ring-3 focus-visible:ring-ring/50",
                       isExternal
                         ? markerActive
@@ -152,7 +152,7 @@ function ExternalSourceList({
           <li
             key={c.id}
             className={cn(
-              "rounded-xl border px-4 py-3 transition-colors duration-150",
+              "rounded-xl border px-4 py-3 transition-colors duration-[140ms]",
               active
                 ? "border-external/50 bg-external-surface"
                 : "border-border bg-card/60 hover:border-external/30"
@@ -219,21 +219,26 @@ function AnswerBody({
   onSelectCitation: (citationId: string | null) => void;
 }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6">
       {aligned.sections.map((section) => {
         if (section.sentences.length === 0) return null;
 
         // AI-generated general knowledge (DOCUMENT_PLUS_AI).
+        //
+        // Marked with a rule and a label, not a tinted card. A critical
+        // apparatus has marked a change of hand this way for five hundred
+        // years, and it keeps the answer a single column of prose with
+        // marked margins rather than a stack of coloured boxes.
         if (section.kind === "context") {
           return (
             <aside
               key={section.key}
               aria-label="AI-generated context"
-              className="flex flex-col gap-3 rounded-2xl border border-ai-context-border bg-ai-context-surface/60 p-5"
+              className="flex flex-col gap-2.5 border-l-2 border-ai-context pl-4"
             >
-              <p className="inline-flex items-start gap-2 font-mono text-meta-xs leading-snug text-ai-context uppercase">
-                <Sparkles className="mt-px size-3.5 shrink-0" />
-                Additional context — AI-generated, not from this project&apos;s documents
+              <p className="text-meta-sm leading-snug text-ai-context">
+                Additional context — AI-generated, not from this
+                project&apos;s documents
               </p>
               <Sentences
                 sentences={section.sentences}
@@ -254,11 +259,11 @@ function AnswerBody({
             <aside
               key={section.key}
               aria-label="External research"
-              className="flex flex-col gap-3.5 rounded-2xl border border-external-border bg-external-surface/50 p-5"
+              className="flex flex-col gap-3 border-l-2 border-external pl-4"
             >
-              <p className="inline-flex items-start gap-2 font-mono text-meta-xs leading-snug text-external uppercase">
-                <Globe className="mt-px size-3.5 shrink-0" />
-                External research — verified web sources, not from your documents
+              <p className="text-meta-sm leading-snug text-external">
+                External research — verified web sources, not from your
+                documents
               </p>
               <Sentences
                 sentences={section.sentences}
@@ -286,10 +291,9 @@ function AnswerBody({
             <section
               key={section.key}
               aria-label="Analysis"
-              className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface-highest/40 p-5"
+              className="flex flex-col gap-2 border-l-2 border-input pl-4"
             >
-              <p className="inline-flex items-start gap-2 font-mono text-meta-xs leading-snug text-muted-foreground uppercase">
-                <GitCompareArrows className="mt-px size-3.5 shrink-0" />
+              <p className="text-meta-sm leading-snug text-muted-foreground">
                 Analysis — AI interpretation
               </p>
               <Sentences
@@ -308,11 +312,12 @@ function AnswerBody({
           );
         }
 
-        // Document-grounded sections.
+        // Document-grounded sections — the default, and therefore the one
+        // that gets no treatment at all. Plain prose on the sheet.
         return (
           <section key={section.key} className="flex flex-col gap-2">
             {section.title != null && (
-              <h3 className="font-mono text-meta-xs text-muted-foreground uppercase">
+              <h3 className="text-meta-sm text-muted-foreground">
                 {section.title}
               </h3>
             )}
@@ -328,12 +333,20 @@ function AnswerBody({
   );
 }
 
+/** One coloured word, not a coloured box. */
 const CONFIDENCE_TONE: Record<ConfidenceLevel, string> = {
-  DOCUMENTS: "border-grounded-border bg-grounded-surface text-grounded",
-  MIXED: "border-pending-border bg-pending-surface text-pending",
-  EXTERNAL: "border-rejected-border bg-rejected-surface text-rejected",
+  DOCUMENTS: "text-grounded",
+  MIXED: "text-pending",
+  EXTERNAL: "text-external",
 };
 
+/**
+ * The stated support level.
+ *
+ * A single line, not a callout. This was the last alert-shaped component in
+ * the product, and an alert box is the wrong register for a statement of
+ * fact the reader is meant to weigh rather than react to.
+ */
 function ConfidenceCallout({ sentences }: { sentences: AnswerSentence[] }) {
   const text = sentences
     .flatMap((s) => s.segments.filter((seg) => seg.kind === "text").map((seg) => seg.text))
@@ -349,23 +362,12 @@ function ConfidenceCallout({ sentences }: { sentences: AnswerSentence[] }) {
         : "MIXED";
 
   return (
-    <div
-      aria-label="Confidence"
-      className={cn(
-        "flex items-start gap-3 rounded-2xl border px-5 py-4",
-        CONFIDENCE_TONE[level]
-      )}
-    >
-      <Gauge className="mt-0.5 size-4 shrink-0" />
-      <div className="flex flex-col gap-1">
-        <span className="font-mono text-meta-xs uppercase opacity-80">
-          Confidence
-        </span>
-        <span className="text-body-sm leading-snug font-medium">
-          {confidenceLabel[level]}
-        </span>
-      </div>
-    </div>
+    <p aria-label="Confidence" className="text-body-md text-muted-foreground">
+      Support:{" "}
+      <span className={cn("font-medium", CONFIDENCE_TONE[level])}>
+        {confidenceLabel[level]}
+      </span>
+    </p>
   );
 }
 

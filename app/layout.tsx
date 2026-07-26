@@ -1,31 +1,33 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Public_Sans, Source_Serif_4 } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
 
-// Reading face. Everything that is prose or UI label.
-const inter = Inter({
-  variable: "--font-inter",
+// Text face — prose. Answers, passages, descriptions. Charter's spirit (large
+// x-height, sturdy stems, built to survive bad rendering) via the closest
+// available serif with the same transitional lineage.
+const sourceSerif = Source_Serif_4({
+  variable: "--font-serif",
   subsets: ["latin"],
   display: "swap",
 });
 
-// Display face — page titles, hero, section headings. Tighter and more
-// geometric than Inter, which is what gives headings their editorial weight.
-const hankenGrotesk = Hanken_Grotesk({
-  variable: "--font-hanken",
+// Interface face — everything that is chrome: labels, controls, headings,
+// captions. Deliberately neutral so it never competes with the text face.
+const publicSans = Public_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
 });
 
-// Metadata face. Timestamps, counts, record ids, citation markers, status
-// labels — the typographic signal for "machine-generated fact".
-const jetBrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
+// Data face — sigla and locators only. Never timestamps, counts, or labels.
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -60,7 +62,7 @@ export default function RootLayout({
       <html
         lang="en"
         suppressHydrationWarning
-        className={`${inter.variable} ${hankenGrotesk.variable} ${jetBrainsMono.variable}`}
+        className={`${sourceSerif.variable} ${publicSans.variable} ${plexMono.variable}`}
       >
         <body className="antialiased">
           <ThemeProvider>{children}</ThemeProvider>

@@ -1,11 +1,7 @@
-import { FileStack, Layers, Network, Quote, ScrollText, Search } from "lucide-react";
 import Link from "next/link";
 
-import { LandingHero } from "@/components/marketing/landing-hero";
-import { AmbientBackground } from "@/components/ui/ambient-background";
 import { Button } from "@/components/ui/button";
-import { Magnetic } from "@/components/ui/motion/magnetic";
-import { Reveal, RevealItem } from "@/components/ui/reveal";
+import { Siglum } from "@/components/ui/siglum";
 
 export const metadata = {
   title: "CaseOS — AI workspace for complex document collections",
@@ -13,175 +9,173 @@ export const metadata = {
     "Upload a document collection, ask questions in plain language, and get answers grounded in your own sources with a citation to the exact page.",
 };
 
-/** What the product does, in the order a new user experiences it. */
-const steps = [
-  {
-    icon: FileStack,
-    title: "Upload your documents",
-    body: "Drop in reports, records, research, correspondence, or archives. Each file is parsed, split into passages, and indexed into its own project.",
-  },
-  {
-    icon: Search,
-    title: "Ask in plain language",
-    body: "Question the collection the way you'd question a colleague who has read all of it. Retrieval is scoped to that project and nothing else.",
-  },
-  {
-    icon: Quote,
-    title: "Follow every claim to its source",
-    body: "Each statement carries a marker linking to the passage behind it — the document, the page, the exact words.",
-  },
-];
+/**
+ * The landing page.
+ *
+ * The hero is a specimen, not an illustration: a real, correctly-typeset
+ * fragment of the product's own output, at true size, in the product's own
+ * faces. It is impossible to confuse with a competitor's stock artwork
+ * because it is made of this product.
+ *
+ * No feature-card grid, no numbered steps, no use-case chips, no animated
+ * background. Impact comes from measure and space, and the type ceiling
+ * (39px) is the same here as everywhere else in the product — marketing is
+ * not a licence to break the system.
+ */
 
-const principles = [
+const sections = [
   {
-    icon: Layers,
-    title: "Project-scoped",
-    body: "Every question runs inside a single project. Retrieval never reaches into another collection — enforced in the query itself, not by policy.",
+    heading: "What it does with your documents",
+    body: "Every file is parsed, split into passages, and indexed inside a single project. Retrieval is scoped to that project in the query itself — not by policy, not by a filter someone could forget to apply.",
   },
   {
-    icon: Network,
-    title: "Grounded, not recalled",
-    body: "Answers come from the documents you uploaded, never from the model's own memory. If the sources don't cover it, it says so instead of guessing.",
+    heading: "What happens when the documents don't cover it",
+    body: "It says so. Answers can be widened to the model's own knowledge or to verified web sources, but that material is marked as a different hand and is never cited as evidence from your collection.",
   },
   {
-    icon: ScrollText,
-    title: "Fully recorded",
-    body: "Every upload, question, and review decision is written to a permanent activity record you can inspect at any time.",
+    heading: "What the record holds",
+    body: "Every upload, question, and review decision is written to a permanent activity record, scoped to the workspace and exportable. Nobody has to reconstruct who concluded what, or from which page.",
   },
-];
-
-const useCases = [
-  "Research archives",
-  "Investigations",
-  "Corporate records",
-  "Compliance files",
-  "Academic material",
-  "Public records",
-  "Reports & filings",
-  "Historical collections",
 ];
 
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen text-foreground">
-      <AmbientBackground />
-
-      <header className="glass-panel sticky top-0 z-40 border-b border-border">
-        <div className="mx-auto flex max-w-(--container-page) items-center justify-between px-6 py-5">
-          <span className="flex items-center gap-3">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
-              <Network className="size-4.5" />
-            </span>
-            <span className="font-display text-headline-xs text-foreground">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-(--container-page) items-center justify-between px-6 py-4">
+          <span className="flex items-baseline gap-2.5">
+            <span className="font-mono text-label-md text-foreground">[C]</span>
+            <span className="text-label-md font-medium tracking-tight text-foreground">
               CaseOS
             </span>
           </span>
           <nav className="flex items-center gap-2">
             <Button
               variant="ghost"
+              size="sm"
               nativeButton={false}
               render={<Link href="/sign-in" />}
             >
               Sign in
             </Button>
-            <Magnetic>
-              <Button nativeButton={false} render={<Link href="/dashboard" />}>
-                Open workspace
-              </Button>
-            </Magnetic>
+            <Button
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/dashboard" />}
+            >
+              Open workspace
+            </Button>
           </nav>
         </div>
       </header>
 
       <main className="mx-auto max-w-(--container-page) px-6">
-        <LandingHero />
-
-        {/* How it works */}
-        <section className="border-t border-border/60 py-24">
-          <h2 className="text-center font-display text-headline-lg text-balance text-foreground">
-            Upload. Ask. Verify.
-          </h2>
-          <Reveal className="mt-14 grid gap-gutter sm:grid-cols-3">
-            {steps.map((step, i) => (
-              <RevealItem
-                key={step.title}
-                className="group glass flex flex-col gap-4 rounded-3xl p-7 shadow-sm transition-[transform,box-shadow] duration-300 ease-(--ease-liquid) hover:-translate-y-1 hover:shadow-xl motion-reduce:hover:translate-y-0"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20 transition-transform duration-300 group-hover:scale-110">
-                    <step.icon className="size-4.5" />
-                  </span>
-                  <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
-                    0{i + 1}
-                  </span>
-                </div>
-                <h3 className="font-display text-headline-xs text-foreground">
-                  {step.title}
-                </h3>
-                <p className="text-body-sm leading-relaxed text-pretty text-muted-foreground">
-                  {step.body}
-                </p>
-              </RevealItem>
-            ))}
-          </Reveal>
-        </section>
-
-        {/* Principles */}
-        <section className="border-t border-border/60 py-24">
-          <Reveal className="grid gap-gutter sm:grid-cols-3">
-            {principles.map((p) => (
-              <RevealItem
-                key={p.title}
-                className="group glass flex flex-col gap-4 rounded-3xl p-7 shadow-sm transition-[transform,box-shadow] duration-300 ease-(--ease-liquid) hover:-translate-y-1 hover:shadow-xl motion-reduce:hover:translate-y-0"
-              >
-                <span className="flex size-11 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20 transition-transform duration-300 group-hover:scale-110">
-                  <p.icon className="size-4.5" />
-                </span>
-                <h3 className="font-display text-headline-xs text-foreground">
-                  {p.title}
-                </h3>
-                <p className="text-body-sm leading-relaxed text-pretty text-muted-foreground">
-                  {p.body}
-                </p>
-              </RevealItem>
-            ))}
-          </Reveal>
-        </section>
-
-        {/* Use cases */}
-        <section className="border-t border-border/60 py-24 text-center">
-          <h2 className="font-display text-headline-md text-foreground">
-            Built for any collection worth reading carefully
-          </h2>
-          <Reveal className="mx-auto mt-9 flex max-w-3xl flex-wrap justify-center gap-2.5">
-            {useCases.map((useCase) => (
-              <RevealItem
-                key={useCase}
-                subtle
-                className="glass rounded-full px-4 py-2 text-body-sm text-muted-foreground shadow-xs transition-[transform,color] duration-200 hover:-translate-y-0.5 hover:text-primary"
-              >
-                {useCase}
-              </RevealItem>
-            ))}
-          </Reveal>
-          <div className="mt-12">
-            <Magnetic strength={0.5}>
+        {/* ---------- Thesis + specimen ---------- */}
+        <section className="grid gap-12 pt-24 pb-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-16">
+          <div>
+            <h1 className="max-w-xl font-serif text-display-lg text-balance text-foreground">
+              Every sentence it writes, you can check.
+            </h1>
+            <p className="mt-8 max-w-md text-body-lg text-pretty text-muted-foreground">
+              CaseOS answers questions about a document collection and attaches
+              the passage behind every claim — the document, the page, the exact
+              words.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
               <Button
-                size="xl"
-                variant="hero"
                 nativeButton={false}
                 render={<Link href="/dashboard" />}
               >
-                Start analysing
+                Open the workspace
               </Button>
-            </Magnetic>
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/sign-up" />}
+              >
+                Create an account
+              </Button>
+            </div>
           </div>
+
+          {/* The specimen. Real output, real type, real sigla — static and
+              inert. Claim on the leaf; source cut into the desk beneath it. */}
+          <Specimen />
         </section>
+
+        {/* ---------- Three statements ---------- */}
+        {sections.map((section) => (
+          <section
+            key={section.heading}
+            className="grid gap-x-16 gap-y-3 border-t border-border py-16 lg:grid-cols-[minmax(0,20rem)_minmax(0,34rem)]"
+          >
+            <h2 className="text-headline-md text-balance text-foreground">
+              {section.heading}
+            </h2>
+            <p className="font-serif text-body-lg text-pretty text-muted-foreground">
+              {section.body}
+            </p>
+          </section>
+        ))}
       </main>
 
-      <footer className="border-t border-border/60 py-10 text-center font-mono text-meta-xs text-muted-foreground">
-        CaseOS — an AI workspace for complex document collections
+      <footer className="border-t border-border">
+        <div className="mx-auto max-w-(--container-page) px-6 py-8">
+          <p className="text-meta-sm text-muted-foreground">
+            CaseOS — an AI workspace for complex document collections
+          </p>
+        </div>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * A true-size fragment of product output. Not decorative: this is what the
+ * inquiry surface actually renders, down to the siglum treatment and the
+ * locator in mono.
+ */
+function Specimen() {
+  return (
+    <div aria-hidden className="select-none">
+      {/* The answer — a leaf, flat on the desk, no shadow. */}
+      <div className="rounded-xl border border-border bg-card p-6">
+        <p className="border-l-2 border-input pl-3.5 font-serif text-body-md text-muted-foreground italic">
+          What changed about the reporting threshold?
+        </p>
+
+        <p className="mt-5 font-serif text-body-lg text-foreground">
+          The reporting threshold was raised to $50,000 in the March revision
+          <Siglum label="S2" className="mx-0.5 align-super" />, superseding the
+          earlier $25,000 limit
+          <Siglum label="S5" className="mx-0.5 align-super" />.
+        </p>
+
+        <p className="mt-5 border-t border-border pt-4 text-meta-sm text-muted-foreground">
+          Grounded in 2 source passages · fully supported by this project&apos;s
+          documents
+        </p>
+      </div>
+
+      {/* The source — recessed. Material the product did not author. */}
+      <div className="mt-3 rounded-xl bg-surface-lowest p-5 shadow-[inset_0_1px_2px_0_var(--shadow-tint-weak)]">
+        <div className="flex items-start gap-3">
+          <Siglum label="S2" />
+          <div className="min-w-0">
+            <p className="border-l-2 border-citation pl-3.5 font-serif text-body-md text-muted-foreground">
+              …effective 1 March, the threshold for mandatory reporting of
+              vendor payments is raised from $25,000 to $50,000 per
+              engagement…
+            </p>
+            <p className="mt-3 flex items-center gap-2 text-meta-sm text-muted-foreground">
+              <span className="truncate">Vendor Compliance Review 2019.pdf</span>
+              <span className="shrink-0 font-mono text-meta-xs tabular-nums">
+                p. 412
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

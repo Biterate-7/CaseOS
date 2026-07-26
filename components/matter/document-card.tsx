@@ -54,11 +54,11 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
   return (
     <div
       className={cn(
-        "group overflow-hidden rounded-xl bg-card ring-1 transition-[box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid)",
-        "hover:shadow-md",
+        "group overflow-hidden rounded-xl bg-card ring-1 transition-[box-shadow,--tw-ring-color] duration-200 ease-(--ease-liquid)",
+        "",
         document.status === "FAILED"
           ? "ring-rejected-border/60"
-          : "ring-border hover:ring-primary/20"
+          : "ring-border hover:ring-input"
       )}
     >
       <div className="flex items-start gap-3 p-4">
@@ -79,7 +79,7 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
           <p className="truncate text-label-sm text-foreground">
             {document.title}
           </p>
-          <p className="mt-0.5 truncate font-mono text-meta-xs text-muted-foreground">
+          <p className="mt-0.5 truncate text-meta-xs text-muted-foreground">
             {document.fileName}
           </p>
 
@@ -101,12 +101,12 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
               </TooltipContent>
             </Tooltip>
 
-            <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+            <span className="text-meta-xs text-muted-foreground tabular-nums">
               {facts.join(" · ")}
             </span>
           </div>
 
-          <p className="mt-2 font-mono text-meta-xs text-muted-foreground/80">
+          <p className="mt-2 text-meta-xs text-muted-foreground/80">
             Added {formatRelativeTime(document.createdAt)}
           </p>
         </div>
@@ -131,7 +131,7 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
               }}
             />
           </div>
-          <p className="mt-2 font-mono text-meta-xs text-muted-foreground">
+          <p className="mt-2 text-meta-xs text-muted-foreground">
             Extracting and embedding — not yet searchable.
           </p>
         </div>
@@ -173,7 +173,7 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
               )}
             </Button>
             {retryError && (
-              <span className="font-mono text-meta-xs text-rejected">
+              <span className="text-meta-xs text-rejected">
                 {retryError}
               </span>
             )}
@@ -187,11 +187,11 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 font-mono text-meta-xs text-muted-foreground transition-colors duration-150 outline-none hover:bg-surface-highest/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 text-meta-xs text-muted-foreground transition-colors duration-[140ms] outline-none hover:bg-surface-highest/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <ChevronRight
               className={cn(
-                "size-3.5 transition-transform duration-250 ease-(--ease-liquid)",
+                "size-3.5 transition-transform duration-200 ease-(--ease-liquid)",
                 expanded && "rotate-90"
               )}
             />

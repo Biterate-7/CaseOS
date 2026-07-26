@@ -6,7 +6,6 @@ import {
   FolderPlus,
   MessageSquareQuote,
   ScrollText,
-  Sparkles,
   TriangleAlert,
   X,
 } from "lucide-react";
@@ -26,7 +25,10 @@ const ACTION_STYLE: Record<
   string,
   { icon: React.ComponentType<{ className?: string }>; tone: string }
 > = {
-  AI_QUESTION_ASKED: { icon: Sparkles, tone: "text-primary bg-primary/12" },
+  AI_QUESTION_ASKED: {
+    icon: MessageSquareQuote,
+    tone: "text-muted-foreground bg-surface-highest",
+  },
   AI_ANSWER_APPROVED: {
     icon: Check,
     tone: "text-grounded bg-grounded-surface",
@@ -107,10 +109,10 @@ function AuditTimeline({
     >
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="flex items-center gap-2.5 font-display text-headline-sm text-foreground">
-          <ScrollText className="size-5 text-primary" />
+          <ScrollText className="size-5 text-foreground" />
           Audit trail
         </h2>
-        <span className="font-mono text-meta-xs uppercase text-muted-foreground">
+        <span className="text-meta-xs text-muted-foreground">
           Permanent record
         </span>
       </div>
@@ -161,7 +163,7 @@ function AuditTimeline({
                 <time
                   dateTime={entry.createdAt.toISOString()}
                   title={formatPreciseDateTime(entry.createdAt)}
-                  className="mt-1 block font-mono text-meta-xs text-muted-foreground/80"
+                  className="mt-1 block text-meta-xs text-muted-foreground/80"
                 >
                   {formatRelativeTime(entry.createdAt)}
                 </time>
@@ -171,7 +173,7 @@ function AuditTimeline({
                     {details.map(([key, value]) => (
                       <span
                         key={key}
-                        className="inline-flex items-baseline gap-1.5 rounded-md bg-surface-highest/70 px-2 py-1 font-mono text-meta-xs text-muted-foreground ring-1 ring-border"
+                        className="inline-flex items-baseline gap-1.5 rounded-md bg-surface-highest/70 px-2 py-1 text-meta-xs text-muted-foreground ring-1 ring-border"
                       >
                         <span className="opacity-70">{key}</span>
                         <span className="max-w-40 truncate text-foreground tabular-nums">

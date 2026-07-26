@@ -148,7 +148,7 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
           <SlidersHorizontal />
           Filters
           {activeFilters.length > 0 && (
-            <span className="ml-0.5 rounded-full bg-primary px-2 font-mono text-meta-xs text-primary-foreground tabular-nums">
+            <span className="ml-0.5 rounded-full bg-primary px-2 text-meta-xs text-primary-foreground tabular-nums">
               {activeFilters.length}
             </span>
           )}
@@ -173,7 +173,7 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
       </div>
 
       {showFilters && (
-        <div className="grid gap-5 rounded-2xl bg-card p-6 ring-1 ring-border sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 rounded-xl bg-card p-6 ring-1 ring-border sm:grid-cols-2 lg:grid-cols-3">
           <div className="flex flex-col gap-2">
             <Label htmlFor="f-project">Project</Label>
             <Select
@@ -273,7 +273,7 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
               key={filter.key}
               type="button"
               onClick={() => setParam(filter.key, null)}
-              className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-highest px-3 font-mono text-meta-xs text-muted-foreground ring-1 ring-border transition-colors duration-150 outline-none hover:text-foreground hover:ring-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md bg-surface-highest px-3 text-meta-xs text-muted-foreground ring-1 ring-border transition-colors duration-[140ms] outline-none hover:text-foreground hover:ring-input focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {filter.label}
               <X className="size-3" />

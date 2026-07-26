@@ -32,15 +32,15 @@ function Card({
       data-size={size}
       data-tone={tone}
       className={cn(
-        "group/card relative flex flex-col gap-(--card-spacing) rounded-2xl py-(--card-spacing) text-sm text-card-foreground",
+        "group/card relative flex flex-col gap-(--card-spacing) rounded-xl py-(--card-spacing) text-sm text-card-foreground",
         "[--card-spacing:--spacing(6)] data-[size=sm]:[--card-spacing:--spacing(4)] data-[size=lg]:[--card-spacing:--spacing(8)]",
         tone === "solid" && "bg-card shadow-sm ring-1 ring-border",
         tone === "glass" && "glass shadow-lg",
         tone === "well" && "glass-well ring-1 ring-border",
         interactive &&
-          "cursor-pointer transition-[box-shadow,transform,background-color] duration-250 ease-(--ease-liquid) hover:-translate-y-0.5 hover:shadow-xl motion-reduce:hover:translate-y-0",
-        interactive && tone === "solid" && "hover:bg-surface hover:ring-primary/25",
-        interactive && tone === "glass" && "hover:border-primary/25",
+          "cursor-pointer transition-[box-shadow,transform,background-color] duration-200 ease-(--ease-liquid)",
+        interactive && tone === "solid" && "hover:bg-surface hover:ring-input",
+        interactive && tone === "glass" && "hover:border-input",
         className
       )}
       {...props}

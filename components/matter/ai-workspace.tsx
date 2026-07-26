@@ -7,7 +7,8 @@ import {
   Quote,
   RefreshCw,
   ShieldQuestion,
-  Sparkles,
+  MessageSquareQuote,
+  PenLine,
   TriangleAlert,
   X,
 } from "lucide-react";
@@ -75,19 +76,19 @@ function InteractionCard({
       className={cn(
         // scroll-mt keeps the card clear of the sticky panel header when a
         // deep link scrolls it into view.
-        "flex scroll-mt-24 flex-col gap-4 rounded-2xl bg-card p-6 ring-1",
-        "transition-[box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid)",
+        "flex scroll-mt-24 flex-col gap-4 rounded-xl bg-card p-6 ring-1",
+        "transition-[box-shadow,--tw-ring-color] duration-200 ease-(--ease-liquid)",
         focused
-          ? "shadow-lg ring-primary/25"
-          : "ring-border hover:shadow-md hover:ring-border/80",
-        highlighted && "ring-2 ring-primary shadow-[0_0_32px_-8px_var(--glow)]"
+          ? "shadow-lg ring-input"
+          : "ring-border hover:ring-border/80",
+        highlighted && "ring-2 ring-foreground"
       )}
     >
       {/* The question, set as a question — indented behind a rule the way a
           quoted issue appears in a report. */}
       <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
-          <p className="border-l-2 border-primary/50 pl-3.5 font-display text-headline-xs leading-snug text-balance text-foreground">
+          <p className="border-l-2 border-input pl-3.5 font-display text-headline-xs leading-snug text-balance text-foreground">
             {interaction.prompt}
           </p>
           <StatusBadge
@@ -99,7 +100,7 @@ function InteractionCard({
           </StatusBadge>
         </div>
 
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 font-mono text-meta-xs text-muted-foreground">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-meta-xs text-muted-foreground">
           <span className="text-foreground">{interaction.authorName}</span>
           <span>· {formatRelativeTime(interaction.createdAt)}</span>
           <span>· {interactionTypeLabel[interaction.type]}</span>
@@ -107,7 +108,7 @@ function InteractionCard({
               would stop meaning anything. */}
           {interaction.knowledgeMode === "DOCUMENT_PLUS_AI" && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-ai-context-border bg-ai-context-surface/60 px-2 py-0.5 text-ai-context">
-              <Sparkles className="size-2.5 shrink-0" />
+              <PenLine className="size-2.5 shrink-0" />
               {knowledgeModeLabel.DOCUMENT_PLUS_AI}
             </span>
           )}
@@ -131,7 +132,7 @@ function InteractionCard({
       />
 
       <footer className="flex flex-col gap-4">
-        <p className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-4 font-mono text-meta-xs text-muted-foreground">
+        <p className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-4 text-meta-xs text-muted-foreground">
           <Quote className="size-3 shrink-0 text-citation" />
           {interaction.citations.length > 0 ? (
             <span>
@@ -231,7 +232,7 @@ function AiWorkspace({
     >
       <div className="flex flex-col gap-2">
         <h2 className="flex items-center gap-2.5 font-display text-headline-sm text-foreground">
-          <Sparkles className="size-5 text-primary" />
+          <MessageSquareQuote className="size-5 text-muted-foreground" />
           Research
         </h2>
         <p className="text-body-sm leading-relaxed text-muted-foreground">

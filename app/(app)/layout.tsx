@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AppTopbar } from "@/components/app-topbar";
 import { MobileNav } from "@/components/mobile-nav";
-import { AmbientBackground } from "@/components/ui/ambient-background";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -25,10 +24,6 @@ export default async function AppLayout({
 
   return (
     <TooltipProvider>
-      {/* The shell paints no opaque background of its own, so the ambient
-          layer at -z-10 shows through every page. */}
-      <AmbientBackground intensity="muted" />
-
       <div className="flex min-h-screen">
         {/* Desktop rail. Fixed so long pages scroll under a stationary sidebar
             rather than dragging it out of view. */}

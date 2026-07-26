@@ -16,7 +16,7 @@ export default function ProjectNotFound() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-6">
       <div className="flex max-w-md flex-col items-center text-center">
-        <span className="flex size-14 items-center justify-center rounded-2xl bg-surface-highest/70 text-muted-foreground ring-1 ring-border">
+        <span className="flex size-14 items-center justify-center rounded-xl bg-surface-highest/70 text-muted-foreground ring-1 ring-border">
           <FolderSearch className="size-6" />
         </span>
 

@@ -6,7 +6,6 @@ import {
   FileStack,
   FolderOpen,
   LayoutDashboard,
-  Network,
   Plus,
   Users,
 } from "lucide-react"
@@ -43,10 +42,8 @@ function BrandMark() {
       href="/dashboard"
       className="group flex items-center gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
     >
-      <span className="relative flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
-        <Network className="size-4.5" />
-      </span>
-      <span className="font-display text-headline-sm tracking-tight text-foreground">
+      <span className="font-mono text-label-md text-foreground">[C]</span>
+      <span className="text-label-md font-medium tracking-tight text-foreground">
         CaseOS
       </span>
     </Link>
@@ -77,13 +74,13 @@ function ProjectSwitcher({
     <Menu>
       <MenuTrigger
         className={cn(
-          "aura-glow group flex w-full items-center justify-between gap-3 rounded-xl bg-surface-highest/70 px-4 py-3 text-left ring-1 ring-border outline-none",
-          "transition-colors duration-150 hover:bg-surface-highest",
+          "group flex w-full items-center justify-between gap-3 rounded-md bg-surface-highest/70 px-4 py-3 text-left ring-1 ring-border outline-none",
+          "transition-colors duration-[140ms] hover:bg-surface-highest",
           "focus-visible:ring-3 focus-visible:ring-ring/50"
         )}
       >
         <span className="flex min-w-0 items-center gap-3">
-          <FolderOpen className="size-4.5 shrink-0 text-primary" />
+          <FolderOpen className="size-4.5 shrink-0 text-foreground" />
           <span className="min-w-0 truncate text-label-md text-foreground">
             {active ? active.title : "Select a project"}
           </span>
@@ -99,7 +96,7 @@ function ProjectSwitcher({
               <MenuItem
                 key={project.id}
                 onClick={onNavigate}
-                className={cn(project.id === activeId && "text-primary")}
+                className={cn(project.id === activeId && "text-foreground")}
                 render={<Link href={`/matters/${project.id}`} />}
               >
                 <FolderOpen />
@@ -147,10 +144,10 @@ function AppNav({ onNavigate }: { onNavigate?: () => void }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "group relative flex h-12 items-center gap-4 rounded-xl px-4 text-label-md",
-              "transition-colors duration-150 outline-none",
+              "transition-colors duration-[140ms] outline-none",
               "focus-visible:ring-3 focus-visible:ring-ring/50",
               active
-                ? "font-medium text-primary"
+                ? "font-medium text-foreground"
                 : "text-muted-foreground hover:bg-surface-highest/60 hover:text-foreground"
             )}
           >
@@ -159,13 +156,13 @@ function AppNav({ onNavigate }: { onNavigate?: () => void }) {
                 layoutId="app-nav-active"
                 aria-hidden
                 transition={reduceMotion ? { duration: 0 } : springSnappy}
-                className="absolute inset-0 -z-10 rounded-xl bg-primary/12 ring-1 ring-primary/25"
+                className="absolute inset-0 -z-10 rounded-xl bg-surface-highest ring-1 ring-input"
               />
             )}
             <Icon
               className={cn(
-                "size-5 shrink-0 transition-colors duration-150",
-                active ? "text-primary" : "group-hover:text-primary"
+                "size-5 shrink-0 transition-colors duration-[140ms]",
+                active ? "text-foreground" : "group-hover:text-foreground"
               )}
             />
             {item.label}

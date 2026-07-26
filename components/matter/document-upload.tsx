@@ -103,11 +103,11 @@ function DocumentUpload({ matterId }: { matterId: string }) {
           void handleFiles(e.dataTransfer.files);
         }}
         className={cn(
-          "relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-5 py-7 text-center",
-          "transition-[border-color,background-color,box-shadow] duration-250 ease-(--ease-liquid)",
+          "relative flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-5 py-7 text-center",
+          "transition-[border-color,background-color,box-shadow] duration-200 ease-(--ease-liquid)",
           dragging
-            ? "border-primary bg-primary/8 shadow-[0_0_0_4px_var(--glow)]"
-            : "border-border bg-surface-lowest/40 hover:border-primary/30 hover:bg-surface-lowest/70",
+            ? "border-input bg-surface-highest"
+            : "border-border bg-surface-lowest/40 hover:border-input hover:bg-surface-lowest/70",
           busy && "pointer-events-none opacity-70"
         )}
       >
@@ -123,34 +123,32 @@ function DocumentUpload({ matterId }: { matterId: string }) {
 
         {phase === "uploading" ? (
           <>
-            <Loader2 className="size-5 animate-spin text-primary" />
+            <Loader2 className="size-5 animate-spin text-foreground" />
             <p className="text-label-sm text-foreground">
               Transferring {fileName}
             </p>
-            <p className="font-mono text-meta-xs leading-relaxed text-muted-foreground">
+            <p className="text-meta-xs leading-relaxed text-muted-foreground">
               Sending the file directly to secure storage.
             </p>
           </>
         ) : phase === "ingesting" ? (
           <>
-            <Loader2 className="size-5 animate-spin text-primary" />
+            <Loader2 className="size-5 animate-spin text-foreground" />
             <p className="text-label-sm text-foreground">
               Indexing {fileName}
             </p>
-            <p className="font-mono text-meta-xs leading-relaxed text-muted-foreground">
+            <p className="text-meta-xs leading-relaxed text-muted-foreground">
               Extracting text, splitting into passages, and embedding. Long
               documents can take a minute.
             </p>
           </>
         ) : (
           <>
-            <span className="flex size-9 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
-              <Upload className="size-4" />
-            </span>
+            <Upload className="size-4 text-muted-foreground" />
             <p className="text-label-sm text-foreground">
               Drop a document, or click to browse
             </p>
-            <p className="font-mono text-meta-xs text-muted-foreground">
+            <p className="text-meta-sm text-muted-foreground">
               PDF, TXT, or Markdown · up to 20 MB
             </p>
           </>

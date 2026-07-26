@@ -20,7 +20,7 @@ export default function DocumentsLoading() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 rounded-2xl bg-card p-5 ring-1 ring-border"
+            className="flex items-center gap-4 rounded-xl bg-card p-5 ring-1 ring-border"
           >
             <Skeleton className="size-11 shrink-0 rounded-xl" />
             <div className="flex flex-1 flex-col gap-2">

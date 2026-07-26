@@ -1,7 +1,5 @@
-import { Network } from "lucide-react";
 import Link from "next/link";
 
-import { AmbientBackground } from "@/components/ui/ambient-background";
 import { cn } from "@/lib/utils";
 
 /**
@@ -9,11 +7,12 @@ import { cn } from "@/lib/utils";
  * sign-up, and onboarding — the surfaces where a user has arrived but has no
  * workspace to be inside yet.
  *
- * Shares the ambient aurora with the landing page and app shell, muted so it
- * never competes with the form. Deliberately does not impose a card of its
- * own — Clerk's widgets and the plain forms here each carry their own glass
- * surface, sized differently, so a shared wrapper card would either double up
- * or fight their natural width.
+ * Deliberately does not impose a card of its own: Clerk's widgets and the
+ * plain forms here each carry their own surface, sized differently, so a
+ * shared wrapper would either double up or fight their natural width.
+ *
+ * These are the quietest screens in the product — a sheet on a desk under a
+ * lamp, and nothing else. The product opens the way it intends to continue.
  */
 function AuthShell({
   children,
@@ -26,16 +25,12 @@ function AuthShell({
 }) {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-12">
-      <AmbientBackground intensity="muted" />
-
       <Link
         href="/"
         className="relative z-10 mb-10 flex items-center gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
-          <Network className="size-4.5" />
-        </span>
-        <span className="font-display text-headline-xs text-foreground">
+        <span className="font-mono text-label-md text-foreground">[C]</span>
+        <span className="text-label-md font-medium tracking-tight text-foreground">
           CaseOS
         </span>
       </Link>
@@ -45,7 +40,7 @@ function AuthShell({
       </div>
 
       {footer && (
-        <div className="relative z-10 mt-8 text-center font-mono text-meta-xs text-muted-foreground">
+        <div className="relative z-10 mt-8 text-center text-meta-sm text-muted-foreground">
           {footer}
         </div>
       )}

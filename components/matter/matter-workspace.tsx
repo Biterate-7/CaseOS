@@ -5,7 +5,7 @@ import {
   PanelLeftClose,
   PanelRightClose,
   ShieldQuestion,
-  Sparkles,
+  MessageSquareQuote,
 } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -143,7 +143,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
     >
       <ShieldQuestion className="size-3.5" />
       Awaiting review
-      <span className="ml-0.5 rounded-full bg-pending-surface px-2 font-mono text-meta-xs text-pending tabular-nums">
+      <span className="ml-0.5 rounded-full bg-pending-surface px-2 text-meta-xs text-pending tabular-nums">
         {reviewCount}
       </span>
     </Button>
@@ -160,7 +160,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
         <aside
           className={cn(
             "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-r border-border bg-surface-lowest/30",
-            "transition-[width] duration-400 ease-(--ease-liquid)",
+            "transition-[width] duration-[280ms] ease-(--ease-liquid)",
             showDocuments ? "w-72 2xl:w-80" : "w-0 overflow-hidden"
           )}
         >
@@ -233,7 +233,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
         <aside
           className={cn(
             "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-l border-border bg-surface-lowest/30",
-            "transition-[width] duration-400 ease-(--ease-liquid)",
+            "transition-[width] duration-[280ms] ease-(--ease-liquid)",
             showEvidence ? "w-80 2xl:w-96" : "w-0 overflow-hidden"
           )}
         >
@@ -251,7 +251,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
           <div className="glass-panel sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 lg:px-5">
             <TabsList>
               <TabsTab value="research">
-                <Sparkles />
+                <MessageSquareQuote />
                 Research
               </TabsTab>
               <TabsTab value="documents">

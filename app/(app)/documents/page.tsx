@@ -67,20 +67,20 @@ export default async function DocumentsPage({
       <DocumentFilters index={index} />
 
       <div className="flex items-baseline justify-between gap-3">
-        <p className="font-mono text-meta-xs uppercase text-muted-foreground tabular-nums">
+        <p className="text-meta-xs text-muted-foreground tabular-nums">
           {isFiltered
             ? `${countLabel(total, "match", "matches")} of ${facets.totalDocuments}`
             : countLabel(total, "document")}
         </p>
         {pageCount > 1 && (
-          <p className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+          <p className="text-meta-xs text-muted-foreground tabular-nums">
             Page {page} of {pageCount}
           </p>
         )}
       </div>
 
       {facets.totalDocuments === 0 ? (
-        <div className="rounded-3xl bg-card/40 ring-1 ring-border backdrop-blur-3xl">
+        <div className="rounded-xl bg-card/40 ring-1 ring-border">
           <EmptyState
             icon={FileStack}
             title="No documents yet"
@@ -93,7 +93,7 @@ export default async function DocumentsPage({
           />
         </div>
       ) : documents.length === 0 ? (
-        <div className="rounded-3xl bg-card/40 ring-1 ring-border backdrop-blur-3xl">
+        <div className="rounded-xl bg-card/40 ring-1 ring-border">
           <EmptyState
             icon={Search}
             title="No matching documents"
@@ -114,7 +114,7 @@ export default async function DocumentsPage({
           {documents.map((doc) => (
             <li
               key={doc.id}
-              className="group flex flex-col gap-4 rounded-2xl bg-card p-4 ring-1 ring-border transition-[background-color,box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid) hover:bg-surface hover:shadow-lg hover:ring-primary/20 sm:flex-row sm:items-center sm:p-5"
+              className="group flex flex-col gap-4 rounded-xl bg-card p-4 ring-1 ring-border transition-[background-color,box-shadow,--tw-ring-color] duration-200 ease-(--ease-liquid) hover:bg-surface hover:ring-input sm:flex-row sm:items-center sm:p-5"
             >
               {/* The icon tile carries ingestion state as a second, redundant
                   signal alongside the badge — colour is never the only cue. */}
@@ -137,12 +137,12 @@ export default async function DocumentsPage({
                 <p className="truncate text-label-md text-foreground">
                   {doc.title}
                 </p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-meta-xs text-muted-foreground">
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-meta-xs text-muted-foreground">
                   {/* Nested inside the row but not inside another link — the
                       row itself is not a link, so this stays valid. */}
                   <Link
                     href={`/matters/${doc.matterId}`}
-                    className="max-w-[16rem] truncate text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className="max-w-[16rem] truncate text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     {doc.matterTitle}
                   </Link>
@@ -168,7 +168,7 @@ export default async function DocumentsPage({
                       dangerouslySetInnerHTML={{ __html: `…${doc.snippet}…` }}
                     />
                     {doc.snippetPage != null && (
-                      <span className="ml-2 whitespace-nowrap font-mono text-meta-xs text-citation/80 tabular-nums">
+                      <span className="ml-2 whitespace-nowrap text-meta-xs text-citation/80 tabular-nums">
                         p.{doc.snippetPage}
                       </span>
                     )}
@@ -210,7 +210,7 @@ export default async function DocumentsPage({
           >
             Previous
           </Button>
-          <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+          <span className="text-meta-xs text-muted-foreground tabular-nums">
             {page} / {pageCount}
           </span>
           <Button

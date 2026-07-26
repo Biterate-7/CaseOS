@@ -46,7 +46,7 @@ function MatterHeader({
   ];
 
   return (
-    <header className="relative border-b border-border bg-card/50 backdrop-blur-3xl">
+    <header className="relative border-b border-border bg-card/50">
       {/* A single soft light from the top-left, so the header reads as its own
           lit material without becoming a gradient feature. */}
       <div
@@ -61,9 +61,9 @@ function MatterHeader({
       <div className="relative px-margin-mobile pt-6 lg:px-8">
         <Link
           href="/matters"
-          className="group inline-flex items-center gap-2 rounded-lg font-mono text-meta-xs uppercase text-muted-foreground transition-colors duration-150 outline-none hover:text-primary focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="group inline-flex items-center gap-2 rounded-lg text-meta-xs text-muted-foreground transition-colors duration-[140ms] outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
         >
-          <ArrowLeft className="size-3.5 transition-transform duration-250 group-hover:-translate-x-1" />
+          <ArrowLeft className="size-3.5 transition-transform duration-200 group-hover:-translate-x-1" />
           All projects
         </Link>
 
@@ -78,7 +78,7 @@ function MatterHeader({
               </StatusBadge>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-meta-xs text-muted-foreground">
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-meta-xs text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Building2 className="size-3.5 shrink-0" />
                 <span className="text-foreground">{matter.clientName}</span>
@@ -99,7 +99,7 @@ function MatterHeader({
 
           {members.length > 0 && (
             <div className="flex shrink-0 items-center gap-3">
-              <p className="font-mono text-meta-xs uppercase text-muted-foreground">
+              <p className="text-meta-xs text-muted-foreground">
                 {countLabel(members.length, "person", "people")}
               </p>
               <div className="flex -space-x-2">
@@ -108,7 +108,7 @@ function MatterHeader({
                     <TooltipTrigger
                       render={
                         <span
-                          className="flex size-9 items-center justify-center rounded-full bg-surface-highest font-mono text-meta-xs text-foreground ring-2 ring-card"
+                          className="flex size-9 items-center justify-center rounded-md bg-surface-highest text-meta-xs text-foreground ring-2 ring-card"
                           aria-label={`${member.name}, ${projectRoleLabel[member.role]}`}
                         >
                           {initials(member.name)}
@@ -121,7 +121,7 @@ function MatterHeader({
                   </Tooltip>
                 ))}
                 {members.length > 4 && (
-                  <span className="flex size-9 items-center justify-center rounded-full bg-surface font-mono text-meta-xs text-muted-foreground ring-2 ring-card">
+                  <span className="flex size-9 items-center justify-center rounded-full bg-surface text-meta-xs text-muted-foreground ring-2 ring-card">
                     +{members.length - 4}
                   </span>
                 )}
@@ -135,7 +135,7 @@ function MatterHeader({
         <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-4 border-t border-border pt-5 pb-6">
           {facts.map((fact) => (
             <div key={fact.label} className="flex flex-col gap-1.5">
-              <dt className="font-mono text-meta-xs uppercase text-muted-foreground">
+              <dt className="text-meta-xs text-muted-foreground">
                 {fact.label}
               </dt>
               <dd

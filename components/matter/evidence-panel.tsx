@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Globe, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertTriangle, Globe, ShieldCheck } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo } from "react";
 
@@ -46,7 +46,6 @@ function EvidencePanel({
           Sources
         </h2>
         <EmptyState
-          icon={Sparkles}
           size="sm"
           title="No analysis selected"
           description="Ask a question, then every claim in the answer will appear here with the document and page it came from."
@@ -63,7 +62,7 @@ function EvidencePanel({
         <h2 className="font-display text-headline-xs text-foreground">
           Sources
         </h2>
-        <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+        <span className="text-meta-xs text-muted-foreground tabular-nums">
           {countLabel(citations.length, "source")}
         </span>
       </div>

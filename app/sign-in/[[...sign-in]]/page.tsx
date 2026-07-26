@@ -11,7 +11,7 @@ export default function SignInPage() {
       className="flex w-auto max-w-none justify-center"
       footer={<>Grounded in your documents. Every answer cited.</>}
     >
-      <div className="glass rounded-3xl p-8 shadow-2xl">
+      <div className="glass rounded-xl p-8 shadow-lg">
         <SignIn appearance={clerkAppearance} />
       </div>
     </AuthShell>

@@ -52,10 +52,10 @@ function ThemeToggle() {
             onClick={() => setTheme(option.value)}
             className={cn(
               "relative flex h-7 flex-1 items-center justify-center rounded-lg outline-none",
-              "transition-colors duration-150",
+              "transition-colors duration-[140ms]",
               "focus-visible:ring-3 focus-visible:ring-ring/50",
               active
-                ? "text-primary"
+                ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >

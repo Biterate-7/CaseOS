@@ -41,7 +41,7 @@ function ReviewGate({ interaction }: { interaction: WorkspaceInteraction }) {
     return (
       <div
         className={cn(
-          "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 font-mono text-meta-xs",
+          "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 text-meta-xs",
           approved
             ? "border-grounded-border bg-grounded-surface text-grounded"
             : "border-rejected-border bg-rejected-surface text-rejected"
@@ -52,7 +52,7 @@ function ReviewGate({ interaction }: { interaction: WorkspaceInteraction }) {
         ) : (
           <X className="size-3.5 shrink-0" />
         )}
-        <span className="uppercase">
+        <span>
           {reviewStatusLabel[interaction.reviewStatus]}
         </span>
         {interaction.reviewedAt && (

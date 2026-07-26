@@ -98,13 +98,13 @@ function InviteForm() {
       )}
 
       {link && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-grounded-border bg-grounded-surface/50 p-5">
+        <div className="flex flex-col gap-3 rounded-xl border border-grounded-border bg-grounded-surface/50 p-5">
           <p className="text-body-sm font-medium text-grounded">
             Invitation created. Send this link to the person you invited —
             CaseOS does not send email.
           </p>
           <div className="flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded-lg bg-surface-lowest/60 px-3 py-2 font-mono text-meta-xs ring-1 ring-border">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-surface-lowest/60 px-3 py-2 text-meta-xs ring-1 ring-border">
               {link}
             </code>
             <Button size="sm" variant="outline" onClick={copy}>
@@ -121,7 +121,7 @@ function InviteForm() {
               )}
             </Button>
           </div>
-          <p className="font-mono text-meta-xs leading-relaxed text-muted-foreground">
+          <p className="text-meta-xs leading-relaxed text-muted-foreground">
             Anyone with this link can join the workspace as the role you chose.
             It expires in 7 days. Creating another invite for the same address
             replaces this link.

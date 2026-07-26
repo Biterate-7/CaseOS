@@ -213,7 +213,7 @@ function DocumentActions({
       </div>
 
       {error && !renameOpen && !moveOpen && !deleteOpen && (
-        <p role="alert" className="mt-1 font-mono text-meta-xs text-rejected">
+        <p role="alert" className="mt-1 text-meta-xs text-rejected">
           {error}
         </p>
       )}

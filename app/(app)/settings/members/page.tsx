@@ -58,7 +58,7 @@ export default async function MembersPage() {
       {isAdmin && (
         <section
           aria-label="Invite someone"
-          className="rounded-2xl bg-card p-6 ring-1 ring-border"
+          className="rounded-xl bg-card p-6 ring-1 ring-border"
         >
           <SectionHeading icon={MailPlus} title="Invite someone" as="h2" />
           <div className="mt-5">
@@ -74,7 +74,7 @@ export default async function MembersPage() {
             title={
               <>
                 Pending invitations
-                <span className="ml-1.5 font-mono text-meta-xs text-muted-foreground tabular-nums">
+                <span className="ml-1.5 text-meta-xs text-muted-foreground tabular-nums">
                   ({invitations.length})
                 </span>
               </>
@@ -110,7 +110,7 @@ export default async function MembersPage() {
         />
 
         {members.length === 0 ? (
-          <div className="rounded-2xl bg-card/40 ring-1 ring-border">
+          <div className="rounded-xl bg-card/40 ring-1 ring-border">
             <EmptyState
               icon={Users}
               size="sm"
