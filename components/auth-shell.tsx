@@ -1,6 +1,7 @@
 import { Network } from "lucide-react";
 import Link from "next/link";
 
+import { AmbientBackground } from "@/components/ui/ambient-background";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,9 +9,11 @@ import { cn } from "@/lib/utils";
  * sign-up, and onboarding — the surfaces where a user has arrived but has no
  * workspace to be inside yet.
  *
- * The ground is a very low-contrast radial wash rather than a flat grey, so
- * the centred card reads as sitting on a surface instead of floating in a
- * void. Kept subtle enough that it never competes with the form.
+ * Shares the ambient aurora with the landing page and app shell, muted so it
+ * never competes with the form. Deliberately does not impose a card of its
+ * own — Clerk's widgets and the plain forms here each carry their own glass
+ * surface, sized differently, so a shared wrapper card would either double up
+ * or fight their natural width.
  */
 function AuthShell({
   children,
@@ -22,20 +25,17 @@ function AuthShell({
   footer?: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-muted/40 px-6 py-10">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--card)_0%,transparent_60%)]"
-      />
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 py-12">
+      <AmbientBackground intensity="muted" />
 
       <Link
         href="/"
-        className="relative z-10 mb-8 flex items-center gap-2.5 rounded-lg outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="relative z-10 mb-10 flex items-center gap-3 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-          <Network className="size-4" />
+        <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
+          <Network className="size-4.5" />
         </span>
-        <span className="font-serif text-lg font-semibold tracking-tight">
+        <span className="font-display text-headline-xs text-foreground">
           CaseOS
         </span>
       </Link>
@@ -45,7 +45,7 @@ function AuthShell({
       </div>
 
       {footer && (
-        <div className="relative z-10 mt-8 text-center text-xs text-muted-foreground">
+        <div className="relative z-10 mt-8 text-center font-mono text-meta-xs text-muted-foreground">
           {footer}
         </div>
       )}

@@ -41,22 +41,22 @@ function CitationCard({
       layout={reduceMotion ? false : "position"}
       transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
       className={cn(
-        "relative overflow-hidden rounded-lg border bg-card",
-        "transition-[border-color,box-shadow,transform] duration-200 ease-(--ease-out-quart)",
+        "relative overflow-hidden rounded-xl bg-card ring-1",
+        "transition-[box-shadow,transform,--tw-ring-color] duration-250 ease-(--ease-liquid)",
         active
-          ? "border-citation shadow-sm ring-1 ring-citation/30"
-          : "hover:-translate-y-px hover:border-foreground/15 hover:shadow-sm"
+          ? "shadow-md ring-citation"
+          : "ring-border hover:-translate-y-px hover:shadow-md hover:ring-citation/40 motion-reduce:hover:translate-y-0"
       )}
     >
       <button
         type="button"
         onClick={onSelect}
         aria-pressed={active}
-        className="flex w-full items-start gap-2.5 p-3 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="flex w-full items-start gap-3 p-4 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <span
           className={cn(
-            "flex size-5 shrink-0 items-center justify-center rounded font-mono text-[0.625rem] font-semibold transition-colors",
+            "flex size-6 shrink-0 items-center justify-center rounded-md font-mono text-[0.625rem] font-semibold transition-colors",
             active
               ? "bg-citation text-card"
               : "bg-citation-surface text-citation"
@@ -67,20 +67,20 @@ function CitationCard({
 
         <span className="min-w-0 flex-1">
           {/* The claim this evidence supports. */}
-          <span className="line-clamp-3 block text-xs leading-relaxed text-foreground">
+          <span className="line-clamp-3 block text-body-sm leading-relaxed text-foreground">
             {citation.claimText}
           </span>
 
           {/* Provenance line. Document is the primary fact and gets weight;
               the page is a discrete locator chip, because "which page" is the
               thing an analyst actually goes and checks. */}
-          <span className="mt-2 flex items-center gap-1.5 text-[0.6875rem]">
-            <FileText className="size-3 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1 truncate font-medium text-foreground">
+          <span className="mt-3 flex items-center gap-2 font-mono text-meta-xs">
+            <FileText className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1 truncate text-foreground">
               {citation.documentTitle}
             </span>
             {citation.pageNumber != null && (
-              <span className="shrink-0 rounded border bg-muted px-1.5 py-px font-mono text-[0.625rem] text-muted-foreground tabular-nums">
+              <span className="shrink-0 rounded-md bg-surface-highest px-2 py-0.5 text-muted-foreground ring-1 ring-border tabular-nums">
                 p.{citation.pageNumber}
               </span>
             )}
@@ -92,11 +92,11 @@ function CitationCard({
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-1.5 border-t px-3 py-1.5 text-[0.6875rem] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 font-mono text-meta-xs text-muted-foreground transition-colors duration-150 outline-none hover:bg-surface-highest/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <ChevronRight
           className={cn(
-            "size-3 transition-transform duration-200 ease-(--ease-out-quart)",
+            "size-3.5 transition-transform duration-250 ease-(--ease-liquid)",
             expanded && "rotate-90"
           )}
         />
@@ -112,13 +112,13 @@ function CitationCard({
             transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
             className="overflow-hidden"
           >
-            <div className="border-t bg-muted/30 p-3">
-              <blockquote className="border-l-2 border-citation pl-2.5 font-mono text-[0.6875rem] leading-relaxed text-muted-foreground">
+            <div className="glass-well border-t border-border p-4">
+              <blockquote className="border-l-2 border-citation pl-3.5 font-mono text-meta-xs leading-relaxed text-muted-foreground">
                 {citation.quotedText}…
               </blockquote>
 
-              <p className="mt-2 inline-flex items-center gap-1 text-[0.625rem] text-muted-foreground/80">
-                <Link2 className="size-2.5 shrink-0" />
+              <p className="mt-3 inline-flex items-center gap-1.5 font-mono text-meta-xs text-muted-foreground/80">
+                <Link2 className="size-3 shrink-0" />
                 Retrieved from this project&apos;s indexed passages
               </p>
             </div>

@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import {
   FILE_TYPES,
   FILE_TYPE_LABELS,
@@ -117,71 +119,66 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
     [query, facets]
   );
 
-  const selectClass =
-    "h-8 w-full rounded-lg border border-input bg-background px-2.5 text-xs outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
-
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 transition-opacity duration-200",
+        "flex flex-col gap-4 transition-opacity duration-200",
         isPending && "opacity-60"
       )}
       aria-busy={isPending}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             placeholder="Search names, projects, and document text…"
             aria-label="Search documents"
-            className="h-8 pl-8 text-xs"
+            className="pl-10"
           />
         </div>
 
         <Button
           variant={showFilters ? "secondary" : "outline"}
-          size="sm"
           aria-expanded={showFilters}
           onClick={() => setShowFilters((v) => !v)}
         >
-          <SlidersHorizontal className="size-3.5" />
+          <SlidersHorizontal />
           Filters
           {activeFilters.length > 0 && (
-            <span className="ml-0.5 rounded bg-primary px-1.5 text-[0.6875rem] font-semibold text-primary-foreground tabular-nums">
+            <span className="ml-0.5 rounded-full bg-primary px-2 font-mono text-meta-xs text-primary-foreground tabular-nums">
               {activeFilters.length}
             </span>
           )}
         </Button>
 
-        <label className="sr-only" htmlFor="doc-sort">
-          Sort documents
-        </label>
-        <select
-          id="doc-sort"
-          value={query.sort}
-          onChange={(e) => setParam("sort", e.target.value)}
-          className={cn(selectClass, "w-auto")}
-        >
-          {SORT_KEYS.map((key) => (
-            <option key={key} value={key}>
-              {SORT_LABELS[key]}
-            </option>
-          ))}
-        </select>
+        <div className="w-44">
+          <label className="sr-only" htmlFor="doc-sort">
+            Sort documents
+          </label>
+          <Select
+            id="doc-sort"
+            value={query.sort}
+            onChange={(e) => setParam("sort", e.target.value)}
+          >
+            {SORT_KEYS.map((key) => (
+              <option key={key} value={key}>
+                {SORT_LABELS[key]}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {showFilters && (
-        <div className="grid gap-2 rounded-xl border bg-card p-3 shadow-xs sm:grid-cols-2 lg:grid-cols-3">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="f-project" className="text-[0.6875rem] font-medium text-muted-foreground">
-              Project
-            </label>
-            <select
+        <div className="grid gap-5 rounded-2xl bg-card p-6 ring-1 ring-border sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="f-project">Project</Label>
+            <Select
               id="f-project"
-              className={selectClass}
+              size="sm"
               value={query.matterId ?? ""}
               onChange={(e) => setParam("project", e.target.value || null)}
             >
@@ -191,16 +188,14 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
                   {p.title}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="f-uploader" className="text-[0.6875rem] font-medium text-muted-foreground">
-              Uploaded by
-            </label>
-            <select
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="f-uploader">Uploaded by</Label>
+            <Select
               id="f-uploader"
-              className={selectClass}
+              size="sm"
               value={query.uploadedById ?? ""}
               onChange={(e) => setParam("uploader", e.target.value || null)}
             >
@@ -210,16 +205,14 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
                   {u.name}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="f-type" className="text-[0.6875rem] font-medium text-muted-foreground">
-              File type
-            </label>
-            <select
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="f-type">File type</Label>
+            <Select
               id="f-type"
-              className={selectClass}
+              size="sm"
               value={query.type ?? ""}
               onChange={(e) => setParam("type", e.target.value || null)}
             >
@@ -229,16 +222,14 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
                   {FILE_TYPE_LABELS[t]}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="f-status" className="text-[0.6875rem] font-medium text-muted-foreground">
-              Status
-            </label>
-            <select
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="f-status">Status</Label>
+            <Select
               id="f-status"
-              className={selectClass}
+              size="sm"
               value={query.status ?? ""}
               onChange={(e) => setParam("status", e.target.value || null)}
             >
@@ -248,30 +239,26 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
                   {documentStatusLabel[s]}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="f-from" className="text-[0.6875rem] font-medium text-muted-foreground">
-              Uploaded after
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="f-from">Uploaded after</Label>
+            <Input
               id="f-from"
               type="date"
-              className={selectClass}
+              className="h-8 text-[0.8125rem]"
               value={query.from ?? ""}
               onChange={(e) => setParam("from", e.target.value || null)}
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label htmlFor="f-to" className="text-[0.6875rem] font-medium text-muted-foreground">
-              Uploaded before
-            </label>
-            <input
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="f-to">Uploaded before</Label>
+            <Input
               id="f-to"
               type="date"
-              className={selectClass}
+              className="h-8 text-[0.8125rem]"
               value={query.to ?? ""}
               onChange={(e) => setParam("to", e.target.value || null)}
             />
@@ -280,13 +267,13 @@ function DocumentFilters({ index }: { index: DocumentIndex }) {
       )}
 
       {activeFilters.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           {activeFilters.map((filter) => (
             <button
               key={filter.key}
               type="button"
               onClick={() => setParam(filter.key, null)}
-              className="inline-flex h-6 items-center gap-1 rounded-md border bg-muted px-2 text-[0.6875rem] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              className="inline-flex h-7 items-center gap-1.5 rounded-full bg-surface-highest px-3 font-mono text-meta-xs text-muted-foreground ring-1 ring-border transition-colors duration-150 outline-none hover:text-foreground hover:ring-primary/30 focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {filter.label}
               <X className="size-3" />

@@ -33,11 +33,13 @@ function DocumentPanel({
   return (
     <section
       aria-label="Documents"
-      className="flex min-h-0 flex-col gap-3 p-4 lg:p-5"
+      className="flex min-h-0 flex-col gap-4 p-5"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Documents</h2>
-        <span className="text-xs text-muted-foreground tabular-nums">
+        <h2 className="font-display text-headline-xs text-foreground">
+          Documents
+        </h2>
+        <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
           {countLabel(documents.length, "source")}
         </span>
       </div>
@@ -46,19 +48,19 @@ function DocumentPanel({
 
       {documents.length > 2 && (
         <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search documents…"
             aria-label="Search documents"
-            className="h-8 pl-8 text-xs"
+            className="h-9 pl-9 text-[0.8125rem]"
           />
         </div>
       )}
 
-      <div className="flex min-h-0 flex-col gap-2">
+      <div className="flex min-h-0 flex-col gap-2.5">
         {documents.length === 0 ? (
           <EmptyState
             icon={FileStack}

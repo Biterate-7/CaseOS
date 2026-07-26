@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { inviteToWorkspace } from "@/lib/actions/invitations";
 import { roleLabel, type Role } from "@/lib/format";
 
@@ -58,8 +59,8 @@ function InviteForm() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
+    <div className="flex flex-col gap-4">
+      <form onSubmit={submit} className="flex flex-col gap-2.5 sm:flex-row">
         <Input
           type="email"
           required
@@ -68,41 +69,42 @@ function InviteForm() {
           placeholder="colleague@example.com"
           aria-label="Email address to invite"
           disabled={isPending}
-          className="h-9 flex-1 text-sm"
+          className="flex-1"
         />
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as Role)}
-          aria-label="Role"
-          disabled={isPending}
-          className="h-9 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          {ROLES.map((r) => (
-            <option key={r} value={r}>
-              {roleLabel[r]}
-            </option>
-          ))}
-        </select>
-        <Button type="submit" size="lg" disabled={isPending || !email.trim()}>
-          <Send className="size-3.5" />
+        <div className="w-full sm:w-40">
+          <Select
+            value={role}
+            onChange={(e) => setRole(e.target.value as Role)}
+            aria-label="Role"
+            disabled={isPending}
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {roleLabel[r]}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <Button type="submit" disabled={isPending || !email.trim()}>
+          <Send />
           {isPending ? "Creating…" : "Create invite"}
         </Button>
       </form>
 
       {error && (
-        <p role="alert" className="text-xs text-rejected">
+        <p role="alert" className="text-body-sm text-rejected">
           {error}
         </p>
       )}
 
       {link && (
-        <div className="flex flex-col gap-2 rounded-lg border border-grounded-border bg-grounded-surface/50 p-3">
-          <p className="text-xs font-medium text-grounded">
+        <div className="flex flex-col gap-3 rounded-2xl border border-grounded-border bg-grounded-surface/50 p-5">
+          <p className="text-body-sm font-medium text-grounded">
             Invitation created. Send this link to the person you invited —
             CaseOS does not send email.
           </p>
           <div className="flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate rounded border bg-card px-2 py-1.5 font-mono text-[0.6875rem]">
+            <code className="min-w-0 flex-1 truncate rounded-lg bg-surface-lowest/60 px-3 py-2 font-mono text-meta-xs ring-1 ring-border">
               {link}
             </code>
             <Button size="sm" variant="outline" onClick={copy}>
@@ -119,7 +121,7 @@ function InviteForm() {
               )}
             </Button>
           </div>
-          <p className="text-[0.6875rem] leading-relaxed text-muted-foreground">
+          <p className="font-mono text-meta-xs leading-relaxed text-muted-foreground">
             Anyone with this link can join the workspace as the role you chose.
             It expires in 7 days. Creating another invite for the same address
             replaces this link.

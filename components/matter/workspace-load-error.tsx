@@ -24,14 +24,14 @@ export function WorkspaceLoadError({ reference }: { reference?: string }) {
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-6">
       <div className="flex max-w-md flex-col items-center text-center">
-        <span className="flex size-11 items-center justify-center rounded-xl border border-rejected-border bg-rejected-surface text-rejected">
-          <TriangleAlert className="size-5" />
+        <span className="flex size-14 items-center justify-center rounded-2xl border border-rejected-border bg-rejected-surface text-rejected">
+          <TriangleAlert className="size-6" />
         </span>
 
-        <h1 className="mt-4 font-serif text-xl font-semibold tracking-tight">
+        <h1 className="mt-5 font-display text-headline-sm text-foreground">
           This workspace couldn&apos;t load
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">
+        <p className="mt-2.5 text-body-sm leading-relaxed text-pretty text-muted-foreground">
           We couldn&apos;t load this project just now. Your documents and
           previous answers are safe — nothing was lost. This is usually
           temporary.
@@ -55,7 +55,7 @@ export function WorkspaceLoadError({ reference }: { reference?: string }) {
         </div>
 
         {reference && (
-          <p className="mt-6 font-mono text-[0.6875rem] text-muted-foreground/70">
+          <p className="mt-8 font-mono text-meta-xs text-muted-foreground/70">
             Reference: {reference}
           </p>
         )}

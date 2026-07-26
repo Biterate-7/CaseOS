@@ -32,12 +32,14 @@ const MODE_ICON: Record<KnowledgeMode, typeof FileText> = {
 };
 
 // The accent a mode wears when selected — matches how its content is rendered
-// in the answer (violet AI context, teal external), so the control previews
-// what you'll get.
+// in the answer (violet AI context, indigo external), so the control previews
+// what you'll get. Document-only stays neutral: it adds no new provenance.
 const MODE_SELECTED_CLASS: Record<KnowledgeMode, string> = {
-  DOCUMENT_ONLY: "bg-card text-foreground shadow-xs ring-1 ring-border",
-  DOCUMENT_PLUS_AI: "bg-card text-ai-context shadow-xs ring-1 ring-ai-context-border",
-  DOCUMENT_PLUS_EXTERNAL: "bg-card text-external shadow-xs ring-1 ring-external-border",
+  DOCUMENT_ONLY: "bg-surface-highest text-foreground shadow-sm ring-1 ring-border",
+  DOCUMENT_PLUS_AI:
+    "bg-ai-context-surface text-ai-context shadow-sm ring-1 ring-ai-context-border",
+  DOCUMENT_PLUS_EXTERNAL:
+    "bg-external-surface text-external shadow-sm ring-1 ring-external-border",
 };
 
 const MODE_OPTIONS = [
@@ -62,12 +64,12 @@ function KnowledgeModeSelector({
   disabled: boolean;
 }) {
   return (
-    <fieldset className="flex flex-col gap-1.5">
+    <fieldset className="flex flex-col gap-2.5">
       <legend className="sr-only">Knowledge mode</legend>
       <div
         role="radiogroup"
         aria-label="Knowledge mode"
-        className="flex w-fit flex-wrap items-center gap-0.5 rounded-lg border bg-muted/60 p-0.5"
+        className="flex w-fit flex-wrap items-center gap-1 rounded-xl bg-surface-lowest/70 p-1 ring-1 ring-border"
       >
         {MODE_OPTIONS.map((option) => {
           const Icon = MODE_ICON[option];
@@ -81,21 +83,22 @@ function KnowledgeModeSelector({
               disabled={disabled}
               onClick={() => onChange(option)}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium",
+                "inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-label-sm",
                 "transition-[background-color,color,box-shadow] duration-150 outline-none",
                 "focus-visible:ring-3 focus-visible:ring-ring/50",
+                "disabled:pointer-events-none disabled:opacity-50",
                 selected
                   ? MODE_SELECTED_CLASS[option]
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="size-3 shrink-0" />
+              <Icon className="size-3.5 shrink-0" />
               {knowledgeModeLabel[option]}
             </button>
           );
         })}
       </div>
-      <p className="text-[0.6875rem] leading-snug text-muted-foreground">
+      <p className="text-body-sm leading-snug text-muted-foreground">
         {knowledgeModeDescription[mode]}
       </p>
     </fieldset>
@@ -152,8 +155,8 @@ function AskComposer({
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <form ref={formRef} action={handleSubmit} className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
+      <form ref={formRef} action={handleSubmit} className="flex flex-col gap-4">
         <KnowledgeModeSelector
           mode={mode}
           onChange={setMode}
@@ -161,8 +164,8 @@ function AskComposer({
         />
         <div
           className={cn(
-            "rounded-xl border bg-card shadow-xs transition-[border-color,box-shadow] duration-200",
-            "focus-within:border-ring focus-within:shadow-sm",
+            "overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-[box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid)",
+            "focus-within:shadow-lg focus-within:ring-primary/40",
             disabled && "opacity-70"
           )}
         >
@@ -177,7 +180,7 @@ function AskComposer({
                 ? "Ask what the documents in this project say…"
                 : "Upload a document first — answers are grounded only in this project's sources."
             }
-            className="resize-none border-0 bg-transparent p-3 text-sm shadow-none focus-visible:ring-0"
+            className="resize-none rounded-none border-0 bg-transparent p-5 text-sm shadow-none focus-visible:bg-transparent focus-visible:ring-0"
             onKeyDown={(e) => {
               // Enter submits, Shift+Enter for a newline. Faster for the
               // repeated-query workflow this panel is built around.
@@ -188,9 +191,9 @@ function AskComposer({
             }}
           />
 
-          <div className="flex items-center justify-between gap-3 border-t px-3 py-2">
-            <p className="inline-flex items-center gap-1.5 text-[0.6875rem] leading-tight text-muted-foreground">
-              <Lock className="size-3 shrink-0" />
+          <div className="flex items-center justify-between gap-3 border-t border-border bg-surface-lowest/40 px-5 py-3">
+            <p className="inline-flex items-center gap-2 font-mono text-meta-xs leading-tight text-muted-foreground">
+              <Lock className="size-3.5 shrink-0" />
               {!grounded ? (
                 <>No indexed documents in this project yet</>
               ) : mode === "DOCUMENT_ONLY" ? (
@@ -230,10 +233,10 @@ function AskComposer({
         {error && (
           <div
             role="alert"
-            className="flex flex-col gap-2 rounded-lg border border-rejected-border bg-rejected-surface/50 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-3 rounded-xl border border-rejected-border bg-rejected-surface/50 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between"
           >
-            <p className="flex items-start gap-1.5 text-xs leading-relaxed text-rejected">
-              <TriangleAlert className="mt-px size-3.5 shrink-0" />
+            <p className="flex items-start gap-2.5 text-body-sm leading-relaxed text-rejected">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
               {error.message}
             </p>
             {error.retryable && (

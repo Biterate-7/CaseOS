@@ -143,7 +143,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
     >
       <ShieldQuestion className="size-3.5" />
       Awaiting review
-      <span className="ml-0.5 rounded bg-pending-surface px-1.5 text-[0.6875rem] font-semibold text-pending tabular-nums">
+      <span className="ml-0.5 rounded-full bg-pending-surface px-2 font-mono text-meta-xs text-pending tabular-nums">
         {reviewCount}
       </span>
     </Button>
@@ -159,8 +159,8 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
             its proof. */}
         <aside
           className={cn(
-            "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-r bg-sidebar/40",
-            "transition-[width] duration-300 ease-(--ease-out-quart)",
+            "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-r border-border bg-surface-lowest/30",
+            "transition-[width] duration-400 ease-(--ease-liquid)",
             showDocuments ? "w-72 2xl:w-80" : "w-0 overflow-hidden"
           )}
         >
@@ -168,7 +168,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1 border-b px-3 py-1.5">
+          <div className="glass-panel sticky top-0 z-10 flex items-center gap-1 border-b border-border px-4 py-2">
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -227,13 +227,13 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
           </div>
 
           {researchPanel}
-          <div className="border-t">{auditPanel}</div>
+          <div className="border-t border-border">{auditPanel}</div>
         </div>
 
         <aside
           className={cn(
-            "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-l bg-sidebar/40",
-            "transition-[width] duration-300 ease-(--ease-out-quart)",
+            "sticky top-0 max-h-screen shrink-0 overflow-y-auto overscroll-contain border-l border-border bg-surface-lowest/30",
+            "transition-[width] duration-400 ease-(--ease-liquid)",
             showEvidence ? "w-80 2xl:w-96" : "w-0 overflow-hidden"
           )}
         >
@@ -248,7 +248,7 @@ function MatterWorkspace({ data }: { data: WorkspaceData }) {
           onValueChange={(value) => setTab(value as Panel)}
           className="gap-0"
         >
-          <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2 lg:px-5">
+          <div className="glass-panel sticky top-0 z-10 flex flex-wrap items-center gap-2 border-b border-border px-4 py-2 lg:px-5">
             <TabsList>
               <TabsTab value="research">
                 <Sparkles />

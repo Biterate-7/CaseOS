@@ -4,6 +4,8 @@ import { InviteForm } from "@/components/settings/invite-form";
 import { InvitationRow } from "@/components/settings/invitation-row";
 import { MemberRow } from "@/components/settings/member-row";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { countLabel } from "@/lib/format";
@@ -47,40 +49,39 @@ export default async function MembersPage() {
   const now = Date.now();
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-8 sm:px-8">
-      <header className="mb-6">
-        <h1 className="font-serif text-2xl font-semibold tracking-tight">
-          Members
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Everyone with access to {user.firmName}. Projects, documents, and AI
-          answers are shared across the workspace.
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-4xl flex-col gap-10 px-margin-mobile py-8 lg:px-8 lg:py-12">
+      <PageHeader
+        title="Members"
+        description={`Everyone with access to ${user.firmName}. Projects, documents, and AI answers are shared across the workspace.`}
+      />
 
       {isAdmin && (
         <section
           aria-label="Invite someone"
-          className="mb-6 rounded-xl border bg-card p-4 shadow-xs"
+          className="rounded-2xl bg-card p-6 ring-1 ring-border"
         >
-          <h2 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold">
-            <MailPlus className="size-4 text-muted-foreground" />
-            Invite someone
-          </h2>
-          <InviteForm />
+          <SectionHeading icon={MailPlus} title="Invite someone" as="h2" />
+          <div className="mt-5">
+            <InviteForm />
+          </div>
         </section>
       )}
 
       {invitations.length > 0 && (
-        <section aria-label="Pending invitations" className="mb-6">
-          <h2 className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold">
-            <Clock className="size-4 text-muted-foreground" />
-            Pending invitations
-            <span className="text-xs font-normal text-muted-foreground tabular-nums">
-              ({invitations.length})
-            </span>
-          </h2>
-          <ul className="flex flex-col gap-2">
+        <section aria-label="Pending invitations" className="flex flex-col gap-4">
+          <SectionHeading
+            icon={Clock}
+            title={
+              <>
+                Pending invitations
+                <span className="ml-1.5 font-mono text-meta-xs text-muted-foreground tabular-nums">
+                  ({invitations.length})
+                </span>
+              </>
+            }
+            as="h2"
+          />
+          <ul className="flex flex-col gap-2.5">
             {invitations.map((invitation) => (
               <InvitationRow
                 key={invitation.id}
@@ -101,21 +102,24 @@ export default async function MembersPage() {
         </section>
       )}
 
-      <section aria-label="Members">
-        <h2 className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold">
-          <Users className="size-4 text-muted-foreground" />
-          {countLabel(members.length, "member")}
-        </h2>
+      <section aria-label="Members" className="flex flex-col gap-4">
+        <SectionHeading
+          icon={Users}
+          title={countLabel(members.length, "member")}
+          as="h2"
+        />
 
         {members.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            size="sm"
-            title="No members yet"
-            description="Invite someone to collaborate on this workspace."
-          />
+          <div className="rounded-2xl bg-card/40 ring-1 ring-border">
+            <EmptyState
+              icon={Users}
+              size="sm"
+              title="No members yet"
+              description="Invite someone to collaborate on this workspace."
+            />
+          </div>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col gap-2.5">
             {members.map((member) => (
               <MemberRow
                 key={member.id}
@@ -129,7 +133,7 @@ export default async function MembersPage() {
       </section>
 
       {!isAdmin && (
-        <p className="mt-6 rounded-lg border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+        <p className="rounded-xl bg-surface-highest/40 px-4 py-3 text-body-sm leading-relaxed text-muted-foreground ring-1 ring-border">
           Only workspace administrators can invite people or change roles.
         </p>
       )}

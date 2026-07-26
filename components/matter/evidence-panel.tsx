@@ -41,8 +41,10 @@ function EvidencePanel({
 
   if (!interaction || !aligned) {
     return (
-      <section aria-label="Sources" className="p-4 lg:p-5">
-        <h2 className="mb-3 text-sm font-semibold">Sources</h2>
+      <section aria-label="Sources" className="p-5">
+        <h2 className="mb-4 font-display text-headline-xs text-foreground">
+          Sources
+        </h2>
         <EmptyState
           icon={Sparkles}
           size="sm"
@@ -56,18 +58,20 @@ function EvidencePanel({
   const { citations } = interaction;
 
   return (
-    <section aria-label="Sources" className="flex flex-col gap-3 p-4 lg:p-5">
+    <section aria-label="Sources" className="flex flex-col gap-4 p-5">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Sources</h2>
-        <span className="text-xs text-muted-foreground tabular-nums">
+        <h2 className="font-display text-headline-xs text-foreground">
+          Sources
+        </h2>
+        <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
           {countLabel(citations.length, "source")}
         </span>
       </div>
 
       {citations.length > 0 &&
         (interaction.externalCitations.length > 0 ? (
-          <p className="inline-flex items-start gap-1.5 rounded-md border border-external-border bg-external-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-external">
-            <ShieldCheck className="mt-px size-3.5 shrink-0" />
+          <p className="inline-flex items-start gap-2 rounded-xl border border-external-border bg-external-surface px-3.5 py-3 text-meta-xs leading-relaxed text-external">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0" />
             <span>
               The passages below are from this project. This answer also cites{" "}
               {countLabel(interaction.externalCitations.length, "verified external source")},
@@ -75,8 +79,8 @@ function EvidencePanel({
             </span>
           </p>
         ) : (
-          <p className="inline-flex items-start gap-1.5 rounded-md border border-grounded-border bg-grounded-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-grounded">
-            <ShieldCheck className="mt-px size-3.5 shrink-0" />
+          <p className="inline-flex items-start gap-2 rounded-xl border border-grounded-border bg-grounded-surface px-3.5 py-3 text-meta-xs leading-relaxed text-grounded">
+            <ShieldCheck className="mt-0.5 size-4 shrink-0" />
             <span>
               Every source below was retrieved from this project. Nothing
               outside it was searched.
@@ -85,8 +89,8 @@ function EvidencePanel({
         ))}
 
       {aligned.unresolvedMarkerCount > 0 && (
-        <p className="inline-flex items-start gap-1.5 rounded-md border border-pending-border bg-pending-surface px-2.5 py-2 text-[0.6875rem] leading-relaxed text-pending">
-          <AlertTriangle className="mt-px size-3.5 shrink-0" />
+        <p className="inline-flex items-start gap-2 rounded-xl border border-pending-border bg-pending-surface px-3.5 py-3 text-meta-xs leading-relaxed text-pending">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <span>
             {countLabel(aligned.unresolvedMarkerCount, "citation marker")} in
             this answer{" "}
@@ -114,7 +118,7 @@ function EvidencePanel({
           />
         )
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {citations.map((citation, index) => (
             <motion.div
               key={citation.id}

@@ -16,19 +16,19 @@ export default function ProjectNotFound() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-6">
       <div className="flex max-w-md flex-col items-center text-center">
-        <span className="flex size-11 items-center justify-center rounded-xl border bg-muted/50 text-muted-foreground">
-          <FolderSearch className="size-5" />
+        <span className="flex size-14 items-center justify-center rounded-2xl bg-surface-highest/70 text-muted-foreground ring-1 ring-border">
+          <FolderSearch className="size-6" />
         </span>
 
-        <h1 className="mt-4 font-serif text-xl font-semibold tracking-tight">
+        <h1 className="mt-5 font-display text-headline-sm text-foreground">
           Project not found
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">
+        <p className="mt-2.5 text-body-sm leading-relaxed text-pretty text-muted-foreground">
           This project doesn&apos;t exist, or it isn&apos;t part of your
           workspace.
         </p>
 
-        <div className="mt-6">
+        <div className="mt-8">
           <Button nativeButton={false} render={<Link href="/matters" />}>
             View all projects
           </Button>

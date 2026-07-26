@@ -1,26 +1,30 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import { Hanken_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Reading face. Everything that is prose or UI label.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Display face — page titles, hero, section headings. Tighter and more
+// geometric than Inter, which is what gives headings their editorial weight.
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
+  display: "swap",
 });
 
-// Display face only — page titles, project names, hero. Adds editorial weight
-// without turning the product into a brochure. Applied deliberately
-// via `font-serif`, never as a component default.
-const sourceSerif = Source_Serif_4({
-  variable: "--font-source-serif",
+// Metadata face. Timestamps, counts, record ids, citation markers, status
+// labels — the typographic signal for "machine-generated fact".
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
   display: "swap",
 });
@@ -56,7 +60,7 @@ export default function RootLayout({
       <html
         lang="en"
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable}`}
+        className={`${inter.variable} ${hankenGrotesk.variable} ${jetBrainsMono.variable}`}
       >
         <body className="antialiased">
           <ThemeProvider>{children}</ThemeProvider>

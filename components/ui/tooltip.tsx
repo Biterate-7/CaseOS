@@ -35,7 +35,9 @@ function TooltipContent({
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            "z-50 max-w-xs origin-(--transform-origin) rounded-lg bg-primary px-2.5 py-1.5 text-xs leading-relaxed text-primary-foreground shadow-md",
+            // A dark glass chip rather than a filled cyan one: cyan is the
+            // interactive colour, and a tooltip is not interactive.
+            "glass z-50 max-w-xs origin-(--transform-origin) rounded-lg px-3 py-1.5 text-xs leading-relaxed text-foreground shadow-lg",
             // Base UI drives enter/exit through data-starting-style /
             // data-ending-style rather than a class toggle.
             "transition-[transform,opacity] duration-150 ease-(--ease-out-quart)",

@@ -61,9 +61,9 @@ function ResearchProgress() {
     <div
       role="status"
       aria-live="polite"
-      className="rounded-lg border bg-card p-4 shadow-xs"
+      className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border"
     >
-      <ol className="flex flex-col gap-2.5">
+      <ol className="flex flex-col gap-3.5">
         {STAGES.map((item, index) => {
           const done = index < stage;
           const active = index === stage;
@@ -96,7 +96,7 @@ function ResearchProgress() {
               <div className="min-w-0">
                 <p
                   className={cn(
-                    "text-xs leading-snug font-medium",
+                    "text-label-sm leading-snug",
                     active ? "text-foreground" : "text-muted-foreground"
                   )}
                 >
@@ -106,7 +106,7 @@ function ResearchProgress() {
                   <motion.p
                     initial={reduceMotion ? false : { opacity: 0, y: -2 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-0.5 text-[0.6875rem] leading-relaxed text-muted-foreground"
+                    className="mt-1 font-mono text-meta-xs leading-relaxed text-muted-foreground"
                   >
                     {item.detail}
                   </motion.p>

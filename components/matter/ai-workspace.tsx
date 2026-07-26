@@ -75,19 +75,19 @@ function InteractionCard({
       className={cn(
         // scroll-mt keeps the card clear of the sticky panel header when a
         // deep link scrolls it into view.
-        "flex scroll-mt-20 flex-col gap-3 rounded-xl border bg-card p-4",
-        "transition-[border-color,box-shadow] duration-200 ease-(--ease-out-quart)",
+        "flex scroll-mt-24 flex-col gap-4 rounded-2xl bg-card p-6 ring-1",
+        "transition-[box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid)",
         focused
-          ? "border-foreground/20 shadow-sm"
-          : "hover:border-foreground/15 hover:shadow-xs",
-        highlighted && "border-primary/50 ring-2 ring-primary/25"
+          ? "shadow-lg ring-primary/25"
+          : "ring-border hover:shadow-md hover:ring-border/80",
+        highlighted && "ring-2 ring-primary shadow-[0_0_32px_-8px_var(--glow)]"
       )}
     >
       {/* The question, set as a question — indented behind a rule the way a
-          quoted issue appears in a memo. */}
-      <header className="flex flex-col gap-2">
+          quoted issue appears in a report. */}
+      <header className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
-          <p className="border-l-2 border-primary/40 pl-2.5 font-serif text-sm leading-snug font-medium text-balance">
+          <p className="border-l-2 border-primary/50 pl-3.5 font-display text-headline-xs leading-snug text-balance text-foreground">
             {interaction.prompt}
           </p>
           <StatusBadge
@@ -99,22 +99,20 @@ function InteractionCard({
           </StatusBadge>
         </div>
 
-        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-muted-foreground">
-          <span className="font-medium text-foreground">
-            {interaction.authorName}
-          </span>
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 font-mono text-meta-xs text-muted-foreground">
+          <span className="text-foreground">{interaction.authorName}</span>
           <span>· {formatRelativeTime(interaction.createdAt)}</span>
           <span>· {interactionTypeLabel[interaction.type]}</span>
           {/* Only the non-default modes are called out — a chip on every card
               would stop meaning anything. */}
           {interaction.knowledgeMode === "DOCUMENT_PLUS_AI" && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-ai-context-border bg-ai-context-surface/60 px-1.5 py-px font-medium text-ai-context">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-ai-context-border bg-ai-context-surface/60 px-2 py-0.5 text-ai-context">
               <Sparkles className="size-2.5 shrink-0" />
               {knowledgeModeLabel.DOCUMENT_PLUS_AI}
             </span>
           )}
           {interaction.knowledgeMode === "DOCUMENT_PLUS_EXTERNAL" && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-external-border bg-external-surface/60 px-1.5 py-px font-medium text-external">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-external-border bg-external-surface/60 px-2 py-0.5 text-external">
               <Globe className="size-2.5 shrink-0" />
               {knowledgeModeLabel.DOCUMENT_PLUS_EXTERNAL}
             </span>
@@ -132,9 +130,9 @@ function InteractionCard({
         }}
       />
 
-      <footer className="flex flex-col gap-3">
-        <p className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.6875rem] text-muted-foreground">
-          <Quote className="size-3 shrink-0" />
+      <footer className="flex flex-col gap-4">
+        <p className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border pt-4 font-mono text-meta-xs text-muted-foreground">
+          <Quote className="size-3 shrink-0 text-citation" />
           {interaction.citations.length > 0 ? (
             <span>
               Grounded in{" "}
@@ -229,11 +227,14 @@ function AiWorkspace({
       // Measure cap. Without it the centre column grows with the viewport and
       // the answer hits ~90 characters per line on a 1440 display — past the
       // point where the eye reliably finds the next line.
-      className="mx-auto flex w-full max-w-2xl flex-col gap-4 p-4 lg:p-5"
+      className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-5 lg:p-8"
     >
-      <div>
-        <h2 className="text-sm font-semibold">Research</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+      <div className="flex flex-col gap-2">
+        <h2 className="flex items-center gap-2.5 font-display text-headline-sm text-foreground">
+          <Sparkles className="size-5 text-primary" />
+          Research
+        </h2>
+        <p className="text-body-sm leading-relaxed text-muted-foreground">
           Answers are grounded in this project&apos;s documents, and every
           document claim carries the passage it came from. Optional AI-added
           context is always labelled and never cited as evidence.
@@ -246,9 +247,9 @@ function AiWorkspace({
       />
 
       {reviewMode && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-pending-border bg-pending-surface/50 px-3 py-2">
-          <p className="inline-flex items-center gap-1.5 text-xs font-medium text-pending">
-            <ShieldQuestion className="size-3.5 shrink-0" />
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-pending-border bg-pending-surface/50 px-4 py-3">
+          <p className="inline-flex items-center gap-2 text-body-sm text-pending">
+            <ShieldQuestion className="size-4 shrink-0" />
             Showing only answers awaiting review
           </p>
           <Button
@@ -269,10 +270,10 @@ function AiWorkspace({
         // unaffected. Offer an in-place retry rather than a global error.
         <div
           role="alert"
-          className="flex flex-col items-start gap-2 rounded-lg border border-rejected-border bg-rejected-surface/50 px-3.5 py-3"
+          className="flex flex-col items-start gap-3 rounded-xl border border-rejected-border bg-rejected-surface/50 px-4 py-4"
         >
-          <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-rejected">
-            <TriangleAlert className="mt-px size-3.5 shrink-0" />
+          <p className="inline-flex items-start gap-2.5 text-body-sm leading-relaxed text-rejected">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
             Previous answers couldn&apos;t be loaded just now. Your documents and
             saved answers are safe — this is usually temporary, and you can still
             ask a new question above.

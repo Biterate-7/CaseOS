@@ -5,6 +5,7 @@ import { DocumentActions } from "@/components/documents/document-actions";
 import { DocumentFilters } from "@/components/documents/document-filters";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth";
 import { loadDocumentIndex } from "@/lib/documents-data";
@@ -15,6 +16,7 @@ import {
   formatBytes,
   formatRelativeTime,
 } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Documents" };
 export const dynamic = "force-dynamic";
@@ -56,92 +58,91 @@ export default async function DocumentsPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-      <header className="mb-6">
-        <h1 className="font-serif text-2xl font-semibold tracking-tight">
-          Documents
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Every source across your workspace. Search covers names, projects,
-          and the text inside each document.
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-(--container-page) flex-col gap-8 px-margin-mobile py-8 lg:px-margin-desktop lg:py-12">
+      <PageHeader
+        title="Documents"
+        description="Every source across your workspace. Search covers names, projects, and the text inside each document."
+      />
 
-      <div className="mb-5">
-        <DocumentFilters index={index} />
-      </div>
+      <DocumentFilters index={index} />
 
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <p className="text-xs text-muted-foreground tabular-nums">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="font-mono text-meta-xs uppercase text-muted-foreground tabular-nums">
           {isFiltered
             ? `${countLabel(total, "match", "matches")} of ${facets.totalDocuments}`
             : countLabel(total, "document")}
         </p>
         {pageCount > 1 && (
-          <p className="text-xs text-muted-foreground tabular-nums">
+          <p className="font-mono text-meta-xs text-muted-foreground tabular-nums">
             Page {page} of {pageCount}
           </p>
         )}
       </div>
 
       {facets.totalDocuments === 0 ? (
-        <EmptyState
-          icon={FileStack}
-          title="No documents yet"
-          description="Upload sources inside a project and they will all appear here, searchable together."
-          action={
-            <Button
-              size="sm"
-              nativeButton={false}
-              render={<Link href="/matters" />}
-            >
-              Go to projects
-            </Button>
-          }
-        />
+        <div className="rounded-3xl bg-card/40 ring-1 ring-border backdrop-blur-3xl">
+          <EmptyState
+            icon={FileStack}
+            title="No documents yet"
+            description="Upload sources inside a project and they will all appear here, searchable together."
+            action={
+              <Button nativeButton={false} render={<Link href="/matters" />}>
+                Go to projects
+              </Button>
+            }
+          />
+        </div>
       ) : documents.length === 0 ? (
-        <EmptyState
-          icon={Search}
-          title="No matching documents"
-          description="Nothing in this workspace matches the current search and filters."
-          action={
-            <Button
-              size="sm"
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/documents" />}
-            >
-              Clear filters
-            </Button>
-          }
-        />
+        <div className="rounded-3xl bg-card/40 ring-1 ring-border backdrop-blur-3xl">
+          <EmptyState
+            icon={Search}
+            title="No matching documents"
+            description="Nothing in this workspace matches the current search and filters."
+            action={
+              <Button
+                variant="outline"
+                nativeButton={false}
+                render={<Link href="/documents" />}
+              >
+                Clear filters
+              </Button>
+            }
+          />
+        </div>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-3">
           {documents.map((doc) => (
             <li
               key={doc.id}
-              className="group flex flex-col gap-3 rounded-xl border bg-card p-3 shadow-xs transition-[border-color,box-shadow] duration-200 ease-(--ease-out-quart) hover:border-foreground/15 hover:shadow-sm sm:flex-row sm:items-center"
+              className="group flex flex-col gap-4 rounded-2xl bg-card p-4 ring-1 ring-border transition-[background-color,box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid) hover:bg-surface hover:shadow-lg hover:ring-primary/20 sm:flex-row sm:items-center sm:p-5"
             >
+              {/* The icon tile carries ingestion state as a second, redundant
+                  signal alongside the badge — colour is never the only cue. */}
               <span
-                className={
-                  doc.status === "READY"
-                    ? "flex size-9 shrink-0 items-center justify-center rounded-lg border border-grounded-border bg-grounded-surface text-grounded"
-                    : doc.status === "FAILED"
-                      ? "flex size-9 shrink-0 items-center justify-center rounded-lg border border-rejected-border bg-rejected-surface text-rejected"
-                      : "flex size-9 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground"
-                }
+                className={cn(
+                  "flex size-11 shrink-0 items-center justify-center rounded-xl ring-1",
+                  doc.status === "READY" &&
+                    "bg-grounded-surface text-grounded ring-grounded-border",
+                  doc.status === "FAILED" &&
+                    "bg-rejected-surface text-rejected ring-rejected-border",
+                  doc.status !== "READY" &&
+                    doc.status !== "FAILED" &&
+                    "bg-surface-highest text-muted-foreground ring-border"
+                )}
               >
-                <FileText className="size-4" />
+                <FileText className="size-5" />
               </span>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{doc.title}</p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                <p className="truncate text-label-md text-foreground">
+                  {doc.title}
+                </p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-meta-xs text-muted-foreground">
                   {/* Nested inside the row but not inside another link — the
                       row itself is not a link, so this stays valid. */}
                   <Link
                     href={`/matters/${doc.matterId}`}
-                    className="max-w-[16rem] truncate font-medium text-foreground underline-offset-2 hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    className="max-w-[16rem] truncate text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     {doc.matterTitle}
                   </Link>
@@ -156,17 +157,18 @@ export default async function DocumentsPage({
                     · {doc.uploaderName ?? "Unknown uploader"}
                   </span>
                 </p>
+
                 {doc.snippet && (
-                  <p className="mt-1.5 border-l-2 border-citation/40 pl-2 text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-3 rounded-lg border-l-2 border-citation/50 bg-citation-surface/25 py-2 pl-3 text-body-sm leading-relaxed text-muted-foreground">
                     {/* ts_headline output, HTML-escaped in lib/search.ts with
                         only <mark> restored — document text is
                         attacker-controlled and must never render as markup. */}
                     <span
-                      className="[&_mark]:rounded-sm [&_mark]:bg-citation-surface [&_mark]:px-0.5 [&_mark]:font-medium [&_mark]:text-citation"
+                      className="[&_mark]:rounded-sm [&_mark]:bg-citation-surface [&_mark]:px-1 [&_mark]:font-medium [&_mark]:text-citation"
                       dangerouslySetInnerHTML={{ __html: `…${doc.snippet}…` }}
                     />
                     {doc.snippetPage != null && (
-                      <span className="ml-1.5 whitespace-nowrap text-[0.625rem] text-muted-foreground/70 tabular-nums">
+                      <span className="ml-2 whitespace-nowrap font-mono text-meta-xs text-citation/80 tabular-nums">
                         p.{doc.snippetPage}
                       </span>
                     )}
@@ -198,23 +200,21 @@ export default async function DocumentsPage({
       {pageCount > 1 && (
         <nav
           aria-label="Pagination"
-          className="mt-5 flex items-center justify-between gap-3"
+          className="flex items-center justify-between gap-3"
         >
           <Button
             variant="outline"
-            size="sm"
             disabled={page <= 1}
             nativeButton={page <= 1}
             render={page > 1 ? <Link href={pageHref(page - 1)} /> : undefined}
           >
             Previous
           </Button>
-          <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
             {page} / {pageCount}
           </span>
           <Button
             variant="outline"
-            size="sm"
             disabled={page >= pageCount}
             nativeButton={page >= pageCount}
             render={

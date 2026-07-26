@@ -35,7 +35,7 @@ function ThemeToggle() {
     <div
       role="radiogroup"
       aria-label="Colour theme"
-      className="flex items-center gap-0.5 rounded-lg bg-sidebar-accent/60 p-0.5"
+      className="flex items-center gap-0.5 rounded-xl bg-surface-lowest/60 p-1 ring-1 ring-border"
     >
       {OPTIONS.map((option) => {
         const active = mounted && theme === option.value;
@@ -51,11 +51,11 @@ function ThemeToggle() {
             title={option.label}
             onClick={() => setTheme(option.value)}
             className={cn(
-              "relative flex h-6 flex-1 items-center justify-center rounded-md outline-none",
+              "relative flex h-7 flex-1 items-center justify-center rounded-lg outline-none",
               "transition-colors duration-150",
               "focus-visible:ring-3 focus-visible:ring-ring/50",
               active
-                ? "text-foreground"
+                ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -68,7 +68,7 @@ function ThemeToggle() {
                     ? { duration: 0 }
                     : { type: "spring", stiffness: 420, damping: 34 }
                 }
-                className="absolute inset-0 -z-10 rounded-md bg-card shadow-xs ring-1 ring-foreground/5"
+                className="absolute inset-0 -z-10 rounded-lg bg-surface-highest shadow-sm"
               />
             )}
             <Icon className="size-3.5" />

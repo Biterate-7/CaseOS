@@ -36,8 +36,19 @@ export const springSoft: Transition = {
 /** Non-spring easing, matching --ease-out-quart in globals.css. */
 export const easeOutQuart = [0.25, 1, 0.5, 1] as const;
 
+/**
+ * The signature curve, matching --ease-liquid in globals.css. A long,
+ * decelerating settle that makes panels feel weighted rather than snappy. Use
+ * it for anything large that moves: panels, sheets, hero reveals.
+ */
+export const easeLiquid = [0.23, 1, 0.32, 1] as const;
+
 export const tweenFast: Transition = { duration: 0.18, ease: easeOutQuart };
 export const tweenBase: Transition = { duration: 0.24, ease: easeOutQuart };
+/** Large surfaces. Slow enough to read as weight, short enough to not block. */
+export const tweenPanel: Transition = { duration: 0.4, ease: easeLiquid };
+/** Hero and route-level moments. */
+export const tweenHero: Transition = { duration: 0.7, ease: easeLiquid };
 
 /**
  * Staggered container. Children rise into place in sequence rather than all

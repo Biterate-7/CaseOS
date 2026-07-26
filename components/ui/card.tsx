@@ -2,27 +2,45 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Card — the default raised surface.
+ *
+ * `tone` selects the material rather than the colour:
+ *   solid  — an opaque panel one rung up the surface ladder. The workhorse.
+ *   glass  — translucent with backdrop blur. Only for surfaces that float
+ *            *above* content; blur behind prose costs legibility.
+ *   well   — recessed, for insets inside another card (code, quotes, canvases).
+ *
+ * `interactive` is only for cards that are themselves a link or button target.
+ * The lift is 2px and the ring brightens — enough to read as "this responds",
+ * not enough to make a page of cards look like it is hovering.
+ */
 function Card({
   className,
   size = "default",
+  tone = "solid",
   interactive = false,
   ...props
 }: React.ComponentProps<"div"> & {
-  size?: "default" | "sm"
-  /** Adds hover elevation. Only for cards that are themselves a link/target. */
+  size?: "default" | "sm" | "lg"
+  tone?: "solid" | "glass" | "well"
   interactive?: boolean
 }) {
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-tone={tone}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
-        // Resting elevation: a whisper. Enough to separate the card from the
-        // page ground without the product looking like it's made of buttons.
-        "shadow-xs",
+        "group/card relative flex flex-col gap-(--card-spacing) rounded-2xl py-(--card-spacing) text-sm text-card-foreground",
+        "[--card-spacing:--spacing(6)] data-[size=sm]:[--card-spacing:--spacing(4)] data-[size=lg]:[--card-spacing:--spacing(8)]",
+        tone === "solid" && "bg-card shadow-sm ring-1 ring-border",
+        tone === "glass" && "glass shadow-lg",
+        tone === "well" && "glass-well ring-1 ring-border",
         interactive &&
-          "cursor-pointer transition-[box-shadow,transform,border-color] duration-200 ease-(--ease-out-quart) hover:-translate-y-px hover:shadow-md hover:ring-foreground/15",
+          "cursor-pointer transition-[box-shadow,transform,background-color] duration-250 ease-(--ease-liquid) hover:-translate-y-0.5 hover:shadow-xl motion-reduce:hover:translate-y-0",
+        interactive && tone === "solid" && "hover:bg-surface hover:ring-primary/25",
+        interactive && tone === "glass" && "hover:border-primary/25",
         className
       )}
       {...props}
@@ -35,7 +53,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
+        "@container/card-header grid auto-rows-min items-start gap-1.5 px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing)",
         className
       )}
       {...props}
@@ -48,7 +66,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-title"
       className={cn(
-        "font-heading text-base leading-snug font-medium group-data-[size=sm]/card:text-sm",
+        "font-display text-headline-sm text-foreground group-data-[size=sm]/card:text-headline-xs",
         className
       )}
       {...props}
@@ -60,7 +78,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-description"
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-body-sm text-muted-foreground", className)}
       {...props}
     />
   )
@@ -94,7 +112,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-xl border-t bg-muted/50 p-(--card-spacing)",
+        "mt-auto flex items-center gap-3 border-t border-border px-(--card-spacing) pt-(--card-spacing)",
         className
       )}
       {...props}

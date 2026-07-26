@@ -14,8 +14,11 @@ import Link from "next/link";
 import { IngestionChart } from "@/components/dashboard/ingestion-chart";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CountUp } from "@/components/ui/motion/count-up";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { PulseMeter } from "@/components/ui/pulse-meter";
 import { Reveal, RevealItem } from "@/components/ui/reveal";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -123,6 +126,10 @@ export default async function DashboardPage() {
   const peak = Math.max(1, ...weeks.map((w) => w.count));
   const processedRecently = weeks.reduce((sum, w) => sum + w.count, 0);
 
+  // The hero meter shows the real shape of the last seven weeks of ingestion,
+  // normalised against the busiest week.
+  const pulseValues = weeks.slice(-7).map((w) => w.count / peak);
+
   // Quick actions need somewhere real to go. With no project yet, uploading
   // and asking are impossible, so those actions point at project creation
   // rather than a dead end.
@@ -148,7 +155,7 @@ export default async function DashboardPage() {
       icon: FolderOpen,
     },
     {
-      label: "AI insights generated",
+      label: "AI insights",
       value: insightCount,
       hint:
         insightCount === 0 ? "No questions asked yet" : "Answers with sources",
@@ -202,132 +209,176 @@ export default async function DashboardPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-      <header className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-serif text-2xl font-semibold tracking-tight">
-            {user.firmName}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Upload documents, ask questions, and trace every answer back to its
-            source.
-          </p>
-        </div>
-        <Button nativeButton={false} render={<Link href="/matters/new" />}>
-          <Plus className="size-4" />
-          New project
-        </Button>
-      </header>
+    <div className="mx-auto flex max-w-(--container-page) flex-col gap-12 px-margin-mobile py-8 lg:px-margin-desktop lg:py-12">
+      {/* ---------- Hero ---------- */}
+      <section
+        aria-label="Workspace overview"
+        className="relative overflow-hidden rounded-3xl bg-card/40 p-8 shadow-2xl ring-1 ring-border backdrop-blur-3xl lg:p-12"
+      >
+        {/* Two soft lights inside the hero, so it reads as a lit surface rather
+            than a flat panel. Purely decorative, no layout cost. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-32 -left-24 size-96 rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in oklch, var(--primary), transparent 88%), transparent 70%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-24 bottom-0 size-80 rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, color-mix(in oklch, var(--ai-context), transparent 90%), transparent 70%)",
+          }}
+        />
 
+        <div className="relative flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-5">
+            <Eyebrow live={documentCount > 0}>Workspace overview</Eyebrow>
+
+            <h1 className="max-w-2xl font-display text-headline-lg text-balance text-foreground lg:text-display-md">
+              {user.firmName}
+            </h1>
+
+            <p className="max-w-md text-pretty text-body-md leading-relaxed text-muted-foreground">
+              Upload documents, ask questions, and trace every answer back to
+              its source.
+            </p>
+
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <Button
+                size="lg"
+                variant="hero"
+                nativeButton={false}
+                render={<Link href="/matters/new" />}
+              >
+                <Plus />
+                New project
+              </Button>
+              {entryProject && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href={`/matters/${entryProject.id}`} />}
+                >
+                  <Sparkles />
+                  Continue {entryProject.title}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Live ingestion panel. Only shown once there is real activity to
+              report — an empty meter is decoration pretending to be data. */}
+          {documentCount > 0 && (
+            <div className="glass w-full shrink-0 rounded-2xl p-6 lg:w-64">
+              <p className="font-mono text-meta-xs uppercase text-primary">
+                Ingestion pulse
+              </p>
+              <PulseMeter values={pulseValues} className="mt-4" />
+              <p className="mt-4 text-body-sm text-muted-foreground tabular-nums">
+                {countLabel(processedRecently, "document")} in 12 weeks
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ---------- Stats ---------- */}
       <Reveal
         as="section"
         aria-label="Overview"
-        className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-gutter sm:grid-cols-2 lg:grid-cols-4"
       >
         {overview.map((card) => (
-          <RevealItem
-            key={card.label}
-            className={cn(
-              "relative rounded-xl border bg-card p-4 shadow-xs transition-[box-shadow,border-color] duration-200 ease-(--ease-out-quart) hover:border-foreground/15 hover:shadow-sm",
-              card.href && "hover:border-pending-border"
-            )}
-          >
-            {/* Overlay link keeps the whole card clickable while the content
-                below stays plain text — no nested interactive elements. */}
-            {card.href && (
-              <Link
-                href={card.href}
-                aria-label={`${card.value} ${card.label.toLowerCase()} — jump to the list`}
-                className="absolute inset-0 z-1 rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              />
-            )}
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-muted-foreground">
-                {card.label}
-              </p>
-              <card.icon className="size-3.5 text-muted-foreground/70" />
-            </div>
-            <p
-              className={cn(
-                "mt-2 text-3xl leading-none font-semibold tabular-nums",
-                card.emphasis && "text-pending"
-              )}
-            >
-              <CountUp value={card.value} />
-            </p>
-            <p className="mt-1.5 text-xs text-muted-foreground">{card.hint}</p>
+          <RevealItem key={card.label}>
+            <StatCard
+              label={card.label}
+              value={card.value}
+              hint={card.hint}
+              icon={card.icon}
+              href={card.href}
+              emphasis={card.emphasis}
+            />
           </RevealItem>
         ))}
       </Reveal>
 
-      <section aria-label="Quick actions" className="mb-6">
-        <Reveal className="grid gap-3 sm:grid-cols-3">
+      {/* ---------- Quick actions ---------- */}
+      <section aria-label="Quick actions">
+        <Reveal className="grid gap-gutter sm:grid-cols-3">
           {quickActions.map((action) => (
             <RevealItem key={action.title}>
               <Link
                 href={action.href}
-              className="group flex items-start gap-3 rounded-xl border bg-card p-4 shadow-xs transition-[box-shadow,transform,border-color] duration-200 ease-(--ease-out-quart) hover:-translate-y-px hover:border-foreground/15 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-primary">
-                <action.icon className="size-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium">{action.title}</span>
-                <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                  {action.body}
+                className="group flex h-full items-start gap-4 rounded-2xl bg-card p-6 ring-1 ring-border transition-[background-color,box-shadow,transform] duration-250 ease-(--ease-liquid) outline-none hover:-translate-y-0.5 hover:bg-surface hover:shadow-xl hover:ring-primary/25 focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:hover:translate-y-0"
+              >
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
+                  <action.icon className="size-5" />
                 </span>
-              </span>
-                <ArrowRight className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-headline-xs text-foreground">
+                    {action.title}
+                  </span>
+                  <span className="mt-1 block truncate text-body-sm text-muted-foreground">
+                    {action.body}
+                  </span>
+                </span>
+                <ArrowRight className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform duration-250 group-hover:translate-x-1 group-hover:text-primary" />
               </Link>
             </RevealItem>
           ))}
         </Reveal>
       </section>
 
-      {/* Work queue. Previously the dashboard reported a pending-review count
-          that linked nowhere, so the only way to find the actual items was to
-          open each project and look. Each row deep-links to the answer itself:
-          the project, filtered to review, scrolled to that interaction. */}
+      {/* ---------- Work queue ----------
+          The dashboard used to report a pending-review count that linked
+          nowhere, so the only way to find the actual items was to open each
+          project and look. Each row deep-links to the answer itself: the
+          project, filtered to review, scrolled to that interaction. */}
       {pendingReviews.length > 0 && (
         <section
           id="awaiting-review"
           aria-label="Awaiting review"
-          className="mb-6 scroll-mt-6 overflow-hidden rounded-xl border border-pending-border bg-card shadow-xs"
+          className="scroll-mt-24 overflow-hidden rounded-2xl bg-card ring-1 ring-pending-border"
         >
-          <div className="flex items-baseline justify-between gap-3 border-b border-pending-border/60 bg-pending-surface/40 px-5 py-3">
-            <h2 className="inline-flex items-center gap-1.5 text-sm font-semibold text-pending">
+          <div className="flex items-baseline justify-between gap-3 border-b border-pending-border/60 bg-pending-surface/40 px-6 py-4">
+            <h2 className="inline-flex items-center gap-2 font-display text-headline-xs text-pending">
               <ShieldQuestion className="size-4" />
               Awaiting your review
             </h2>
-            <p className="text-xs text-pending/90 tabular-nums">
+            <p className="font-mono text-meta-xs text-pending/90 tabular-nums">
               {countLabel(pendingReviewCount, "answer")}
             </p>
           </div>
 
           <ul className="flex flex-col">
             {pendingReviews.map((item) => (
-              <li key={item.id} className="border-b last:border-0">
+              <li key={item.id} className="border-b border-border last:border-0">
                 <Link
                   href={`/matters/${item.matter.id}?tab=review#interaction-${item.id}`}
-                  className="group flex items-start justify-between gap-4 px-5 py-3 transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                  className="group flex items-start justify-between gap-4 px-6 py-4 transition-colors duration-150 outline-none hover:bg-surface focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <span className="min-w-0">
-                    <span className="line-clamp-2 block font-serif text-sm leading-snug text-foreground">
+                    <span className="line-clamp-2 block text-body-sm leading-snug text-foreground">
                       {item.prompt}
                     </span>
-                    <span className="mt-1 block truncate text-xs text-muted-foreground">
+                    <span className="mt-1.5 block truncate font-mono text-meta-xs text-muted-foreground">
                       {item.matter.title} · {item.user.name} ·{" "}
                       {formatRelativeTime(item.createdAt)}
                     </span>
                   </span>
-                  <ArrowRight className="mt-0.5 size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
+                  <ArrowRight className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform duration-250 group-hover:translate-x-1 group-hover:text-primary" />
                 </Link>
               </li>
             ))}
           </ul>
 
           {pendingReviewCount > pendingReviews.length && (
-            <p className="border-t px-5 py-2.5 text-xs text-muted-foreground tabular-nums">
+            <p className="border-t border-border px-6 py-3 font-mono text-meta-xs text-muted-foreground tabular-nums">
               {pendingReviewCount - pendingReviews.length} more awaiting review
               across your projects
             </p>
@@ -335,43 +386,52 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="flex min-w-0 flex-col gap-6">
+      {/* ---------- Split: activity over time + recent work ---------- */}
+      <div className="grid gap-gutter lg:grid-cols-[1fr_360px]">
+        <div className="flex min-w-0 flex-col gap-gutter">
           <section
             aria-label="Documents processed over time"
-            className="rounded-xl border bg-card p-5 shadow-xs"
+            className="rounded-2xl bg-card p-6 ring-1 ring-border"
           >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-sm font-semibold">Documents processed</h2>
-              <p className="text-xs text-muted-foreground tabular-nums">
-                {countLabel(processedRecently, "document")} · last 12 weeks
-              </p>
-            </div>
+            <SectionHeading
+              title="Documents processed"
+              action={
+                <p className="font-mono text-meta-xs text-muted-foreground tabular-nums">
+                  {countLabel(processedRecently, "document")} · 12 weeks
+                </p>
+              }
+            />
 
-            {documentCount === 0 ? (
-              <EmptyState
-                icon={FileStack}
-                size="sm"
-                title="No documents yet"
-                description="Upload a document and this chart starts tracking ingestion over time."
-              />
-            ) : (
-              <IngestionChart weeks={weeks} peak={peak} />
-            )}
+            <div className="mt-6">
+              {documentCount === 0 ? (
+                <EmptyState
+                  icon={FileStack}
+                  size="sm"
+                  title="No documents yet"
+                  description="Upload a document and this chart starts tracking ingestion over time."
+                />
+              ) : (
+                <IngestionChart weeks={weeks} peak={peak} />
+              )}
+            </div>
           </section>
 
           <section
             aria-label="Recent projects"
-            className="rounded-xl border bg-card shadow-xs"
+            className="overflow-hidden rounded-2xl bg-card ring-1 ring-border"
           >
-            <div className="flex items-baseline justify-between gap-3 p-5 pb-3">
-              <h2 className="text-sm font-semibold">Recent projects</h2>
-              <Link
-                href="/matters"
-                className="rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-              >
-                View all
-              </Link>
+            <div className="p-6 pb-4">
+              <SectionHeading
+                title="Recent projects"
+                action={
+                  <Link
+                    href="/matters"
+                    className="rounded-lg font-mono text-meta-xs uppercase text-primary transition-opacity duration-150 outline-none hover:opacity-70 focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    View all
+                  </Link>
+                }
+              />
             </div>
 
             {recentProjects.length === 0 ? (
@@ -381,30 +441,30 @@ export default async function DashboardPage() {
                 description="A project holds a document collection and everything the AI derives from it."
                 action={
                   <Button
-                    size="sm"
                     nativeButton={false}
                     render={<Link href="/matters/new" />}
                   >
+                    <Plus />
                     Create your first project
                   </Button>
                 }
               />
             ) : (
-              <div className="flex flex-col border-t">
+              <div className="flex flex-col border-t border-border">
                 {recentProjects.map((project) => (
                   <Link
                     key={project.id}
                     href={`/matters/${project.id}`}
-                    className="flex items-center justify-between gap-4 border-b px-5 py-3 transition-colors last:border-0 hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                    className="group flex items-center justify-between gap-4 border-b border-border px-6 py-4 transition-colors duration-150 outline-none last:border-0 hover:bg-surface focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
+                      <p className="truncate text-label-md text-foreground transition-colors group-hover:text-primary">
                         {project.title}
                       </p>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground tabular-nums">
+                      <p className="mt-1 truncate font-mono text-meta-xs text-muted-foreground tabular-nums">
                         {countLabel(project._count.documents, "document")} ·{" "}
-                        {countLabel(project._count.aiInteractions, "insight")} ·
-                        updated {formatRelativeTime(project.updatedAt)}
+                        {countLabel(project._count.aiInteractions, "insight")} ·{" "}
+                        {formatRelativeTime(project.updatedAt)}
                       </p>
                     </div>
                     <StatusBadge
@@ -423,50 +483,57 @@ export default async function DashboardPage() {
 
         <section
           aria-label="Recent activity"
-          className="rounded-xl border bg-card p-5 shadow-xs lg:sticky lg:top-4 lg:self-start"
+          className="h-fit rounded-2xl bg-card p-6 ring-1 ring-border lg:sticky lg:top-24"
         >
-          <h2 className="mb-4 text-sm font-semibold">Recent activity</h2>
+          <SectionHeading icon={ScrollText} title="Activity" />
 
-          {auditEntries.length === 0 ? (
-            <EmptyState
-              icon={ScrollText}
-              size="sm"
-              title="Nothing recorded yet"
-              description="Uploads, questions, and review decisions are permanently logged here."
-            />
-          ) : (
-            <ol className="relative flex flex-col">
-              <span
-                aria-hidden
-                className="absolute top-2 bottom-2 left-[3px] w-px bg-border"
+          <div className="mt-6">
+            {auditEntries.length === 0 ? (
+              <EmptyState
+                icon={ScrollText}
+                size="sm"
+                title="Nothing recorded yet"
+                description="Uploads, questions, and review decisions are permanently logged here."
               />
-              {auditEntries.map((entry) => (
-                <li
-                  key={entry.id}
-                  className="relative flex gap-3 pb-4 last:pb-0"
-                >
-                  <span className="z-1 mt-1.5 size-[7px] shrink-0 rounded-full bg-muted-foreground/40 ring-4 ring-card" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs leading-snug">
-                      <span className="font-medium">
-                        {entry.user?.name ?? "System"}
-                      </span>{" "}
-                      <span className="text-muted-foreground">
-                        {formatAuditAction(entry.action)}
-                      </span>
-                    </p>
-                    <time
-                      dateTime={entry.createdAt.toISOString()}
-                      title={formatPreciseDateTime(entry.createdAt)}
-                      className="mt-0.5 block text-[0.6875rem] text-muted-foreground/80"
-                    >
-                      {formatRelativeTime(entry.createdAt)}
-                    </time>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
+            ) : (
+              <ol className="relative flex flex-col">
+                <span
+                  aria-hidden
+                  className="absolute top-2 bottom-2 left-[3.5px] w-px bg-border"
+                />
+                {auditEntries.map((entry, index) => (
+                  <li
+                    key={entry.id}
+                    className="relative flex gap-4 pb-5 last:pb-0"
+                  >
+                    <span
+                      className={cn(
+                        "z-1 mt-1.5 size-2 shrink-0 rounded-full ring-4 ring-card",
+                        index === 0 ? "bg-primary" : "bg-muted-foreground/40"
+                      )}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-body-sm leading-snug">
+                        <span className="text-foreground">
+                          {entry.user?.name ?? "System"}
+                        </span>{" "}
+                        <span className="text-muted-foreground">
+                          {formatAuditAction(entry.action)}
+                        </span>
+                      </p>
+                      <time
+                        dateTime={entry.createdAt.toISOString()}
+                        title={formatPreciseDateTime(entry.createdAt)}
+                        className="mt-1 block font-mono text-meta-xs text-muted-foreground/80"
+                      >
+                        {formatRelativeTime(entry.createdAt)}
+                      </time>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
         </section>
       </div>
     </div>

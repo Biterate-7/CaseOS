@@ -66,14 +66,13 @@ export default function LandingPage() {
     <div className="relative min-h-screen text-foreground">
       <AmbientBackground />
 
-      <header className="sticky top-0 z-40 border-b border-glass-border">
-        <div className="glass absolute inset-0 -z-10" />
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="flex items-center gap-2.5">
-            <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
-              <Network className="size-4" />
+      <header className="glass-panel sticky top-0 z-40 border-b border-border">
+        <div className="mx-auto flex max-w-(--container-page) items-center justify-between px-6 py-5">
+          <span className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
+              <Network className="size-4.5" />
             </span>
-            <span className="font-serif text-lg font-semibold tracking-tight">
+            <span className="font-display text-headline-xs text-foreground">
               CaseOS
             </span>
           </span>
@@ -94,30 +93,32 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6">
+      <main className="mx-auto max-w-(--container-page) px-6">
         <LandingHero />
 
         {/* How it works */}
-        <section className="border-t border-border/60 py-20">
-          <h2 className="text-center font-serif text-3xl font-semibold tracking-tight text-balance">
+        <section className="border-t border-border/60 py-24">
+          <h2 className="text-center font-display text-headline-lg text-balance text-foreground">
             Upload. Ask. Verify.
           </h2>
-          <Reveal className="mt-12 grid gap-4 sm:grid-cols-3">
+          <Reveal className="mt-14 grid gap-gutter sm:grid-cols-3">
             {steps.map((step, i) => (
               <RevealItem
                 key={step.title}
-                className="group glass flex flex-col gap-3 rounded-2xl p-5 shadow-sm transition-[transform,box-shadow] duration-300 ease-(--ease-out-quart) hover:-translate-y-1 hover:shadow-lg"
+                className="group glass flex flex-col gap-4 rounded-3xl p-7 shadow-sm transition-[transform,box-shadow] duration-300 ease-(--ease-liquid) hover:-translate-y-1 hover:shadow-xl motion-reduce:hover:translate-y-0"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="flex size-8 items-center justify-center rounded-lg border bg-card text-primary shadow-xs transition-transform duration-300 group-hover:scale-110">
-                    <step.icon className="size-4" />
+                <div className="flex items-center gap-3">
+                  <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20 transition-transform duration-300 group-hover:scale-110">
+                    <step.icon className="size-4.5" />
                   </span>
-                  <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                  <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
                     0{i + 1}
                   </span>
                 </div>
-                <h3 className="font-semibold">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+                <h3 className="font-display text-headline-xs text-foreground">
+                  {step.title}
+                </h3>
+                <p className="text-body-sm leading-relaxed text-pretty text-muted-foreground">
                   {step.body}
                 </p>
               </RevealItem>
@@ -126,18 +127,20 @@ export default function LandingPage() {
         </section>
 
         {/* Principles */}
-        <section className="border-t border-border/60 py-20">
-          <Reveal className="grid gap-4 sm:grid-cols-3">
+        <section className="border-t border-border/60 py-24">
+          <Reveal className="grid gap-gutter sm:grid-cols-3">
             {principles.map((p) => (
               <RevealItem
                 key={p.title}
-                className="group glass flex flex-col gap-3 rounded-2xl p-5 shadow-sm transition-[transform,box-shadow] duration-300 ease-(--ease-out-quart) hover:-translate-y-1 hover:shadow-lg"
+                className="group glass flex flex-col gap-4 rounded-3xl p-7 shadow-sm transition-[transform,box-shadow] duration-300 ease-(--ease-liquid) hover:-translate-y-1 hover:shadow-xl motion-reduce:hover:translate-y-0"
               >
-                <span className="flex size-9 items-center justify-center rounded-lg border bg-card text-primary shadow-xs transition-transform duration-300 group-hover:scale-110">
-                  <p.icon className="size-4" />
+                <span className="flex size-11 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20 transition-transform duration-300 group-hover:scale-110">
+                  <p.icon className="size-4.5" />
                 </span>
-                <h3 className="font-semibold">{p.title}</h3>
-                <p className="text-sm leading-relaxed text-pretty text-muted-foreground">
+                <h3 className="font-display text-headline-xs text-foreground">
+                  {p.title}
+                </h3>
+                <p className="text-body-sm leading-relaxed text-pretty text-muted-foreground">
                   {p.body}
                 </p>
               </RevealItem>
@@ -146,28 +149,28 @@ export default function LandingPage() {
         </section>
 
         {/* Use cases */}
-        <section className="border-t border-border/60 py-20 text-center">
-          <h2 className="font-serif text-2xl font-semibold tracking-tight">
+        <section className="border-t border-border/60 py-24 text-center">
+          <h2 className="font-display text-headline-md text-foreground">
             Built for any collection worth reading carefully
           </h2>
-          <Reveal className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-2">
+          <Reveal className="mx-auto mt-9 flex max-w-3xl flex-wrap justify-center gap-2.5">
             {useCases.map((useCase) => (
               <RevealItem
                 key={useCase}
                 subtle
-                className="glass rounded-full px-3.5 py-1.5 text-sm text-muted-foreground shadow-xs transition-transform duration-200 hover:-translate-y-0.5 hover:text-foreground"
+                className="glass rounded-full px-4 py-2 text-body-sm text-muted-foreground shadow-xs transition-[transform,color] duration-200 hover:-translate-y-0.5 hover:text-primary"
               >
                 {useCase}
               </RevealItem>
             ))}
           </Reveal>
-          <div className="mt-10">
+          <div className="mt-12">
             <Magnetic strength={0.5}>
               <Button
-                size="lg"
+                size="xl"
+                variant="hero"
                 nativeButton={false}
                 render={<Link href="/dashboard" />}
-                className="shadow-sm transition-shadow duration-300 hover:shadow-lg"
               >
                 Start analysing
               </Button>
@@ -176,7 +179,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-border/60 py-8 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-border/60 py-10 text-center font-mono text-meta-xs text-muted-foreground">
         CaseOS — an AI workspace for complex document collections
       </footer>
     </div>

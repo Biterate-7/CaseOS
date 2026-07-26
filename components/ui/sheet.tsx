@@ -31,7 +31,7 @@ function SheetContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Backdrop
         className={cn(
-          "fixed inset-0 z-50 bg-foreground/25 backdrop-blur-[2px]",
+          "fixed inset-0 z-50 bg-background/70 backdrop-blur-sm",
           "transition-opacity duration-250 ease-(--ease-out-quart)",
           "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0"
         )}
@@ -39,9 +39,9 @@ function SheetContent({
       <DialogPrimitive.Popup
         data-slot="sheet-content"
         className={cn(
-          "fixed inset-y-0 z-50 flex w-[min(20rem,85vw)] flex-col bg-sidebar shadow-xl outline-none",
-          side === "left" ? "left-0 border-r" : "right-0 border-l",
-          "transition-transform duration-300 ease-(--ease-out-quart)",
+          "glass-panel fixed inset-y-0 z-50 flex w-[min(20rem,85vw)] flex-col shadow-2xl outline-none",
+          side === "left" ? "left-0 border-r border-border" : "right-0 border-l border-border",
+          "transition-transform duration-400 ease-(--ease-liquid)",
           side === "left"
             ? "data-[starting-style]:-translate-x-full data-[ending-style]:-translate-x-full"
             : "data-[starting-style]:translate-x-full data-[ending-style]:translate-x-full",

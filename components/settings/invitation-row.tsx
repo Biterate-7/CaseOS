@@ -52,14 +52,14 @@ function InvitationRow({
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs sm:flex-row sm:items-center">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border bg-muted text-muted-foreground">
+    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-highest text-muted-foreground ring-1 ring-border">
         <Mail className="size-4" />
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{invitation.email}</p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+        <p className="truncate text-label-sm text-foreground">{invitation.email}</p>
+        <p className="mt-0.5 truncate font-mono text-meta-xs text-muted-foreground">
           {roleLabel[invitation.role]} · invited by {invitation.invitedByName} ·{" "}
           {invitation.expired
             ? "expired"
@@ -67,7 +67,7 @@ function InvitationRow({
         </p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-2">
         <StatusBadge
           size="sm"
           tone={invitation.expired ? "rejected" : "pending"}
@@ -106,7 +106,7 @@ function InvitationRow({
       </div>
 
       {error && (
-        <p role="alert" className="text-xs text-rejected sm:w-full">
+        <p role="alert" className="text-body-sm text-rejected sm:w-full">
           {error}
         </p>
       )}

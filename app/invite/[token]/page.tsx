@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AcceptInvitation } from "@/components/invite/accept-invitation";
 import { AuthShell } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
+import { Eyebrow } from "@/components/ui/eyebrow";
 import { previewInvitation } from "@/lib/actions/invitations";
 import { roleLabel } from "@/lib/format";
 
@@ -35,14 +36,14 @@ export default async function InvitePage({
   if (!invitation) {
     return (
       <AuthShell>
-        <div className="rounded-xl border bg-card p-6 text-center shadow-sm">
-          <span className="mx-auto flex size-11 items-center justify-center rounded-xl border bg-muted text-muted-foreground">
+        <div className="glass rounded-3xl p-8 text-center shadow-2xl">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-surface-highest/70 text-muted-foreground ring-1 ring-border">
             <MailWarning className="size-5" />
           </span>
-          <h1 className="mt-4 font-serif text-lg font-semibold">
+          <h1 className="mt-5 font-display text-headline-xs text-foreground">
             This invitation link isn&apos;t valid
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-2.5 text-body-sm leading-relaxed text-muted-foreground">
             It may have been revoked, already used, or mistyped. Ask whoever
             invited you to send a new one.
           </p>
@@ -78,43 +79,39 @@ export default async function InvitePage({
 
   return (
     <AuthShell>
-      <div className="rounded-xl border bg-card p-6 shadow-sm">
+      <div className="glass rounded-3xl p-8 shadow-2xl">
         <div className="flex flex-col items-center text-center">
-          <span className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-bright text-primary-foreground shadow-lg shadow-[var(--glow)]">
             <Building2 className="size-5" />
           </span>
-          <p className="mt-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Workspace invitation
-          </p>
-          <h1 className="mt-1.5 font-serif text-xl font-semibold tracking-tight text-balance">
+          <Eyebrow className="mt-5">Workspace invitation</Eyebrow>
+          <h1 className="mt-2 font-display text-headline-sm text-balance text-foreground">
             {workspaceName}
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            <span className="font-medium text-foreground">{inviterName}</span>{" "}
-            invited <span className="font-medium text-foreground">{email}</span>{" "}
-            to join as{" "}
-            <span className="font-medium text-foreground">
-              {roleLabel[role]}
-            </span>
-            .
+          <p className="mt-3 text-body-sm leading-relaxed text-muted-foreground">
+            <span className="text-foreground">{inviterName}</span> invited{" "}
+            <span className="text-foreground">{email}</span> to join as{" "}
+            <span className="text-foreground">{roleLabel[role]}</span>.
           </p>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-7">
           {state === "ready" && <AcceptInvitation token={token} />}
 
           {state === "signed-out" && (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <SignInButton
                 mode="modal"
                 forceRedirectUrl={`/invite/${token}`}
                 signUpForceRedirectUrl={`/invite/${token}`}
               >
-                <Button className="w-full">Sign in to accept</Button>
+                <Button variant="hero" className="w-full">
+                  Sign in to accept
+                </Button>
               </SignInButton>
-              <p className="text-center text-xs leading-relaxed text-muted-foreground">
-                Use {email} — the invitation is tied to that address. You&apos;ll
-                come straight back here.
+              <p className="text-center font-mono text-meta-xs leading-relaxed text-muted-foreground">
+                Use {email} — the invitation is tied to that address.
+                You&apos;ll come straight back here.
               </p>
             </div>
           )}
@@ -131,9 +128,9 @@ export default async function InvitePage({
           )}
 
           {problem[state] && state !== "already-member" && (
-            <div className="flex flex-col gap-3">
-              <p className="flex items-start gap-2 rounded-lg border border-pending-border bg-pending-surface/50 px-3 py-2.5 text-xs leading-relaxed text-pending">
-                <TriangleAlert className="mt-px size-3.5 shrink-0" />
+            <div className="flex flex-col gap-4">
+              <p className="flex items-start gap-2.5 rounded-xl border border-pending-border bg-pending-surface/50 px-4 py-3 text-body-sm leading-relaxed text-pending">
+                <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                 <span>
                   <span className="font-medium">{problem[state].title}.</span>{" "}
                   {problem[state].body}

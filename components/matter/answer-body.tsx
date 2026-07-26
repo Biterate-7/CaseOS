@@ -19,10 +19,13 @@ import type { WorkspaceExternalCitation } from "@/lib/matter-data";
  * reader can never confuse where a claim came from:
  *  - document sections: quiet headings, bronze [Sn] citation chips.
  *  - Additional Context (DOCUMENT_PLUS_AI): violet card, no citations.
- *  - External Research (DOCUMENT_PLUS_EXTERNAL): teal card, teal [En] chips,
- *    and a verified source list (title/publisher/date/URL/access date).
+ *  - External Research (DOCUMENT_PLUS_EXTERNAL): indigo card, indigo [En]
+ *    chips, and a verified source list (title/publisher/date/URL/access date).
  *  - Analysis: neutral card — the model's own interpretation, no citations.
  *  - Confidence: a colour-coded support-level callout.
+ *
+ * None of these sections may use chrome cyan. Cyan means "you can click this";
+ * every colour here means "this is where the claim came from".
  */
 
 type Tone = "document" | "external";
@@ -40,7 +43,7 @@ function Sentences({
 }) {
   const isExternal = tone === "external";
   return (
-    <div className="font-serif text-[0.9375rem] leading-[1.75] text-foreground">
+    <div className="text-body-md leading-[1.75] text-foreground">
       {sentences.map((sentence) => {
         const isActive =
           activeCitationId != null &&
@@ -74,7 +77,7 @@ function Sentences({
                         ? "This external source could not be verified and was removed."
                         : "The model cited a source that was not retrieved for this answer. Nothing grounds this marker."
                     }
-                    className="mx-0.5 cursor-help font-sans text-[0.625rem] font-semibold text-muted-foreground/60 line-through"
+                    className="mx-0.5 cursor-help font-mono text-[0.625rem] font-semibold text-muted-foreground/60 line-through"
                   >
                     {label}
                   </sup>
@@ -98,7 +101,7 @@ function Sentences({
                     }
                     className={cn(
                       "relative before:absolute before:-inset-x-2 before:-inset-y-3 before:content-['']",
-                      "inline-flex min-h-4 min-w-4 items-center justify-center rounded px-1 py-px font-sans text-[0.625rem] font-semibold",
+                      "inline-flex min-h-4 min-w-4 items-center justify-center rounded-sm px-1 py-px font-mono text-[0.625rem] font-semibold",
                       "transition-[background-color,color,box-shadow] duration-150 outline-none",
                       "focus-visible:ring-3 focus-visible:ring-ring/50",
                       isExternal
@@ -141,7 +144,7 @@ function ExternalSourceList({
 }) {
   if (citations.length === 0) return null;
   return (
-    <ol className="flex flex-col gap-1.5">
+    <ol className="flex flex-col gap-2">
       {citations.map((c) => {
         const active = activeCitationId === c.id;
         const tier = (c.tier as SourceTier) ?? "unknown";
@@ -149,27 +152,27 @@ function ExternalSourceList({
           <li
             key={c.id}
             className={cn(
-              "rounded-md border px-2.5 py-2 transition-colors duration-150",
+              "rounded-xl border px-4 py-3 transition-colors duration-150",
               active
                 ? "border-external/50 bg-external-surface"
                 : "border-border bg-card/60 hover:border-external/30"
             )}
           >
-            <div className="flex items-start gap-2">
+            <div className="flex items-start gap-3">
               <button
                 type="button"
                 onClick={() => onSelectCitation(active ? null : c.id)}
                 aria-pressed={active}
-                className="mt-px inline-flex h-4 min-w-5 shrink-0 items-center justify-center rounded bg-external-surface px-1 font-sans text-[0.625rem] font-semibold text-external ring-1 ring-external/30 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="mt-0.5 inline-flex h-5 min-w-6 shrink-0 items-center justify-center rounded-sm bg-external-surface px-1 font-mono text-[0.625rem] font-semibold text-external ring-1 ring-external/30 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 E{c.marker}
               </button>
               <div className="min-w-0 flex-1">
-                <p className="text-[0.8125rem] leading-snug font-medium text-foreground">
+                <p className="text-body-sm leading-snug font-medium text-foreground">
                   {c.title}
                 </p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[0.6875rem] text-muted-foreground">
-                  <span className="font-medium text-foreground/80">{c.publisher}</span>
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-meta-xs text-muted-foreground">
+                  <span className="text-foreground/80">{c.publisher}</span>
                   <span>
                     ·{" "}
                     {c.publishedAt
@@ -178,7 +181,7 @@ function ExternalSourceList({
                   </span>
                   <span
                     className={cn(
-                      "rounded-full border px-1.5 py-px font-medium",
+                      "rounded-full border px-2 py-0.5",
                       TIER_TONE[tier]
                     )}
                     title={sourceTierLabel[tier]}
@@ -190,9 +193,9 @@ function ExternalSourceList({
                   href={c.url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="mt-0.5 inline-flex items-center gap-1 text-[0.6875rem] break-all text-external hover:underline"
+                  className="mt-1.5 inline-flex items-center gap-1.5 font-mono text-meta-xs break-all text-external underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  <ExternalLink className="size-2.5 shrink-0" />
+                  <ExternalLink className="size-3 shrink-0" />
                   {c.domain}
                 </a>
               </div>
@@ -226,10 +229,10 @@ function AnswerBody({
             <aside
               key={section.key}
               aria-label="AI-generated context"
-              className="flex flex-col gap-2 rounded-lg border border-ai-context-border bg-ai-context-surface/60 px-3.5 py-3"
+              className="flex flex-col gap-3 rounded-2xl border border-ai-context-border bg-ai-context-surface/60 p-5"
             >
-              <p className="inline-flex items-start gap-1.5 font-sans text-[0.6875rem] leading-snug font-semibold tracking-wide text-ai-context uppercase">
-                <Sparkles className="mt-px size-3 shrink-0" />
+              <p className="inline-flex items-start gap-2 font-mono text-meta-xs leading-snug text-ai-context uppercase">
+                <Sparkles className="mt-px size-3.5 shrink-0" />
                 Additional context — AI-generated, not from this project&apos;s documents
               </p>
               <Sentences
@@ -237,7 +240,7 @@ function AnswerBody({
                 activeCitationId={activeCitationId}
                 onSelectCitation={onSelectCitation}
               />
-              <p className="font-sans text-[0.6875rem] leading-snug text-muted-foreground">
+              <p className="text-body-sm leading-relaxed text-muted-foreground">
                 Drawn from the model&apos;s general knowledge to supplement the
                 cited evidence above. Verify independently before relying on it.
               </p>
@@ -251,10 +254,10 @@ function AnswerBody({
             <aside
               key={section.key}
               aria-label="External research"
-              className="flex flex-col gap-2.5 rounded-lg border border-external-border bg-external-surface/50 px-3.5 py-3"
+              className="flex flex-col gap-3.5 rounded-2xl border border-external-border bg-external-surface/50 p-5"
             >
-              <p className="inline-flex items-start gap-1.5 font-sans text-[0.6875rem] leading-snug font-semibold tracking-wide text-external uppercase">
-                <Globe className="mt-px size-3 shrink-0" />
+              <p className="inline-flex items-start gap-2 font-mono text-meta-xs leading-snug text-external uppercase">
+                <Globe className="mt-px size-3.5 shrink-0" />
                 External research — verified web sources, not from your documents
               </p>
               <Sentences
@@ -268,7 +271,7 @@ function AnswerBody({
                 activeCitationId={activeCitationId}
                 onSelectCitation={onSelectCitation}
               />
-              <p className="font-sans text-[0.6875rem] leading-snug text-muted-foreground">
+              <p className="text-body-sm leading-relaxed text-muted-foreground">
                 Each source&apos;s URL was checked automatically before it was
                 shown; unverifiable citations were removed. Open a source to
                 confirm it supports the claim.
@@ -283,10 +286,10 @@ function AnswerBody({
             <section
               key={section.key}
               aria-label="Analysis"
-              className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/40 px-3.5 py-3"
+              className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface-highest/40 p-5"
             >
-              <p className="inline-flex items-start gap-1.5 font-sans text-[0.6875rem] leading-snug font-semibold tracking-wide text-muted-foreground uppercase">
-                <GitCompareArrows className="mt-px size-3 shrink-0" />
+              <p className="inline-flex items-start gap-2 font-mono text-meta-xs leading-snug text-muted-foreground uppercase">
+                <GitCompareArrows className="mt-px size-3.5 shrink-0" />
                 Analysis — AI interpretation
               </p>
               <Sentences
@@ -307,9 +310,9 @@ function AnswerBody({
 
         // Document-grounded sections.
         return (
-          <section key={section.key} className="flex flex-col gap-1">
+          <section key={section.key} className="flex flex-col gap-2">
             {section.title != null && (
-              <h3 className="font-sans text-[0.6875rem] font-semibold tracking-wide text-muted-foreground uppercase">
+              <h3 className="font-mono text-meta-xs text-muted-foreground uppercase">
                 {section.title}
               </h3>
             )}
@@ -349,16 +352,16 @@ function ConfidenceCallout({ sentences }: { sentences: AnswerSentence[] }) {
     <div
       aria-label="Confidence"
       className={cn(
-        "flex items-start gap-2 rounded-lg border px-3.5 py-2.5",
+        "flex items-start gap-3 rounded-2xl border px-5 py-4",
         CONFIDENCE_TONE[level]
       )}
     >
-      <Gauge className="mt-px size-3.5 shrink-0" />
-      <div className="flex flex-col gap-0.5">
-        <span className="font-sans text-[0.6875rem] font-semibold tracking-wide uppercase opacity-80">
+      <Gauge className="mt-0.5 size-4 shrink-0" />
+      <div className="flex flex-col gap-1">
+        <span className="font-mono text-meta-xs uppercase opacity-80">
           Confidence
         </span>
-        <span className="text-[0.8125rem] leading-snug font-medium">
+        <span className="text-body-sm leading-snug font-medium">
           {confidenceLabel[level]}
         </span>
       </div>

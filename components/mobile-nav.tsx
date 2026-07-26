@@ -1,23 +1,33 @@
 "use client"
 
-import { Menu } from "lucide-react"
+import { Menu, Search } from "lucide-react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
-import { AppSidebar, BrandMark } from "@/components/app-sidebar"
+import {
+  AppSidebar,
+  BrandMark,
+  type SwitcherProject,
+} from "@/components/app-sidebar"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 
 /**
- * Small-screen navigation. The sidebar content is shared with the desktop
- * rail rather than duplicated, so nav items can never drift between the two.
+ * Small-screen navigation. The sidebar content is shared with the desktop rail
+ * rather than duplicated, so nav items can never drift between the two.
+ *
+ * Search collapses to an icon that routes to the documents page, where the full
+ * search field lives — a persistent input would eat most of a phone's header.
  */
 function MobileNav({
   userName,
   firmName,
+  projects = [],
 }: {
   userName: string
   firmName: string
+  projects?: SwitcherProject[]
 }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
@@ -29,7 +39,7 @@ function MobileNav({
   }, [pathname])
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur-md lg:hidden">
+    <header className="glass-panel sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border px-4 lg:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <Button
           variant="ghost"
@@ -39,16 +49,29 @@ function MobileNav({
         >
           <Menu />
         </Button>
-        <SheetContent side="left">
+        <SheetContent side="left" className="p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <AppSidebar
             userName={userName}
             firmName={firmName}
+            projects={projects}
             onNavigate={() => setOpen(false)}
           />
         </SheetContent>
       </Sheet>
+
       <BrandMark />
+
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Search documents"
+        className="ml-auto"
+        nativeButton={false}
+        render={<Link href="/documents" />}
+      >
+        <Search />
+      </Button>
     </header>
   )
 }

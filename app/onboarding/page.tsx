@@ -1,15 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
+import { Layers } from "lucide-react";
+
 import { AuthShell } from "@/components/auth-shell";
 import { OnboardingForm } from "@/components/onboarding-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { db } from "@/lib/db";
 
 export const metadata = { title: "Set up your workspace" };
@@ -50,20 +45,21 @@ export default async function OnboardingPage() {
         <>Your workspace is the outer boundary. Nothing crosses it — ever.</>
       }
     >
-      <Card className="w-full shadow-sm">
-        <CardHeader>
-          <CardTitle className="font-serif text-xl">
-            Set up your firm
-          </CardTitle>
-          <CardDescription className="leading-relaxed">
+      <div className="glass flex flex-col gap-6 rounded-3xl p-8 shadow-2xl">
+        <div className="flex flex-col gap-3">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
+            <Layers className="size-5" />
+          </span>
+          <h1 className="font-display text-headline-sm text-foreground">
+            Set up your workspace
+          </h1>
+          <p className="text-body-sm leading-relaxed text-muted-foreground">
             CaseOS scopes every project, document, and AI interaction to your
             workspace. Create yours to get started.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <OnboardingForm defaultName={defaultName} />
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        <OnboardingForm defaultName={defaultName} />
+      </div>
     </AuthShell>
   );
 }

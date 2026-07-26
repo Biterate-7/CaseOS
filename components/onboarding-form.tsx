@@ -21,8 +21,8 @@ export function OnboardingForm({ defaultName }: { defaultName: string }) {
   }
 
   return (
-    <form action={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+    <form action={handleSubmit} className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2.5">
         <Label htmlFor="userName">Your name</Label>
         <Input
           id="userName"
@@ -33,7 +33,7 @@ export function OnboardingForm({ defaultName }: { defaultName: string }) {
           disabled={isPending}
         />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         <Label htmlFor="firmName">Workspace name</Label>
         <Input
           id="firmName"
@@ -43,8 +43,12 @@ export function OnboardingForm({ defaultName }: { defaultName: string }) {
           disabled={isPending}
         />
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={isPending}>
+      {error && (
+        <p className="text-body-sm text-rejected" role="alert">
+          {error}
+        </p>
+      )}
+      <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isPending}>
         {isPending ? "Setting up your workspace…" : "Create workspace"}
       </Button>
     </form>

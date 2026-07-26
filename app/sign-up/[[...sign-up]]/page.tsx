@@ -1,6 +1,7 @@
 import { SignUp } from "@clerk/nextjs";
 
 import { AuthShell } from "@/components/auth-shell";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 
 export const metadata = { title: "Create account" };
 
@@ -8,9 +9,11 @@ export default function SignUpPage() {
   return (
     <AuthShell
       className="flex w-auto max-w-none justify-center"
-      footer={<>You&apos;ll set up your firm workspace next.</>}
+      footer={<>You&apos;ll set up your workspace next.</>}
     >
-      <SignUp />
+      <div className="glass rounded-3xl p-8 shadow-2xl">
+        <SignUp appearance={clerkAppearance} />
+      </div>
     </AuthShell>
   );
 }

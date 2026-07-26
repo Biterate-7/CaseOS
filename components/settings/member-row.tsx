@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 
+import { Select } from "@/components/ui/select";
 import { changeMemberRole } from "@/lib/actions/invitations";
 import { formatDate, initials, roleLabel, type Role } from "@/lib/format";
 
@@ -36,49 +37,51 @@ function MemberRow({
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-xl border bg-card p-3 shadow-xs sm:flex-row sm:items-center">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-[0.6875rem] font-semibold text-secondary-foreground">
+    <li className="flex flex-col gap-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:flex-row sm:items-center">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-highest font-mono text-meta-xs text-foreground">
         {initials(member.name)}
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">
+        <p className="truncate text-label-sm text-foreground">
           {member.name}
           {isSelf && (
-            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+            <span className="ml-2 font-mono text-meta-xs text-muted-foreground">
               you
             </span>
           )}
         </p>
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+        <p className="mt-0.5 truncate font-mono text-meta-xs text-muted-foreground">
           {member.email} · joined {formatDate(member.createdAt)}
         </p>
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
         {canManage ? (
-          <select
-            value={role}
-            onChange={(e) => update(e.target.value as Role)}
-            disabled={isPending}
-            aria-label={`Role for ${member.name}`}
-            className="h-8 rounded-lg border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
-          >
-            {ROLES.map((r) => (
-              <option key={r} value={r}>
-                {roleLabel[r]}
-              </option>
-            ))}
-          </select>
+          <div className="w-36">
+            <Select
+              value={role}
+              onChange={(e) => update(e.target.value as Role)}
+              disabled={isPending}
+              aria-label={`Role for ${member.name}`}
+              size="sm"
+            >
+              {ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {roleLabel[r]}
+                </option>
+              ))}
+            </Select>
+          </div>
         ) : (
-          <span className="text-xs text-muted-foreground">
+          <span className="font-mono text-meta-xs text-muted-foreground">
             {roleLabel[role]}
           </span>
         )}
       </div>
 
       {error && (
-        <p role="alert" className="text-xs text-rejected sm:w-full">
+        <p role="alert" className="text-body-sm text-rejected sm:w-full">
           {error}
         </p>
       )}

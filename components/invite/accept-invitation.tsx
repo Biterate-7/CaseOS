@@ -35,8 +35,13 @@ function AcceptInvitation({ token }: { token: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button className="w-full" disabled={isPending} onClick={accept}>
+    <div className="flex flex-col gap-3">
+      <Button
+        variant="hero"
+        className="w-full"
+        disabled={isPending}
+        onClick={accept}
+      >
         {isPending ? (
           "Joining…"
         ) : (
@@ -47,7 +52,7 @@ function AcceptInvitation({ token }: { token: string }) {
         )}
       </Button>
       {error && (
-        <p role="alert" className="text-center text-xs text-rejected">
+        <p role="alert" className="text-center text-body-sm text-rejected">
           {error}
         </p>
       )}

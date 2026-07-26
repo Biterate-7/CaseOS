@@ -54,34 +54,36 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
   return (
     <div
       className={cn(
-        "group rounded-lg border bg-card transition-[border-color,box-shadow] duration-200 ease-(--ease-out-quart)",
-        "hover:border-foreground/15 hover:shadow-sm",
-        document.status === "FAILED" && "border-rejected-border/60"
+        "group overflow-hidden rounded-xl bg-card ring-1 transition-[box-shadow,--tw-ring-color] duration-250 ease-(--ease-liquid)",
+        "hover:shadow-md",
+        document.status === "FAILED"
+          ? "ring-rejected-border/60"
+          : "ring-border hover:ring-primary/20"
       )}
     >
-      <div className="flex items-start gap-3 p-3">
+      <div className="flex items-start gap-3 p-4">
         <span
           className={cn(
-            "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border",
+            "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg ring-1",
             document.status === "READY"
-              ? "border-grounded-border bg-grounded-surface text-grounded"
+              ? "bg-grounded-surface text-grounded ring-grounded-border"
               : document.status === "FAILED"
-                ? "border-rejected-border bg-rejected-surface text-rejected"
-                : "bg-muted text-muted-foreground"
+                ? "bg-rejected-surface text-rejected ring-rejected-border"
+                : "bg-surface-highest text-muted-foreground ring-border"
           )}
         >
           <FileText className="size-4" />
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[0.8125rem] leading-snug font-medium">
+          <p className="truncate text-label-sm text-foreground">
             {document.title}
           </p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+          <p className="mt-0.5 truncate font-mono text-meta-xs text-muted-foreground">
             {document.fileName}
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -99,12 +101,12 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
               </TooltipContent>
             </Tooltip>
 
-            <span className="text-xs text-muted-foreground tabular-nums">
+            <span className="font-mono text-meta-xs text-muted-foreground tabular-nums">
               {facts.join(" · ")}
             </span>
           </div>
 
-          <p className="mt-1.5 text-xs text-muted-foreground/80">
+          <p className="mt-2 font-mono text-meta-xs text-muted-foreground/80">
             Added {formatRelativeTime(document.createdAt)}
           </p>
         </div>
@@ -113,14 +115,14 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
       {/* Ingestion is the gate on whether this document can ground anything,
           so the two states that block it say so in words, not just colour. */}
       {document.status === "PROCESSING" && (
-        <div className="border-t px-3 py-2">
+        <div className="border-t border-border px-4 py-3">
           <div
             role="progressbar"
             aria-label="Ingesting document"
-            className="h-0.5 w-full overflow-hidden rounded-full bg-pending-surface"
+            className="h-1 w-full overflow-hidden rounded-full bg-pending-surface"
           >
             <motion.div
-              className="h-full w-1/3 rounded-full bg-pending"
+              className="h-full w-1/3 rounded-full bg-pending shadow-[0_0_8px_var(--pending)]"
               animate={reduceMotion ? undefined : { x: ["-100%", "300%"] }}
               transition={{
                 duration: 1.6,
@@ -129,16 +131,16 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
               }}
             />
           </div>
-          <p className="mt-1.5 text-[0.6875rem] text-muted-foreground">
+          <p className="mt-2 font-mono text-meta-xs text-muted-foreground">
             Extracting and embedding — not yet searchable.
           </p>
         </div>
       )}
 
       {document.status === "FAILED" && (
-        <div className="flex flex-col gap-2 border-t border-rejected-border/60 bg-rejected-surface/50 px-3 py-2">
-          <p className="flex items-start gap-1.5 text-[0.6875rem] leading-relaxed text-rejected">
-            <TriangleAlert className="mt-px size-3 shrink-0" />
+        <div className="flex flex-col gap-2.5 border-t border-rejected-border/60 bg-rejected-surface/50 px-4 py-3">
+          <p className="flex items-start gap-2 text-meta-xs leading-relaxed text-rejected">
+            <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
             <span>
               Ingestion didn&apos;t finish. This can be a scan with no text
               layer, or an interrupted upload. Retry, or re-upload a
@@ -171,7 +173,7 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
               )}
             </Button>
             {retryError && (
-              <span className="text-[0.6875rem] text-rejected">
+              <span className="font-mono text-meta-xs text-rejected">
                 {retryError}
               </span>
             )}
@@ -185,11 +187,11 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
             type="button"
             onClick={() => setExpanded((v) => !v)}
             aria-expanded={expanded}
-            className="flex w-full items-center gap-1.5 border-t px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+            className="flex w-full items-center gap-2 border-t border-border px-4 py-2.5 font-mono text-meta-xs text-muted-foreground transition-colors duration-150 outline-none hover:bg-surface-highest/50 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <ChevronRight
               className={cn(
-                "size-3.5 transition-transform duration-200 ease-(--ease-out-quart)",
+                "size-3.5 transition-transform duration-250 ease-(--ease-liquid)",
                 expanded && "rotate-90"
               )}
             />
@@ -205,7 +207,7 @@ function DocumentCard({ document }: { document: WorkspaceDocument }) {
                 transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
                 className="overflow-hidden"
               >
-                <p className="border-t bg-muted/30 px-3 py-2.5 font-serif text-xs leading-relaxed text-muted-foreground">
+                <p className="glass-well border-t border-border px-4 py-3 text-body-sm leading-relaxed text-muted-foreground">
                   {document.excerpt}
                   {document.excerpt && document.excerpt.length >= 600 && "…"}
                 </p>

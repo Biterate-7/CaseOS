@@ -1,6 +1,5 @@
 "use client";
 
-import { Dialog } from "@base-ui/react/dialog";
 import {
   Download,
   ExternalLink,
@@ -13,7 +12,16 @@ import {
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -26,55 +34,6 @@ import {
   renameDocument,
 } from "@/lib/actions/document-library";
 import type { IndexedDocument } from "@/lib/documents-shared";
-import { cn } from "@/lib/utils";
-
-/** Shared shell so the three dialogs look and animate identically. */
-function ActionDialog({
-  open,
-  onOpenChange,
-  title,
-  description,
-  children,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Backdrop
-          className={cn(
-            "fixed inset-0 z-50 bg-foreground/25 backdrop-blur-[2px]",
-            "transition-opacity duration-200 ease-(--ease-out-quart)",
-            "data-[starting-style]:opacity-0 data-[ending-style]:opacity-0"
-          )}
-        />
-        <Dialog.Popup
-          className={cn(
-            "fixed top-1/2 left-1/2 z-50 w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2",
-            "rounded-xl border bg-card p-5 shadow-xl outline-none",
-            "transition-[transform,opacity] duration-200 ease-(--ease-out-quart)",
-            "data-[starting-style]:scale-95 data-[starting-style]:opacity-0",
-            "data-[ending-style]:scale-95 data-[ending-style]:opacity-0"
-          )}
-        >
-          <Dialog.Title className="font-serif text-base font-semibold">
-            {title}
-          </Dialog.Title>
-          {description && (
-            <Dialog.Description className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
-              {description}
-            </Dialog.Description>
-          )}
-          <div className="mt-4">{children}</div>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
-  );
-}
 
 function DocumentActions({
   document: doc,
@@ -127,7 +86,10 @@ function DocumentActions({
     }
   }
 
-  function run(fn: () => Promise<{ ok: boolean; error?: string }>, close: () => void) {
+  function run(
+    fn: () => Promise<{ ok: boolean; error?: string }>,
+    close: () => void
+  ) {
     setError(null);
     startTransition(async () => {
       const result = await fn();
@@ -137,6 +99,13 @@ function DocumentActions({
   }
 
   const otherProjects = projects.filter((p) => p.id !== doc.matterId);
+
+  /** Inline error inside a dialog. */
+  const errorNote = error ? (
+    <p role="alert" className="text-body-sm text-rejected">
+      {error}
+    </p>
+  ) : null;
 
   return (
     <>
@@ -244,145 +213,147 @@ function DocumentActions({
       </div>
 
       {error && !renameOpen && !moveOpen && !deleteOpen && (
-        <p role="alert" className="mt-1 text-[0.6875rem] text-rejected">
+        <p role="alert" className="mt-1 font-mono text-meta-xs text-rejected">
           {error}
         </p>
       )}
 
       {/* Rename */}
-      <ActionDialog
-        open={renameOpen}
-        onOpenChange={setRenameOpen}
-        title="Rename document"
-        description="This changes the display name only. The stored file and its indexed passages are untouched."
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            run(() => renameDocument(doc.id, title), () => setRenameOpen(false));
-          }}
-          className="flex flex-col gap-3"
-        >
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            aria-label="Document name"
-            autoFocus
-            required
-            maxLength={200}
-          />
-          {error && (
-            <p role="alert" className="text-xs text-rejected">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setRenameOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" size="sm" disabled={isPending}>
-              {isPending ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </form>
-      </ActionDialog>
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename document</DialogTitle>
+            <DialogDescription>
+              This changes the display name only. The stored file and its
+              indexed passages are untouched.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              run(
+                () => renameDocument(doc.id, title),
+                () => setRenameOpen(false)
+              );
+            }}
+            className="flex flex-col gap-5"
+          >
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              aria-label="Document name"
+              autoFocus
+              required
+              maxLength={200}
+            />
+            {errorNote}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRenameOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="animate-spin" />}
+                {isPending ? "Saving…" : "Save"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Move */}
-      <ActionDialog
-        open={moveOpen}
-        onOpenChange={setMoveOpen}
-        title="Move to another project"
-        description="The document becomes searchable in the destination project and stops grounding answers in this one. Existing citations are unaffected."
-      >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!target) return;
-            run(() => moveDocument(doc.id, target), () => setMoveOpen(false));
-          }}
-          className="flex flex-col gap-3"
-        >
-          <select
-            value={target}
-            onChange={(e) => setTarget(e.target.value)}
-            aria-label="Destination project"
-            required
-            className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      <Dialog open={moveOpen} onOpenChange={setMoveOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move to another project</DialogTitle>
+            <DialogDescription>
+              The document becomes searchable in the destination project and
+              stops grounding answers in this one. Existing citations are
+              unaffected.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!target) return;
+              run(() => moveDocument(doc.id, target), () => setMoveOpen(false));
+            }}
+            className="flex flex-col gap-5"
           >
-            <option value="">Choose a project…</option>
-            {otherProjects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.title}
-              </option>
-            ))}
-          </select>
-          {error && (
-            <p role="alert" className="text-xs text-rejected">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setMoveOpen(false)}
+            <Select
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              aria-label="Destination project"
+              required
             >
-              Cancel
-            </Button>
-            <Button type="submit" size="sm" disabled={isPending || !target}>
-              {isPending ? "Moving…" : "Move document"}
-            </Button>
-          </div>
-        </form>
-      </ActionDialog>
+              <option value="">Choose a project…</option>
+              {otherProjects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
+            </Select>
+            {errorNote}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setMoveOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending || !target}>
+                {isPending && <Loader2 className="animate-spin" />}
+                {isPending ? "Moving…" : "Move document"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete */}
-      <ActionDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title="Delete this document?"
-        description={`"${doc.title}" and its ${doc.chunkCount} indexed passage${doc.chunkCount === 1 ? "" : "s"} will be permanently removed.`}
-      >
-        <div className="flex flex-col gap-3">
-          <p className="flex items-start gap-1.5 rounded-lg border border-rejected-border bg-rejected-surface/60 px-3 py-2 text-xs leading-relaxed text-rejected">
-            <TriangleAlert className="mt-px size-3.5 shrink-0" />
-            <span>
-              Any past AI answer that cited this document loses its link to the
-              source and can no longer be verified. This cannot be undone.
-            </span>
-          </p>
-          {error && (
-            <p role="alert" className="text-xs text-rejected">
-              {error}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this document?</DialogTitle>
+            <DialogDescription>
+              &ldquo;{doc.title}&rdquo; and its {doc.chunkCount} indexed passage
+              {doc.chunkCount === 1 ? "" : "s"} will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-5">
+            <p className="flex items-start gap-2.5 rounded-xl border border-rejected-border bg-rejected-surface/60 px-4 py-3 text-body-sm leading-relaxed text-rejected">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <span>
+                Any past AI answer that cited this document loses its link to
+                the source and can no longer be verified. This cannot be undone.
+              </span>
             </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDeleteOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isPending}
-              onClick={() =>
-                run(() => deleteDocument(doc.id), () => setDeleteOpen(false))
-              }
-            >
-              {isPending ? "Deleting…" : "Delete permanently"}
-            </Button>
+            {errorNote}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={isPending}
+                onClick={() =>
+                  run(() => deleteDocument(doc.id), () => setDeleteOpen(false))
+                }
+              >
+                {isPending && <Loader2 className="animate-spin" />}
+                {isPending ? "Deleting…" : "Delete permanently"}
+              </Button>
+            </DialogFooter>
           </div>
-        </div>
-      </ActionDialog>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

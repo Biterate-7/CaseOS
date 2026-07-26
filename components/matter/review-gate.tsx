@@ -41,7 +41,7 @@ function ReviewGate({ interaction }: { interaction: WorkspaceInteraction }) {
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
+          "flex items-center gap-2.5 rounded-xl border px-4 py-2.5 font-mono text-meta-xs",
           approved
             ? "border-grounded-border bg-grounded-surface text-grounded"
             : "border-rejected-border bg-rejected-surface text-rejected"
@@ -52,7 +52,7 @@ function ReviewGate({ interaction }: { interaction: WorkspaceInteraction }) {
         ) : (
           <X className="size-3.5 shrink-0" />
         )}
-        <span className="font-medium">
+        <span className="uppercase">
           {reviewStatusLabel[interaction.reviewStatus]}
         </span>
         {interaction.reviewedAt && (
@@ -65,10 +65,10 @@ function ReviewGate({ interaction }: { interaction: WorkspaceInteraction }) {
   }
 
   return (
-    <div className="rounded-lg border border-pending-border bg-pending-surface/50 p-3">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="inline-flex items-start gap-1.5 text-xs leading-relaxed text-pending">
-          <ShieldQuestion className="mt-px size-3.5 shrink-0" />
+    <div className="rounded-xl border border-pending-border bg-pending-surface/50 p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="inline-flex items-start gap-2.5 text-body-sm leading-relaxed text-pending">
+          <ShieldQuestion className="mt-0.5 size-4 shrink-0" />
           <span>
             Awaiting review. Nothing here should be relied on or shared
             onward until someone signs off on it.

@@ -23,7 +23,7 @@ export function IngestionChart({
   const reduce = useReducedMotion();
 
   return (
-    <div className="mt-5 flex h-28 items-end gap-1.5">
+    <div className="flex h-36 items-end gap-2">
       {weeks.map((week, i) => {
         const label = `Week ending ${week.end.toLocaleDateString("en-US", {
           month: "short",
@@ -40,8 +40,10 @@ export function IngestionChart({
           >
             <motion.div
               className={cn(
-                "w-full origin-bottom rounded-sm transition-colors duration-150",
-                week.count > 0 ? "bg-primary/80 group-hover:bg-primary" : "bg-muted"
+                "w-full origin-bottom rounded-t-lg transition-colors duration-150",
+                week.count > 0
+                  ? "bg-primary/25 group-hover:bg-primary group-hover:shadow-[0_0_16px_var(--glow)]"
+                  : "bg-surface-highest"
               )}
               style={{ height }}
               initial={reduce ? false : { scaleY: 0, opacity: 0 }}

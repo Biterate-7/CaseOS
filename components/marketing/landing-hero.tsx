@@ -30,28 +30,32 @@ export function LandingHero() {
 
   return (
     <motion.section
-      className="pt-20 pb-16 text-center"
+      className="pt-24 pb-20 text-center"
       variants={staggerContainer}
       initial={reduce ? false : "hidden"}
       animate="visible"
     >
       <motion.p
         variants={rise}
-        className="mb-4 text-xs font-medium tracking-widest text-muted-foreground uppercase"
+        className="mb-5 flex items-center justify-center gap-2.5 font-mono text-meta-xs text-primary"
       >
+        <span className="relative flex size-1.5 shrink-0">
+          <span className="animate-pulse-ring absolute inline-flex size-full rounded-full bg-primary motion-reduce:hidden" />
+          <span className="relative inline-flex size-full rounded-full bg-primary" />
+        </span>
         Document intelligence
       </motion.p>
 
       <motion.h1
         variants={rise}
-        className="text-gradient mx-auto max-w-4xl font-serif text-5xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-6xl"
+        className="text-gradient mx-auto max-w-4xl font-display text-display-md leading-[1.08] text-balance sm:text-display-lg"
       >
         Understand a document collection you don&apos;t have time to read
       </motion.h1>
 
       <motion.p
         variants={rise}
-        className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground"
+        className="mx-auto mt-7 max-w-2xl text-body-lg leading-relaxed text-pretty text-muted-foreground"
       >
         CaseOS reads your files, answers questions about them in plain language,
         and shows you the exact passage behind every claim — so you can trust
@@ -60,21 +64,21 @@ export function LandingHero() {
 
       <motion.div
         variants={rise}
-        className="mt-9 flex flex-wrap justify-center gap-3"
+        className="mt-10 flex flex-wrap justify-center gap-3"
       >
         <Magnetic strength={0.5}>
           <Button
-            size="lg"
+            size="xl"
+            variant="hero"
             nativeButton={false}
             render={<Link href="/dashboard" />}
-            className="shadow-sm transition-shadow duration-300 hover:shadow-lg"
           >
             Open the workspace
           </Button>
         </Magnetic>
         <Magnetic strength={0.35}>
           <Button
-            size="lg"
+            size="xl"
             variant="outline"
             nativeButton={false}
             render={<Link href="/sign-up" />}
@@ -90,7 +94,7 @@ export function LandingHero() {
       <motion.div
         aria-hidden
         variants={rise}
-        className="mt-16"
+        className="mt-20"
       >
         <div className="relative mx-auto max-w-3xl">
           <Tilt max={9} className="rounded-3xl">
@@ -98,7 +102,7 @@ export function LandingHero() {
               {[0, 1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className="h-28 w-20 rounded-lg border bg-card shadow-sm sm:h-36 sm:w-24"
+                  className="h-28 w-20 rounded-xl bg-card shadow-md ring-1 ring-border sm:h-36 sm:w-24"
                   style={{
                     transform: `perspective(900px) rotateX(14deg) rotateY(${(i - 2) * 7}deg) translateY(${Math.abs(i - 2) * 8}px)`,
                     opacity: 1 - Math.abs(i - 2) * 0.16,
@@ -125,21 +129,21 @@ export function LandingHero() {
             initial={reduce ? false : { opacity: 0, y: 18, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ ...springSoft, delay: reduce ? 0 : 0.35 }}
-            className="glass animate-breathe relative mx-auto -mt-4 max-w-md rounded-xl p-4 shadow-lg"
+            className="glass animate-breathe relative mx-auto -mt-4 max-w-md rounded-2xl p-5 shadow-2xl"
           >
-            <p className="font-serif text-sm leading-relaxed text-foreground">
+            <p className="text-body-sm leading-relaxed text-foreground">
               The reporting threshold was raised to $50,000 in the March revision
-              <sup className="mx-0.5 rounded bg-citation-surface px-1 font-sans text-[0.625rem] font-semibold text-citation ring-1 ring-citation/30">
+              <sup className="mx-0.5 rounded-sm bg-citation-surface px-1 font-mono text-[0.625rem] font-semibold text-citation ring-1 ring-citation/30">
                 S2
               </sup>
               , superseding the earlier $25,000 limit
-              <sup className="mx-0.5 rounded bg-citation-surface px-1 font-sans text-[0.625rem] font-semibold text-citation ring-1 ring-citation/30">
+              <sup className="mx-0.5 rounded-sm bg-citation-surface px-1 font-mono text-[0.625rem] font-semibold text-citation ring-1 ring-citation/30">
                 S5
               </sup>
               .
             </p>
-            <div className="mt-3 flex items-center gap-2 border-t border-glass-border pt-2.5 text-[0.6875rem] text-muted-foreground">
-              <Quote className="size-3 shrink-0" />
+            <div className="mt-3.5 flex items-center gap-2 border-t border-glass-border pt-3 font-mono text-meta-xs text-muted-foreground">
+              <Quote className="size-3.5 shrink-0 text-citation" />
               Grounded in 2 source passages
             </div>
           </motion.div>
